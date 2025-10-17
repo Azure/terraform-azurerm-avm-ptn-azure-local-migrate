@@ -10,19 +10,15 @@
 output "discovered_servers" {
   description = "List of discovered servers from Azure Migrate"
   value = local.is_discover_mode && length(data.azapi_resource_list.discovered_servers) > 0 ? [
-    for server in try(jsondecode(data.azapi_resource_list.discovered_servers[0].output).value, []) : {
-      id            = try(server.id, null)
-      name          = try(server.name, null)
-      display_name  = try(server.properties.displayName, null)
-      machine_name  = try(server.properties.discoveryData[0].machineName, "N/A")
-      ip_addresses  = try(join(", ", server.properties.discoveryData[0].ipAddresses), "N/A")
-      os_name       = try(server.properties.discoveryData[0].osName, "N/A")
-      boot_type     = try(server.properties.discoveryData[0].extendedInfo.bootType, "N/A")
-      cpu_cores     = try(server.properties.numberOfProcessorCore, null)
-      memory_mb     = try(server.properties.allocatedMemoryInMB, null)
-      disks         = try(server.properties.disks, [])
-      network_adapters = try(server.properties.networkAdapters, [])
-    }
+    for server in try(jsondecode(data.azapi_resource_list.discovered_servers[0].output).value, []) :
+    length(server.properties.discoveryData) > 0 ? {
+      machine_name     = try(server.properties.discoveryData[0].fqdn, server.properties.discoveryData[0].machineName, server.name, "N/A")
+      ip_addresses     = try(join(", ", server.properties.discoveryData[0].ipAddresses), "N/A")
+      operating_system = try(server.properties.discoveryData[0].osName, "N/A")
+      boot_type        = try(server.properties.discoveryData[0].extendedInfo.bootType, "N/A")
+      os_disk_id       = try(jsondecode(server.properties.discoveryData[0].extendedInfo.diskDetails)[0].InstanceId, "N/A")
+    } : null
+    if server.properties.discoveryData != null && length(server.properties.discoveryData) > 0
   ] : []
 }
 
