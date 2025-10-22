@@ -27,6 +27,10 @@ locals {
   # Only calculate if we're in initialize mode to avoid null value errors
   storage_account_suffix = local.is_initialize_mode && var.source_appliance_name != null ? substr(md5("${var.source_appliance_name}${var.project_name}"), 0, 14) : ""
   storage_account_name   = local.is_initialize_mode && var.source_appliance_name != null ? "migratersa${local.storage_account_suffix}" : ""
+
+  # Check if vault exists in solution
+  vault_exists_in_solution = local.is_initialize_mode && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null
+  create_new_vault         = local.is_initialize_mode && !local.vault_exists_in_solution
 }
 
 # ========================================
@@ -84,26 +88,34 @@ data "azapi_resource_list" "discovered_servers" {
 # COMMAND 2: INITIALIZE REPLICATION INFRASTRUCTURE
 # ========================================
 
-# Get existing replication vault (from solution)
-data "azapi_resource" "replication_vault" {
-  count = local.is_initialize_mode && try(jsondecode(data.azapi_resource.replication_solution[0].output).properties.details.extendedDetails.vaultId, null) != null ? 1 : 0
+# Create replication vault if it doesn't exist
+resource "azapi_resource" "replication_vault" {
+  count = local.create_new_vault ? 1 : 0
 
-  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
-  resource_id = try(jsondecode(data.azapi_resource.replication_solution[0].output).properties.details.extendedDetails.vaultId, "")
-}
-
-# Enable managed identity on replication vault if missing
-resource "azapi_update_resource" "vault_identity" {
-  count = local.is_initialize_mode && try(data.azapi_resource.replication_vault[0].identity, null) == null ? 1 : 0
-
-  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
-  resource_id = data.azapi_resource.replication_vault[0].id
+  type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  name      = "${replace(var.project_name, "-", "")}replicationvault"
+  parent_id = data.azurerm_resource_group.this.id
+  location  = data.azurerm_resource_group.this.location
 
   body = {
-    identity = {
-      type = "SystemAssigned"
-    }
+    properties = {}
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
+}
+
+# Get existing replication vault (from solution)
+data "azapi_resource" "replication_vault" {
+  count = local.vault_exists_in_solution ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "")
 }
 
 # Query replication fabrics
@@ -112,6 +124,8 @@ data "azapi_resource_list" "replication_fabrics" {
 
   type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
   parent_id = data.azurerm_resource_group.this.id
+
+  depends_on = [azapi_resource.replication_vault]
 }
 
 # Create or update replication policy
@@ -119,8 +133,8 @@ resource "azapi_resource" "replication_policy" {
   count = local.is_initialize_mode ? 1 : 0
 
   type      = "Microsoft.DataReplication/replicationVaults/replicationPolicies@2024-09-01"
-  name      = var.policy_name != null ? var.policy_name : "${split("/", try(data.azapi_resource.replication_vault[0].id, ""))[8]}${var.instance_type}policy"
-  parent_id = try(data.azapi_resource.replication_vault[0].id, "")
+  name      = var.policy_name != null ? var.policy_name : "${split("/", local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id)[8]}${var.instance_type}policy"
+  parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
 
   schema_validation_enabled = false
 
@@ -135,7 +149,7 @@ resource "azapi_resource" "replication_policy" {
     }
   }
 
-  depends_on = [azapi_update_resource.vault_identity]
+  depends_on = [azapi_resource.replication_vault, data.azapi_resource.replication_vault]
 }
 
 # Create cache storage account if not provided
@@ -172,7 +186,7 @@ resource "azurerm_role_assignment" "vault_storage_contributor" {
 
   scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
   role_definition_name = "Contributor"
-  principal_id         = try(jsondecode(data.azapi_resource.replication_vault[0].output).identity.principalId, jsondecode(azapi_update_resource.vault_identity[0].output).identity.principalId)
+  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
 
   skip_service_principal_aad_check = true
 }
@@ -183,12 +197,12 @@ resource "azurerm_role_assignment" "vault_storage_blob_contributor" {
 
   scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = try(jsondecode(data.azapi_resource.replication_vault[0].output).identity.principalId, jsondecode(azapi_update_resource.vault_identity[0].output).identity.principalId)
+  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
 
   skip_service_principal_aad_check = true
 }
 
-# Update AMH solution with storage account ID
+# Update AMH solution with storage account ID and vault ID
 resource "azapi_update_resource" "update_solution_storage" {
   count = local.is_initialize_mode ? 1 : 0
 
@@ -199,9 +213,10 @@ resource "azapi_update_resource" "update_solution_storage" {
     properties = {
       details = {
         extendedDetails = merge(
-          try(jsondecode(data.azapi_resource.replication_solution[0].output).properties.details.extendedDetails, {}),
+          try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails, {}),
           {
             replicationStorageAccountId = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+            vaultId                     = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
           }
         )
       }
@@ -209,6 +224,7 @@ resource "azapi_update_resource" "update_solution_storage" {
   }
 
   depends_on = [
+    azapi_resource.replication_vault,
     azurerm_role_assignment.vault_storage_contributor,
     azurerm_role_assignment.vault_storage_blob_contributor
   ]
@@ -220,7 +236,7 @@ resource "azapi_resource" "replication_extension" {
 
   type      = "Microsoft.DataReplication/replicationVaults/replicationExtensions@2024-09-01"
   name      = "${basename(var.source_fabric_id)}-${basename(var.target_fabric_id)}-MigReplicationExtn"
-  parent_id = try(data.azapi_resource.replication_vault[0].id, "")
+  parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
 
   schema_validation_enabled = false
 

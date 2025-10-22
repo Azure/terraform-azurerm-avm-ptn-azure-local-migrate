@@ -64,12 +64,12 @@ output "debug_data_source_length" {
 
 output "replication_vault_id" {
   description = "ID of the replication vault"
-  value       = local.is_initialize_mode && length(data.azapi_resource.replication_vault) > 0 ? data.azapi_resource.replication_vault[0].id : null
+  value       = local.is_initialize_mode ? (local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id) : null
 }
 
 output "replication_vault_identity" {
   description = "Managed identity of the replication vault"
-  value       = local.is_initialize_mode && length(data.azapi_resource.replication_vault) > 0 ? try(jsondecode(data.azapi_resource.replication_vault[0].output).identity.principalId, null) : null
+  value       = local.is_initialize_mode ? (local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId) : null
 }
 
 output "replication_policy_id" {

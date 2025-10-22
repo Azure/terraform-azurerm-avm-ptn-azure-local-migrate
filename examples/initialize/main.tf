@@ -24,6 +24,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
 }
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
@@ -34,23 +35,23 @@ module "initialize_replication" {
   operation_mode = "initialize"
 
   # Resource configuration
-  resource_group_name = "rg-migrate-prod"
+  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
   location            = "eastus"
   name                = "hci-migration-init"
 
   # Migration project
-  project_name = "contoso-migrate-project"
+  project_name = "saifaldinali-vmw-ga-bb"
 
   # Appliance names
-  source_appliance_name = "vmware-source-appliance"
-  target_appliance_name = "hci-target-appliance"
+  source_appliance_name = "src"
+  target_appliance_name = "tgt2"
 
   # Instance type (VMware to HCI or HyperV to HCI)
   instance_type = "VMwareToAzStackHCI"
 
   # Fabric IDs (obtained from Azure Migrate)
-  source_fabric_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-migrate-prod/providers/Microsoft.DataReplication/replicationFabrics/vmware-fabric"
-  target_fabric_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-migrate-prod/providers/Microsoft.DataReplication/replicationFabrics/hci-fabric"
+  source_fabric_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/src23b3replicationfabric"
+  target_fabric_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/tgt28eb7replicationfabric"
 
   # Optional: Provide existing cache storage account
   # cache_storage_account_id = "/subscriptions/.../storageAccounts/existingcache"
