@@ -23,7 +23,7 @@ provider "azapi" {
 
 # Test Discovery
 module "discover_vms" {
-  source = "../.."  # Points to the root module directory
+  source = "../.."
 
   # Required variables
   name                 = "migrate-discover"
