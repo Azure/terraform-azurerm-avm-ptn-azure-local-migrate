@@ -177,12 +177,12 @@ variable "tags" {
 # Operation Mode
 variable "operation_mode" {
   type        = string
-  description = "The migration operation to perform: discover, initialize, replicate, or jobs"
+  description = "The migration operation to perform: discover, initialize, replicate, jobs, or remove"
   default     = "discover"
 
   validation {
-    condition     = contains(["discover", "initialize", "replicate", "jobs"], var.operation_mode)
-    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs."
+    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove"], var.operation_mode)
+    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove."
   }
 }
 
@@ -463,4 +463,25 @@ variable "job_name" {
   type        = string
   description = "Specific job name to retrieve. If not provided, all jobs will be listed."
   default     = null
+}
+
+# COMMAND 5: REMOVE REPLICATION Variables
+variable "target_object_id" {
+  type        = string
+  description = "The protected item ARM ID for which replication needs to be disabled. Required for 'remove' operation mode. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}"
+  default     = null
+
+  validation {
+    condition = (
+      var.target_object_id == null ||
+      can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.DataReplication/replicationVaults/[^/]+/protectedItems/[^/]+$", var.target_object_id))
+    )
+    error_message = "target_object_id must be a valid protected item ARM ID in the format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}"
+  }
+}
+
+variable "force_remove" {
+  type        = bool
+  description = "Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state."
+  default     = false
 }

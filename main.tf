@@ -4,12 +4,6 @@
 # --------------------------------------------------------------------------------------------
 #
 # Terraform Module for Azure Stack HCI Migration
-# Equivalent to Azure CLI Python implementation for:
-# 1. get_discovered_server - Retrieve discovered servers
-# 2. initialize_replication_infrastructure - Setup replication infrastructure
-# 3. new_local_server_replication - Create VM replication
-# 4. get_local_replication_job - Retrieve replication job status
-#
 
 # ========================================
 # LOCAL VALUES
@@ -21,6 +15,7 @@ locals {
   is_initialize_mode = var.operation_mode == "initialize"
   is_replicate_mode  = var.operation_mode == "replicate"
   is_jobs_mode       = var.operation_mode == "jobs"
+  is_remove_mode     = var.operation_mode == "remove"
 
   # Resource group reference
   resource_group_name = var.resource_group_name
@@ -371,6 +366,38 @@ data "azapi_resource_list" "replication_jobs" {
 
   type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
   parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_jobs[0].id
+}
+
+# ========================================
+# REMOVE REPLICATION OPERATION
+# ========================================
+
+# Validate the protected item exists before removal
+data "azapi_resource" "protected_item_to_remove" {
+  count = local.is_remove_mode ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.target_object_id
+}
+
+# Execute the removal operation
+resource "azapi_resource_action" "remove_replication" {
+  count = local.is_remove_mode ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.target_object_id
+  action      = ""  # Empty action means DELETE
+  method      = "DELETE"
+
+  # Add forceDelete query parameter as a map of lists
+  query_parameters = {
+    forceDelete = [tostring(var.force_remove)]
+  }
+
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_remove
+  ]
 }
 
 # ========================================

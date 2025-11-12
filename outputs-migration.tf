@@ -222,3 +222,33 @@ output "vault_id_for_jobs" {
   description = "Replication vault ID used for job queries"
   value       = local.is_jobs_mode && length(data.azapi_resource.vault_for_jobs) > 0 ? data.azapi_resource.vault_for_jobs[0].id : null
 }
+
+# ========================================
+# COMMAND 5: REMOVE REPLICATION OUTPUTS
+# ========================================
+
+output "removal_status" {
+  description = "Status of the replication removal operation"
+  value = local.is_remove_mode && length(azapi_resource_action.remove_replication) > 0 ? {
+    protected_item_id = var.target_object_id
+    force_remove      = var.force_remove
+    operation_status  = "Initiated"
+    message          = "Successfully initiated removal of replication for protected item '${var.target_object_id}'"
+  } : null
+}
+
+output "removal_operation_headers" {
+  description = "Response headers from the removal operation (includes Azure-AsyncOperation and Location for job tracking)"
+  value       = local.is_remove_mode && length(azapi_resource_action.remove_replication) > 0 ? try(azapi_resource_action.remove_replication[0].output, null) : null
+}
+
+output "protected_item_details" {
+  description = "Details of the protected item before removal (for validation)"
+  value = local.is_remove_mode && length(data.azapi_resource.protected_item_to_remove) > 0 ? {
+    name                        = try(data.azapi_resource.protected_item_to_remove[0].output.name, "N/A")
+    protection_state            = try(data.azapi_resource.protected_item_to_remove[0].output.properties.protectionStateDescription, "Unknown")
+    allowed_jobs                = try(data.azapi_resource.protected_item_to_remove[0].output.properties.allowedJobs, [])
+    can_disable_protection      = try(contains(data.azapi_resource.protected_item_to_remove[0].output.properties.allowedJobs, "DisableProtection"), false)
+    replication_health          = try(data.azapi_resource.protected_item_to_remove[0].output.properties.replicationHealth, "Unknown")
+  } : null
+}
