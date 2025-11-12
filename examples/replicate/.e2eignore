@@ -1,0 +1,4 @@
+# This example requires pre-existing replication infrastructure
+# (vault, fabrics, policies) created by the initialize operation.
+# It cannot run independently in automated end-to-end testing.
+# It should be tested as part of a full workflow: initialize → replicate.
