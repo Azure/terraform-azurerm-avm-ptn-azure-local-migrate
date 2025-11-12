@@ -1,17 +1,415 @@
-# TODO: Replace this dummy resource azurerm_resource_group.TODO with your module resource
-resource "azurerm_resource_group" "TODO" {
-  location = var.location
-  name     = var.name # calling code must supply the name
-  tags     = var.tags
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Terraform Module for Azure Stack HCI Migration
+
+# ========================================
+# LOCAL VALUES
+# ========================================
+
+locals {
+  # Determine operation mode
+  is_discover_mode   = var.operation_mode == "discover"
+  is_initialize_mode = var.operation_mode == "initialize"
+  is_replicate_mode  = var.operation_mode == "replicate"
+  is_jobs_mode       = var.operation_mode == "jobs"
+  is_remove_mode     = var.operation_mode == "remove"
+
+  # Resource group reference
+  resource_group_name = var.resource_group_name
+
+  # Storage account name generation (similar to Python generate_hash_for_artifact)
+  # Only calculate if we're in initialize mode to avoid null value errors
+  storage_account_suffix = local.is_initialize_mode && var.source_appliance_name != null ? substr(md5("${var.source_appliance_name}${var.project_name}"), 0, 14) : ""
+  storage_account_name   = local.is_initialize_mode && var.source_appliance_name != null ? "migratersa${local.storage_account_suffix}" : ""
+
+  # Check if vault exists in solution
+  vault_exists_in_solution = local.is_initialize_mode && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null
+  create_new_vault         = local.is_initialize_mode && !local.vault_exists_in_solution
 }
 
-# required AVM resources interfaces
+# ========================================
+# DATA SOURCES
+# ========================================
+
+# Get current subscription
+data "azurerm_client_config" "current" {}
+
+# Get resource group
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
+}
+
+# Get Azure Migrate Project (for all modes)
+data "azapi_resource" "migrate_project" {
+  count = var.project_name != null ? 1 : 0
+
+  type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
+  name      = var.project_name
+  parent_id = data.azurerm_resource_group.this.id
+}
+
+# Get Discovery Solution (needed for appliance mapping)
+data "azapi_resource" "discovery_solution" {
+  count = local.is_initialize_mode || local.is_replicate_mode ? 1 : 0
+
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
+  name      = "Servers-Discovery-ServerDiscovery"
+  parent_id = data.azapi_resource.migrate_project[0].id
+}
+
+# Get Data Replication Solution
+data "azapi_resource" "replication_solution" {
+  count = local.is_initialize_mode || local.is_replicate_mode ? 1 : 0
+
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
+  name      = "Servers-Migration-ServerMigration_DataReplication"
+  parent_id = data.azapi_resource.migrate_project[0].id
+}
+
+# ========================================
+# COMMAND 1: DISCOVER SERVERS
+# ========================================
+
+# Query discovered servers from VMware or HyperV sites
+data "azapi_resource_list" "discovered_servers" {
+  count = local.is_discover_mode ? 1 : 0
+
+  type      = var.appliance_name != null ? (var.source_machine_type == "HyperV" ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06") : "Microsoft.Migrate/migrateprojects/machines@2020-05-01"
+  parent_id = var.appliance_name != null ? "${data.azurerm_resource_group.this.id}/providers/Microsoft.OffAzure/${var.source_machine_type == "HyperV" ? "HyperVSites" : "VMwareSites"}/${var.appliance_name}" : data.azapi_resource.migrate_project[0].id
+}
+
+# ========================================
+# COMMAND 2: INITIALIZE REPLICATION INFRASTRUCTURE
+# ========================================
+
+# Create replication vault if it doesn't exist
+resource "azapi_resource" "replication_vault" {
+  count = local.create_new_vault ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  name      = "${replace(var.project_name, "-", "")}replicationvault"
+  parent_id = data.azurerm_resource_group.this.id
+  location  = data.azurerm_resource_group.this.location
+
+  body = {
+    properties = {}
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
+}
+
+# Get existing replication vault (from solution)
+data "azapi_resource" "replication_vault" {
+  count = local.vault_exists_in_solution ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "")
+}
+
+# Query replication fabrics
+data "azapi_resource_list" "replication_fabrics" {
+  count = local.is_initialize_mode ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
+  parent_id = data.azurerm_resource_group.this.id
+
+  depends_on = [azapi_resource.replication_vault]
+}
+
+# Create or update replication policy
+resource "azapi_resource" "replication_policy" {
+  count = local.is_initialize_mode ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/replicationPolicies@2024-09-01"
+  name      = var.policy_name != null ? var.policy_name : "${split("/", local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id)[8]}${var.instance_type}policy"
+  parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
+
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      customProperties = {
+        instanceType                      = var.instance_type
+        recoveryPointHistoryInMinutes     = var.recovery_point_history_minutes
+        crashConsistentFrequencyInMinutes = var.crash_consistent_frequency_minutes
+        appConsistentFrequencyInMinutes   = var.app_consistent_frequency_minutes
+      }
+    }
+  }
+
+  depends_on = [azapi_resource.replication_vault, data.azapi_resource.replication_vault]
+}
+
+# Create cache storage account if not provided
+resource "azurerm_storage_account" "cache" {
+  count = local.is_initialize_mode && var.cache_storage_account_id == null ? 1 : 0
+
+  name                     = local.storage_account_name
+  resource_group_name      = data.azurerm_resource_group.this.name
+  location                 = data.azurerm_resource_group.this.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"
+
+  allow_nested_items_to_be_public  = false
+  cross_tenant_replication_enabled = true
+  min_tls_version                  = "TLS1_2"
+
+  network_rules {
+    default_action = "Allow"
+  }
+
+  blob_properties {
+    versioning_enabled = false
+  }
+
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
+}
+
+# Grant Contributor role to vault identity on storage account
+resource "azurerm_role_assignment" "vault_storage_contributor" {
+  count = local.is_initialize_mode ? 1 : 0
+
+  scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+  role_definition_name = "Contributor"
+  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
+
+  skip_service_principal_aad_check = true
+}
+
+# Grant Storage Blob Data Contributor role to vault identity
+resource "azurerm_role_assignment" "vault_storage_blob_contributor" {
+  count = local.is_initialize_mode ? 1 : 0
+
+  scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
+
+  skip_service_principal_aad_check = true
+}
+
+# Update AMH solution with storage account ID and vault ID
+resource "azapi_update_resource" "update_solution_storage" {
+  count = local.is_initialize_mode ? 1 : 0
+
+  type        = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
+  resource_id = data.azapi_resource.replication_solution[0].id
+
+  body = {
+    properties = {
+      details = {
+        extendedDetails = merge(
+          try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails, {}),
+          {
+            replicationStorageAccountId = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+            vaultId                     = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
+          }
+        )
+      }
+    }
+  }
+
+  depends_on = [
+    azapi_resource.replication_vault,
+    azurerm_role_assignment.vault_storage_contributor,
+    azurerm_role_assignment.vault_storage_blob_contributor
+  ]
+}
+
+# Create replication extension
+resource "azapi_resource" "replication_extension" {
+  count = local.is_initialize_mode && var.source_fabric_id != null && var.target_fabric_id != null ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/replicationExtensions@2024-09-01"
+  name      = "${basename(var.source_fabric_id)}-${basename(var.target_fabric_id)}-MigReplicationExtn"
+  parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
+
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      customProperties = var.instance_type == "VMwareToAzStackHCI" ? {
+        azStackHciFabricArmId       = var.target_fabric_id
+        storageAccountId            = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+        storageAccountSasSecretName = null
+        instanceType                = var.instance_type
+        vmwareFabricArmId           = var.source_fabric_id
+      } : {
+        azStackHciFabricArmId       = var.target_fabric_id
+        storageAccountId            = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+        storageAccountSasSecretName = null
+        instanceType                = var.instance_type
+        hyperVFabricArmId           = var.source_fabric_id
+      }
+    }
+  }
+
+  depends_on = [
+    azapi_resource.replication_policy,
+    azapi_update_resource.update_solution_storage
+  ]
+}
+
+# ========================================
+# COMMAND 3: CREATE SERVER REPLICATION
+# ========================================
+
+# Get discovered machine details (if machine_id provided)
+# Note: This data source is currently not used and disabled to avoid lookup failures
+data "azapi_resource" "discovered_machine" {
+  count = 0 # Disabled: local.is_replicate_mode && var.machine_id != null ? 1 : 0
+
+  type        = contains(split("/", lower(var.machine_id)), "migrateprojects") ? "Microsoft.Migrate/migrateprojects/machines@2020-05-01" : (contains(split("/", lower(var.machine_id)), "hypervsites") ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06")
+  resource_id = var.machine_id
+}
+
+# Create protected item (VM replication)
+resource "azapi_resource" "protected_item" {
+  count = local.is_replicate_mode && (var.machine_id != null || var.machine_name != null) ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  name      = var.machine_name != null ? var.machine_name : basename(var.machine_id)
+  parent_id = var.replication_vault_id
+
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      policyName               = var.policy_name
+      replicationExtensionName = var.replication_extension_name
+      customProperties = {
+        instanceType                     = var.instance_type
+        targetArcClusterCustomLocationId = var.custom_location_id
+        customLocationRegion             = var.location
+        fabricDiscoveryMachineId         = var.machine_id != null ? var.machine_id : "${data.azapi_resource.migrate_project[0].id}/machines/${var.machine_name}"
+        disksToInclude = [
+          for disk in var.disks_to_include : {
+            diskId                 = disk.disk_id
+            diskSizeGB             = disk.disk_size_gb
+            diskFileFormat         = disk.disk_file_format
+            isOsDisk               = disk.is_os_disk
+            isDynamic              = disk.is_dynamic
+            diskPhysicalSectorSize = 512
+          }
+        ]
+        targetVmName              = var.target_vm_name
+        targetResourceGroupId     = var.target_resource_group_id
+        storageContainerId        = var.target_storage_path_id
+        hyperVGeneration          = var.hyperv_generation
+        targetCpuCores            = var.target_vm_cpu_cores
+        sourceCpuCores            = var.source_vm_cpu_cores
+        isDynamicRam              = var.is_dynamic_memory_enabled
+        sourceMemoryInMegaBytes   = var.source_vm_ram_mb
+        targetMemoryInMegaBytes   = var.target_vm_ram_mb
+        nicsToInclude = [
+          for nic in var.nics_to_include : {
+            nicId                    = nic.nic_id
+            selectionTypeForFailover = nic.selection_type
+            targetNetworkId          = nic.target_network_id
+            testNetworkId            = nic.test_network_id
+          }
+        ]
+        dynamicMemoryConfig = {
+          maximumMemoryInMegaBytes     = 1048576
+          minimumMemoryInMegaBytes     = 512
+          targetMemoryBufferPercentage = 20
+        }
+        sourceFabricAgentName = var.source_fabric_agent_name
+        targetFabricAgentName = var.target_fabric_agent_name
+        runAsAccountId        = var.run_as_account_id
+        targetHCIClusterId    = var.target_hci_cluster_id
+      }
+    }
+  }
+
+  timeouts {
+    create = "120m"
+    update = "120m"
+  }
+}
+
+# ========================================
+# COMMAND 4: GET REPLICATION JOBS
+# ========================================
+
+# Get vault from solution (for jobs mode)
+data "azapi_resource" "vault_for_jobs" {
+  count = local.is_jobs_mode ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, var.replication_vault_id)
+}
+
+# Get a specific job by name
+data "azapi_resource" "replication_job" {
+  count = local.is_jobs_mode && var.job_name != null ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
+  name      = var.job_name
+  parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_jobs[0].id
+}
+
+# List all jobs in the vault
+data "azapi_resource_list" "replication_jobs" {
+  count = local.is_jobs_mode && var.job_name == null ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
+  parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_jobs[0].id
+}
+
+# ========================================
+# REMOVE REPLICATION OPERATION
+# ========================================
+
+# Validate the protected item exists before removal
+data "azapi_resource" "protected_item_to_remove" {
+  count = local.is_remove_mode ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.target_object_id
+}
+
+# Execute the removal operation
+resource "azapi_resource_action" "remove_replication" {
+  count = local.is_remove_mode ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.target_object_id
+  action      = ""  # Empty action means DELETE
+  method      = "DELETE"
+
+  # Add forceDelete query parameter as a map of lists
+  query_parameters = {
+    forceDelete = [tostring(var.force_remove)]
+  }
+
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_remove
+  ]
+}
+
+# ========================================
+# AVM REQUIRED INTERFACES
+# ========================================
+
 resource "azurerm_management_lock" "this" {
   count = var.lock != null ? 1 : 0
 
   lock_level = var.lock.kind
   name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  scope      = azurerm_resource_group.TODO.id # TODO: Replace with your azurerm resource name
+  scope      = data.azurerm_resource_group.this.id
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
 
@@ -19,7 +417,7 @@ resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
-  scope                                  = azurerm_resource_group.TODO.id # TODO: Replace this dummy resource azurerm_resource_group.TODO with your module resource
+  scope                                  = data.azurerm_resource_group.this.id
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id

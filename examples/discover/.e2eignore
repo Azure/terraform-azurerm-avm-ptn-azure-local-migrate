@@ -1,0 +1,4 @@
+# This example requires an existing Azure Migrate project
+# with already discovered machines (from VMware/Hyper-V appliance).
+# It cannot run independently in automated end-to-end testing.
+# It should be tested manually with a project that has discovered machines.

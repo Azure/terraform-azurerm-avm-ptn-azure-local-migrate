@@ -1,0 +1,3 @@
+# This example requires existing replication infrastructure (vault with jobs)
+# and is not suitable for automated end-to-end testing.
+# It should be tested manually with real migration jobs.
