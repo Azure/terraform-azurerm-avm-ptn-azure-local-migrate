@@ -23,15 +23,33 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.protected_item](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.replication_extension](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.replication_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.remove_replication](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_update_resource.update_solution_storage](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_resource_group.TODO](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.vault_storage_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.vault_storage_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_storage_account.cache](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.discovered_machine](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.discovery_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.migrate_project](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.protected_item_to_remove](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.replication_job](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.replication_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.vault_for_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource_list.discovered_servers](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.replication_fabrics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.replication_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -47,7 +65,7 @@ Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the this resource.
+Description: The name of the migration resource.
 
 Type: `string`
 
@@ -60,6 +78,46 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_app_consistent_frequency_minutes"></a> [app\_consistent\_frequency\_minutes](#input\_app\_consistent\_frequency\_minutes)
+
+Description: Application consistent snapshot frequency in minutes
+
+Type: `number`
+
+Default: `240`
+
+### <a name="input_appliance_name"></a> [appliance\_name](#input\_appliance\_name)
+
+Description: Appliance name (maps to site name)
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_cache_storage_account_id"></a> [cache\_storage\_account\_id](#input\_cache\_storage\_account\_id)
+
+Description: Storage Account ARM ID for cache/private endpoint scenario
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
+
+Description: Crash consistent snapshot frequency in minutes
+
+Type: `number`
+
+Default: `60`
+
+### <a name="input_custom_location_id"></a> [custom\_location\_id](#input\_custom\_location\_id)
+
+Description: Custom location ARM ID for Arc
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
@@ -119,6 +177,32 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_disks_to_include"></a> [disks\_to\_include](#input\_disks\_to\_include)
+
+Description: Disks to include for replication (power user mode)
+
+Type:
+
+```hcl
+list(object({
+    disk_id          = string
+    disk_size_gb     = number
+    disk_file_format = optional(string, "VHDX")
+    is_os_disk       = bool
+    is_dynamic       = optional(bool, true)
+  }))
+```
+
+Default: `[]`
+
+### <a name="input_display_name"></a> [display\_name](#input\_display\_name)
+
+Description: Source machine display name for filtering
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -128,6 +212,46 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_force_remove"></a> [force\_remove](#input\_force\_remove)
+
+Description: Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_hyperv_generation"></a> [hyperv\_generation](#input\_hyperv\_generation)
+
+Description: Hyper-V generation (1 or 2)
+
+Type: `string`
+
+Default: `"1"`
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: Migration instance type
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_is_dynamic_memory_enabled"></a> [is\_dynamic\_memory\_enabled](#input\_is\_dynamic\_memory\_enabled)
+
+Description: Whether RAM is dynamic
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_job_name"></a> [job\_name](#input\_job\_name)
+
+Description: Specific job name to retrieve. If not provided, all jobs will be listed.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -144,6 +268,30 @@ object({
     name = optional(string, null)
   })
 ```
+
+Default: `null`
+
+### <a name="input_machine_id"></a> [machine\_id](#input\_machine\_id)
+
+Description: Machine ARM ID of the discovered server to migrate
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_machine_index"></a> [machine\_index](#input\_machine\_index)
+
+Description: Index of the discovered server from the list (1-based)
+
+Type: `number`
+
+Default: `null`
+
+### <a name="input_machine_name"></a> [machine\_name](#input\_machine\_name)
+
+Description: Source machine internal name
+
+Type: `string`
 
 Default: `null`
 
@@ -165,69 +313,78 @@ object({
 
 Default: `{}`
 
-### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
+### <a name="input_nics_to_include"></a> [nics\_to\_include](#input\_nics\_to\_include)
 
-Description: A map of private endpoints to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of this resource.
-- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `name` - The name of the IP configuration.
-  - `private_ip_address` - The private IP address of the IP configuration.
+Description: NICs to include for replication (power user mode)
 
 Type:
 
 ```hcl
-map(object({
-    name = optional(string, null)
-    role_assignments = optional(map(object({
-      role_definition_id_or_name             = string
-      principal_id                           = string
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      condition                              = optional(string, null)
-      condition_version                      = optional(string, null)
-      delegated_managed_identity_resource_id = optional(string, null)
-    })), {})
-    lock = optional(object({
-      kind = string
-      name = optional(string, null)
-    }), null)
-    tags                                    = optional(map(string), null)
-    subnet_resource_id                      = string
-    private_dns_zone_group_name             = optional(string, "default")
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_associations = optional(map(string), {})
-    private_service_connection_name         = optional(string, null)
-    network_interface_name                  = optional(string, null)
-    location                                = optional(string, null)
-    resource_group_name                     = optional(string, null)
-    ip_configurations = optional(map(object({
-      name               = string
-      private_ip_address = string
-    })), {})
+list(object({
+    nic_id            = string
+    target_network_id = string
+    test_network_id   = optional(string)
+    selection_type    = optional(string, "SelectedByUser")
   }))
 ```
 
-Default: `{}`
+Default: `[]`
 
-### <a name="input_private_endpoints_manage_dns_zone_group"></a> [private\_endpoints\_manage\_dns\_zone\_group](#input\_private\_endpoints\_manage\_dns\_zone\_group)
+### <a name="input_operation_mode"></a> [operation\_mode](#input\_operation\_mode)
 
-Description: Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy.
+Description: The migration operation to perform: discover, initialize, replicate, jobs, or remove
 
-Type: `bool`
+Type: `string`
 
-Default: `true`
+Default: `"discover"`
+
+### <a name="input_os_disk_id"></a> [os\_disk\_id](#input\_os\_disk\_id)
+
+Description: Operating system disk ID for the source server (default user mode)
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name)
+
+Description: Replication policy name
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: Azure Migrate project name
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_recovery_point_history_minutes"></a> [recovery\_point\_history\_minutes](#input\_recovery\_point\_history\_minutes)
+
+Description: Recovery point retention in minutes
+
+Type: `number`
+
+Default: `4320`
+
+### <a name="input_replication_extension_name"></a> [replication\_extension\_name](#input\_replication\_extension\_name)
+
+Description: Replication extension name (for replicate mode)
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
+
+Description: Replication vault ARM ID (for replicate mode)
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -261,6 +418,62 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_run_as_account_id"></a> [run\_as\_account\_id](#input\_run\_as\_account\_id)
+
+Description: Run-as account ARM ID
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
+
+Description: Source appliance name for AzLocal scenario
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_source_fabric_agent_name"></a> [source\_fabric\_agent\_name](#input\_source\_fabric\_agent\_name)
+
+Description: Source fabric agent (DRA) name
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_source_fabric_id"></a> [source\_fabric\_id](#input\_source\_fabric\_id)
+
+Description: Source replication fabric ARM ID
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_source_machine_type"></a> [source\_machine\_type](#input\_source\_machine\_type)
+
+Description: Source machine type (VMware or HyperV)
+
+Type: `string`
+
+Default: `"VMware"`
+
+### <a name="input_source_vm_cpu_cores"></a> [source\_vm\_cpu\_cores](#input\_source\_vm\_cpu\_cores)
+
+Description: Number of CPU cores from source VM
+
+Type: `number`
+
+Default: `2`
+
+### <a name="input_source_vm_ram_mb"></a> [source\_vm\_ram\_mb](#input\_source\_vm\_ram\_mb)
+
+Description: Source RAM size in MB
+
+Type: `number`
+
+Default: `4096`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.
@@ -269,13 +482,237 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
+
+Description: Target appliance name for AzLocal scenario
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_fabric_agent_name"></a> [target\_fabric\_agent\_name](#input\_target\_fabric\_agent\_name)
+
+Description: Target fabric agent (DRA) name
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_fabric_id"></a> [target\_fabric\_id](#input\_target\_fabric\_id)
+
+Description: Target replication fabric ARM ID
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_hci_cluster_id"></a> [target\_hci\_cluster\_id](#input\_target\_hci\_cluster\_id)
+
+Description: Target HCI cluster ARM ID
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_object_id"></a> [target\_object\_id](#input\_target\_object\_id)
+
+Description: The protected item ARM ID for which replication needs to be disabled. Required for 'remove' operation mode. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_resource_group_id"></a> [target\_resource\_group\_id](#input\_target\_resource\_group\_id)
+
+Description: Target resource group ARM ID for migrated VM resources
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_storage_path_id"></a> [target\_storage\_path\_id](#input\_target\_storage\_path\_id)
+
+Description: Storage path ARM ID where VMs will be stored
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_test_virtual_switch_id"></a> [target\_test\_virtual\_switch\_id](#input\_target\_test\_virtual\_switch\_id)
+
+Description: Test logical network ARM ID for VMs
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
+
+Description: Logical network ARM ID for VMs (default user mode)
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_vm_cpu_cores"></a> [target\_vm\_cpu\_cores](#input\_target\_vm\_cpu\_cores)
+
+Description: Number of CPU cores for target VM
+
+Type: `number`
+
+Default: `null`
+
+### <a name="input_target_vm_name"></a> [target\_vm\_name](#input\_target\_vm\_name)
+
+Description: Name of the VM to be created on target
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_target_vm_ram_mb"></a> [target\_vm\_ram\_mb](#input\_target\_vm\_ram\_mb)
+
+Description: Target RAM size in MB
+
+Type: `number`
+
+Default: `null`
+
 ## Outputs
 
 The following outputs are exported:
 
-### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
+### <a name="output_cache_storage_account_id"></a> [cache\_storage\_account\_id](#output\_cache\_storage\_account\_id)
 
-Description:   A map of the private endpoints created.
+Description: ID of the cache storage account
+
+### <a name="output_cache_storage_account_name"></a> [cache\_storage\_account\_name](#output\_cache\_storage\_account\_name)
+
+Description: Name of the cache storage account
+
+### <a name="output_debug_data_source_length"></a> [debug\_data\_source\_length](#output\_debug\_data\_source\_length)
+
+Description: Length of discovered\_servers data source
+
+### <a name="output_debug_is_discover_mode"></a> [debug\_is\_discover\_mode](#output\_debug\_is\_discover\_mode)
+
+Description: Is discover mode active
+
+### <a name="output_debug_parsed_servers"></a> [debug\_parsed\_servers](#output\_debug\_parsed\_servers)
+
+Description: Parsed servers for debugging
+
+### <a name="output_debug_raw_discovered_servers"></a> [debug\_raw\_discovered\_servers](#output\_debug\_raw\_discovered\_servers)
+
+Description: Raw API response for debugging
+
+### <a name="output_discovered_servers"></a> [discovered\_servers](#output\_discovered\_servers)
+
+Description: List of discovered servers from Azure Migrate (filtered: index, machine\_name, ip\_addresses, operating\_system, boot\_type, os\_disk\_id)
+
+### <a name="output_discovered_servers_count"></a> [discovered\_servers\_count](#output\_discovered\_servers\_count)
+
+Description: Total number of discovered servers with discovery data
+
+### <a name="output_location_output"></a> [location\_output](#output\_location\_output)
+
+Description: Azure region where resources are deployed
+
+### <a name="output_machine_id"></a> [machine\_id](#output\_machine\_id)
+
+Description: Machine ID being replicated
+
+### <a name="output_migrate_project_id"></a> [migrate\_project\_id](#output\_migrate\_project\_id)
+
+Description: Azure Migrate project ID
+
+### <a name="output_operation_mode"></a> [operation\_mode](#output\_operation\_mode)
+
+Description: Current operation mode
+
+### <a name="output_project_name_output"></a> [project\_name\_output](#output\_project\_name\_output)
+
+Description: Azure Migrate project name
+
+### <a name="output_protected_item_details"></a> [protected\_item\_details](#output\_protected\_item\_details)
+
+Description: Details of the protected item before removal (for validation)
+
+### <a name="output_protected_item_id"></a> [protected\_item\_id](#output\_protected\_item\_id)
+
+Description: ID of the protected item (replicated VM)
+
+### <a name="output_protected_item_name"></a> [protected\_item\_name](#output\_protected\_item\_name)
+
+Description: Name of the protected item
+
+### <a name="output_removal_operation_headers"></a> [removal\_operation\_headers](#output\_removal\_operation\_headers)
+
+Description: Response headers from the removal operation (includes Azure-AsyncOperation and Location for job tracking)
+
+### <a name="output_removal_status"></a> [removal\_status](#output\_removal\_status)
+
+Description: Status of the replication removal operation
+
+### <a name="output_replication_extension_id"></a> [replication\_extension\_id](#output\_replication\_extension\_id)
+
+Description: ID of the replication extension
+
+### <a name="output_replication_extension_name"></a> [replication\_extension\_name](#output\_replication\_extension\_name)
+
+Description: Name of the replication extension
+
+### <a name="output_replication_job"></a> [replication\_job](#output\_replication\_job)
+
+Description: Detailed information for a specific replication job
+
+### <a name="output_replication_jobs"></a> [replication\_jobs](#output\_replication\_jobs)
+
+Description: Summary of all replication jobs in the vault
+
+### <a name="output_replication_jobs_count"></a> [replication\_jobs\_count](#output\_replication\_jobs\_count)
+
+Description: Total number of replication jobs in the vault
+
+### <a name="output_replication_policy_id"></a> [replication\_policy\_id](#output\_replication\_policy\_id)
+
+Description: ID of the replication policy
+
+### <a name="output_replication_state"></a> [replication\_state](#output\_replication\_state)
+
+Description: Current replication state
+
+### <a name="output_replication_vault_id"></a> [replication\_vault\_id](#output\_replication\_vault\_id)
+
+Description: ID of the replication vault
+
+### <a name="output_replication_vault_identity"></a> [replication\_vault\_identity](#output\_replication\_vault\_identity)
+
+Description: Managed identity of the replication vault
+
+### <a name="output_resource_group_name_output"></a> [resource\_group\_name\_output](#output\_resource\_group\_name\_output)
+
+Description: Name of the resource group
+
+### <a name="output_source_fabric_id"></a> [source\_fabric\_id](#output\_source\_fabric\_id)
+
+Description: Source fabric ID used for replication
+
+### <a name="output_target_fabric_id"></a> [target\_fabric\_id](#output\_target\_fabric\_id)
+
+Description: Target fabric ID used for replication
+
+### <a name="output_target_vm_name_output"></a> [target\_vm\_name\_output](#output\_target\_vm\_name\_output)
+
+Description: Name of the target VM to be created
+
+### <a name="output_total_machines_count"></a> [total\_machines\_count](#output\_total\_machines\_count)
+
+Description: Total number of machines (including those without discovery data)
+
+### <a name="output_vault_id_for_jobs"></a> [vault\_id\_for\_jobs](#output\_vault\_id\_for\_jobs)
+
+Description: Replication vault ID used for job queries
 
 ## Modules
 
