@@ -10,24 +10,21 @@
 # ========================================
 
 locals {
+  create_new_vault = local.is_initialize_mode && !local.vault_exists_in_solution
   # Determine operation mode
   is_discover_mode   = var.operation_mode == "discover"
   is_initialize_mode = var.operation_mode == "initialize"
-  is_replicate_mode  = var.operation_mode == "replicate"
   is_jobs_mode       = var.operation_mode == "jobs"
   is_remove_mode     = var.operation_mode == "remove"
-
+  is_replicate_mode  = var.operation_mode == "replicate"
   # Resource group reference
-  resource_group_name = var.resource_group_name
-
+  resource_group_name  = var.resource_group_name
+  storage_account_name = local.is_initialize_mode && var.source_appliance_name != null ? "migratersa${local.storage_account_suffix}" : ""
   # Storage account name generation (similar to Python generate_hash_for_artifact)
   # Only calculate if we're in initialize mode to avoid null value errors
   storage_account_suffix = local.is_initialize_mode && var.source_appliance_name != null ? substr(md5("${var.source_appliance_name}${var.project_name}"), 0, 14) : ""
-  storage_account_name   = local.is_initialize_mode && var.source_appliance_name != null ? "migratersa${local.storage_account_suffix}" : ""
-
   # Check if vault exists in solution
   vault_exists_in_solution = local.is_initialize_mode && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null
-  create_new_vault         = local.is_initialize_mode && !local.vault_exists_in_solution
 }
 
 # ========================================
@@ -46,27 +43,27 @@ data "azurerm_resource_group" "this" {
 data "azapi_resource" "migrate_project" {
   count = var.project_name != null ? 1 : 0
 
-  type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
   name      = var.project_name
   parent_id = data.azurerm_resource_group.this.id
+  type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
 }
 
 # Get Discovery Solution (needed for appliance mapping)
 data "azapi_resource" "discovery_solution" {
   count = local.is_initialize_mode || local.is_replicate_mode ? 1 : 0
 
-  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
   name      = "Servers-Discovery-ServerDiscovery"
   parent_id = data.azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
 }
 
 # Get Data Replication Solution
 data "azapi_resource" "replication_solution" {
   count = local.is_initialize_mode || local.is_replicate_mode ? 1 : 0
 
-  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
   name      = "Servers-Migration-ServerMigration_DataReplication"
   parent_id = data.azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
 }
 
 # ========================================
@@ -77,8 +74,8 @@ data "azapi_resource" "replication_solution" {
 data "azapi_resource_list" "discovered_servers" {
   count = local.is_discover_mode ? 1 : 0
 
-  type      = var.appliance_name != null ? (var.source_machine_type == "HyperV" ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06") : "Microsoft.Migrate/migrateprojects/machines@2020-05-01"
   parent_id = var.appliance_name != null ? "${data.azurerm_resource_group.this.id}/providers/Microsoft.OffAzure/${var.source_machine_type == "HyperV" ? "HyperVSites" : "VMwareSites"}/${var.appliance_name}" : data.azapi_resource.migrate_project[0].id
+  type      = var.appliance_name != null ? (var.source_machine_type == "HyperV" ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06") : "Microsoft.Migrate/migrateprojects/machines@2020-05-01"
 }
 
 # ========================================
@@ -89,38 +86,40 @@ data "azapi_resource_list" "discovered_servers" {
 resource "azapi_resource" "replication_vault" {
   count = local.create_new_vault ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  location  = data.azurerm_resource_group.this.location
   name      = "${replace(var.project_name, "-", "")}replicationvault"
   parent_id = data.azurerm_resource_group.this.id
-  location  = data.azurerm_resource_group.this.location
-
+  type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
   body = {
     properties = {}
   }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   identity {
     type = "SystemAssigned"
   }
-
-  tags = merge(var.tags, {
-    "Migrate Project" = var.project_name
-  })
 }
 
 # Get existing replication vault (from solution)
 data "azapi_resource" "replication_vault" {
   count = local.vault_exists_in_solution ? 1 : 0
 
-  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
   resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "")
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
 }
 
 # Query replication fabrics
 data "azapi_resource_list" "replication_fabrics" {
   count = local.is_initialize_mode ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
   parent_id = data.azurerm_resource_group.this.id
+  type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
 
   depends_on = [azapi_resource.replication_vault]
 }
@@ -129,12 +128,9 @@ data "azapi_resource_list" "replication_fabrics" {
 resource "azapi_resource" "replication_policy" {
   count = local.is_initialize_mode ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/replicationPolicies@2024-09-01"
   name      = var.policy_name != null ? var.policy_name : "${split("/", local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id)[8]}${var.instance_type}policy"
   parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
-
-  schema_validation_enabled = false
-
+  type      = "Microsoft.DataReplication/replicationVaults/replicationPolicies@2024-09-01"
   body = {
     properties = {
       customProperties = {
@@ -145,6 +141,11 @@ resource "azapi_resource" "replication_policy" {
       }
     }
   }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [azapi_resource.replication_vault, data.azapi_resource.replication_vault]
 }
@@ -153,38 +154,34 @@ resource "azapi_resource" "replication_policy" {
 resource "azurerm_storage_account" "cache" {
   count = local.is_initialize_mode && var.cache_storage_account_id == null ? 1 : 0
 
-  name                     = local.storage_account_name
-  resource_group_name      = data.azurerm_resource_group.this.name
-  location                 = data.azurerm_resource_group.this.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  account_kind             = "StorageV2"
-
+  account_replication_type         = "LRS"
+  account_tier                     = "Standard"
+  location                         = data.azurerm_resource_group.this.location
+  name                             = local.storage_account_name
+  resource_group_name              = data.azurerm_resource_group.this.name
+  account_kind                     = "StorageV2"
   allow_nested_items_to_be_public  = false
   cross_tenant_replication_enabled = true
   min_tls_version                  = "TLS1_2"
-
-  network_rules {
-    default_action = "Allow"
-  }
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
 
   blob_properties {
     versioning_enabled = false
   }
-
-  tags = merge(var.tags, {
-    "Migrate Project" = var.project_name
-  })
+  network_rules {
+    default_action = "Allow"
+  }
 }
 
 # Grant Contributor role to vault identity on storage account
 resource "azurerm_role_assignment" "vault_storage_contributor" {
   count = local.is_initialize_mode ? 1 : 0
 
-  scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
-  role_definition_name = "Contributor"
-  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
-
+  principal_id                     = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
+  scope                            = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+  role_definition_name             = "Contributor"
   skip_service_principal_aad_check = true
 }
 
@@ -192,10 +189,9 @@ resource "azurerm_role_assignment" "vault_storage_contributor" {
 resource "azurerm_role_assignment" "vault_storage_blob_contributor" {
   count = local.is_initialize_mode ? 1 : 0
 
-  scope                = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
-
+  principal_id                     = local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId
+  scope                            = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
+  role_definition_name             = "Storage Blob Data Contributor"
   skip_service_principal_aad_check = true
 }
 
@@ -203,9 +199,8 @@ resource "azurerm_role_assignment" "vault_storage_blob_contributor" {
 resource "azapi_update_resource" "update_solution_storage" {
   count = local.is_initialize_mode ? 1 : 0
 
-  type        = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
   resource_id = data.azapi_resource.replication_solution[0].id
-
+  type        = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
   body = {
     properties = {
       details = {
@@ -219,6 +214,8 @@ resource "azapi_update_resource" "update_solution_storage" {
       }
     }
   }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.replication_vault,
@@ -231,12 +228,9 @@ resource "azapi_update_resource" "update_solution_storage" {
 resource "azapi_resource" "replication_extension" {
   count = local.is_initialize_mode && var.source_fabric_id != null && var.target_fabric_id != null ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/replicationExtensions@2024-09-01"
   name      = "${basename(var.source_fabric_id)}-${basename(var.target_fabric_id)}-MigReplicationExtn"
   parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
-
-  schema_validation_enabled = false
-
+  type      = "Microsoft.DataReplication/replicationVaults/replicationExtensions@2024-09-01"
   body = {
     properties = {
       customProperties = var.instance_type == "VMwareToAzStackHCI" ? {
@@ -245,7 +239,7 @@ resource "azapi_resource" "replication_extension" {
         storageAccountSasSecretName = null
         instanceType                = var.instance_type
         vmwareFabricArmId           = var.source_fabric_id
-      } : {
+        } : {
         azStackHciFabricArmId       = var.target_fabric_id
         storageAccountId            = var.cache_storage_account_id != null ? var.cache_storage_account_id : azurerm_storage_account.cache[0].id
         storageAccountSasSecretName = null
@@ -254,6 +248,11 @@ resource "azapi_resource" "replication_extension" {
       }
     }
   }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.replication_policy,
@@ -270,20 +269,17 @@ resource "azapi_resource" "replication_extension" {
 data "azapi_resource" "discovered_machine" {
   count = 0 # Disabled: local.is_replicate_mode && var.machine_id != null ? 1 : 0
 
-  type        = contains(split("/", lower(var.machine_id)), "migrateprojects") ? "Microsoft.Migrate/migrateprojects/machines@2020-05-01" : (contains(split("/", lower(var.machine_id)), "hypervsites") ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06")
   resource_id = var.machine_id
+  type        = contains(split("/", lower(var.machine_id)), "migrateprojects") ? "Microsoft.Migrate/migrateprojects/machines@2020-05-01" : (contains(split("/", lower(var.machine_id)), "hypervsites") ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06")
 }
 
 # Create protected item (VM replication)
 resource "azapi_resource" "protected_item" {
   count = local.is_replicate_mode && (var.machine_id != null || var.machine_name != null) ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
   name      = var.machine_name != null ? var.machine_name : basename(var.machine_id)
   parent_id = var.replication_vault_id
-
-  schema_validation_enabled = false
-
+  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
   body = {
     properties = {
       policyName               = var.policy_name
@@ -303,15 +299,15 @@ resource "azapi_resource" "protected_item" {
             diskPhysicalSectorSize = 512
           }
         ]
-        targetVmName              = var.target_vm_name
-        targetResourceGroupId     = var.target_resource_group_id
-        storageContainerId        = var.target_storage_path_id
-        hyperVGeneration          = var.hyperv_generation
-        targetCpuCores            = var.target_vm_cpu_cores
-        sourceCpuCores            = var.source_vm_cpu_cores
-        isDynamicRam              = var.is_dynamic_memory_enabled
-        sourceMemoryInMegaBytes   = var.source_vm_ram_mb
-        targetMemoryInMegaBytes   = var.target_vm_ram_mb
+        targetVmName            = var.target_vm_name
+        targetResourceGroupId   = var.target_resource_group_id
+        storageContainerId      = var.target_storage_path_id
+        hyperVGeneration        = var.hyperv_generation
+        targetCpuCores          = var.target_vm_cpu_cores
+        sourceCpuCores          = var.source_vm_cpu_cores
+        isDynamicRam            = var.is_dynamic_memory_enabled
+        sourceMemoryInMegaBytes = var.source_vm_ram_mb
+        targetMemoryInMegaBytes = var.target_vm_ram_mb
         nicsToInclude = [
           for nic in var.nics_to_include : {
             nicId                    = nic.nic_id
@@ -332,6 +328,11 @@ resource "azapi_resource" "protected_item" {
       }
     }
   }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "120m"
@@ -347,25 +348,25 @@ resource "azapi_resource" "protected_item" {
 data "azapi_resource" "vault_for_jobs" {
   count = local.is_jobs_mode ? 1 : 0
 
-  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
   resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, var.replication_vault_id)
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
 }
 
 # Get a specific job by name
 data "azapi_resource" "replication_job" {
   count = local.is_jobs_mode && var.job_name != null ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
   name      = var.job_name
   parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_jobs[0].id
+  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
 }
 
 # List all jobs in the vault
 data "azapi_resource_list" "replication_jobs" {
   count = local.is_jobs_mode && var.job_name == null ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
   parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_jobs[0].id
+  type      = "Microsoft.DataReplication/replicationVaults/jobs@2024-09-01"
 }
 
 # ========================================
@@ -376,23 +377,22 @@ data "azapi_resource_list" "replication_jobs" {
 data "azapi_resource" "protected_item_to_remove" {
   count = local.is_remove_mode ? 1 : 0
 
-  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
   resource_id = var.target_object_id
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
 }
 
 # Execute the removal operation
 resource "azapi_resource_action" "remove_replication" {
   count = local.is_remove_mode ? 1 : 0
 
-  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
-  resource_id = var.target_object_id
-  action      = ""  # Empty action means DELETE
-  method      = "DELETE"
-
+  action = "" # Empty action means DELETE
+  method = "DELETE"
   # Add forceDelete query parameter as a map of lists
   query_parameters = {
     forceDelete = [tostring(var.force_remove)]
   }
+  resource_id = var.target_object_id
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
 
   # Ensure validation happens first
   depends_on = [
