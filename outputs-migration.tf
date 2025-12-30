@@ -252,3 +252,218 @@ output "vault_id_for_jobs" {
   description = "Replication vault ID used for job queries"
   value       = local.is_jobs_mode && length(data.azapi_resource.vault_for_jobs) > 0 ? data.azapi_resource.vault_for_jobs[0].id : null
 }
+
+# ========================================
+# GET PROTECTED ITEM OUTPUTS
+# ========================================
+
+output "protected_item" {
+  description = "Complete protected item details including replication status, health, and configuration"
+  value = local.is_get_mode ? (
+    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
+    data.azapi_resource.protected_item_by_id[0].output :
+    (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
+    data.azapi_resource.protected_item_by_name[0].output : null)
+  ) : null
+}
+
+output "protected_item_summary" {
+  description = "Summary of protected item with key information"
+  value = local.is_get_mode ? (
+    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ? {
+      id                              = try(data.azapi_resource.protected_item_by_id[0].output.id, "N/A")
+      name                            = try(data.azapi_resource.protected_item_by_id[0].output.name, "N/A")
+      type                            = try(data.azapi_resource.protected_item_by_id[0].output.type, "N/A")
+      protection_state                = try(data.azapi_resource.protected_item_by_id[0].output.properties.protectionState, "Unknown")
+      protection_state_description    = try(data.azapi_resource.protected_item_by_id[0].output.properties.protectionStateDescription, "N/A")
+      replication_health              = try(data.azapi_resource.protected_item_by_id[0].output.properties.replicationHealth, "Unknown")
+      policy_name                     = try(data.azapi_resource.protected_item_by_id[0].output.properties.policyName, "N/A")
+      replication_extension_name      = try(data.azapi_resource.protected_item_by_id[0].output.properties.replicationExtensionName, "N/A")
+      allowed_jobs                    = try(data.azapi_resource.protected_item_by_id[0].output.properties.allowedJobs, [])
+      resynchronization_required      = try(data.azapi_resource.protected_item_by_id[0].output.properties.resynchronizationRequired, false)
+      last_test_failover_time         = try(data.azapi_resource.protected_item_by_id[0].output.properties.lastSuccessfulTestFailoverTime, "N/A")
+      last_test_failover_status       = try(data.azapi_resource.protected_item_by_id[0].output.properties.lastTestFailoverStatus, "N/A")
+      last_planned_failover_time      = try(data.azapi_resource.protected_item_by_id[0].output.properties.lastSuccessfulPlannedFailoverTime, "N/A")
+      last_unplanned_failover_time    = try(data.azapi_resource.protected_item_by_id[0].output.properties.lastSuccessfulUnplannedFailoverTime, "N/A")
+      source_machine_name             = try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties.sourceMachineName, "N/A")
+      target_vm_name                  = try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties.targetVmName, "N/A")
+      target_resource_group_id        = try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties.targetResourceGroupId, "N/A")
+      instance_type                   = try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties.instanceType, "N/A")
+    } : (
+      var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ? {
+        id                              = try(data.azapi_resource.protected_item_by_name[0].output.id, "N/A")
+        name                            = try(data.azapi_resource.protected_item_by_name[0].output.name, "N/A")
+        type                            = try(data.azapi_resource.protected_item_by_name[0].output.type, "N/A")
+        protection_state                = try(data.azapi_resource.protected_item_by_name[0].output.properties.protectionState, "Unknown")
+        protection_state_description    = try(data.azapi_resource.protected_item_by_name[0].output.properties.protectionStateDescription, "N/A")
+        replication_health              = try(data.azapi_resource.protected_item_by_name[0].output.properties.replicationHealth, "Unknown")
+        policy_name                     = try(data.azapi_resource.protected_item_by_name[0].output.properties.policyName, "N/A")
+        replication_extension_name      = try(data.azapi_resource.protected_item_by_name[0].output.properties.replicationExtensionName, "N/A")
+        allowed_jobs                    = try(data.azapi_resource.protected_item_by_name[0].output.properties.allowedJobs, [])
+        resynchronization_required      = try(data.azapi_resource.protected_item_by_name[0].output.properties.resynchronizationRequired, false)
+        last_test_failover_time         = try(data.azapi_resource.protected_item_by_name[0].output.properties.lastSuccessfulTestFailoverTime, "N/A")
+        last_test_failover_status       = try(data.azapi_resource.protected_item_by_name[0].output.properties.lastTestFailoverStatus, "N/A")
+        last_planned_failover_time      = try(data.azapi_resource.protected_item_by_name[0].output.properties.lastSuccessfulPlannedFailoverTime, "N/A")
+        last_unplanned_failover_time    = try(data.azapi_resource.protected_item_by_name[0].output.properties.lastSuccessfulUnplannedFailoverTime, "N/A")
+        source_machine_name             = try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties.sourceMachineName, "N/A")
+        target_vm_name                  = try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties.targetVmName, "N/A")
+        target_resource_group_id        = try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties.targetResourceGroupId, "N/A")
+        instance_type                   = try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties.instanceType, "N/A")
+      } : null
+    )
+  ) : null
+}
+
+output "protected_item_health_errors" {
+  description = "List of health errors for the protected item"
+  value = local.is_get_mode ? (
+    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
+    try(data.azapi_resource.protected_item_by_id[0].output.properties.healthErrors, []) :
+    (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
+    try(data.azapi_resource.protected_item_by_name[0].output.properties.healthErrors, []) : [])
+  ) : []
+}
+
+output "protected_item_custom_properties" {
+  description = "Custom properties including fabric-specific details, disk configuration, and network settings"
+  value = local.is_get_mode ? (
+    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
+    try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties, {}) :
+    (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
+    try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties, {}) : {})
+  ) : {}
+}
+
+# ========================================
+# LIST PROTECTED ITEMS OUTPUTS
+# ========================================
+
+output "protected_items_list" {
+  description = "Complete list of all protected items (replicated VMs) in the vault"
+  value       = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? try(data.azapi_resource_list.protected_items[0].output.value, []) : []
+}
+
+output "protected_items_count" {
+  description = "Total number of protected items found"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? length(try(data.azapi_resource_list.protected_items[0].output.value, [])) : 0
+}
+
+output "protected_items_summary" {
+  description = "Summary list with key information for each protected item"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? [
+    for item in try(data.azapi_resource_list.protected_items[0].output.value, []) : {
+      name                         = try(item.name, "N/A")
+      id                           = try(item.id, "N/A")
+      protection_state             = try(item.properties.protectionState, "Unknown")
+      protection_state_description = try(item.properties.protectionStateDescription, "N/A")
+      replication_health           = try(item.properties.replicationHealth, "Unknown")
+      source_machine_name          = try(item.properties.customProperties.sourceMachineName, "N/A")
+      target_vm_name               = try(item.properties.customProperties.targetVmName, "N/A")
+      target_resource_group_id     = try(item.properties.customProperties.targetResourceGroupId, "N/A")
+      policy_name                  = try(item.properties.policyName, "N/A")
+      replication_extension_name   = try(item.properties.replicationExtensionName, "N/A")
+      instance_type                = try(item.properties.customProperties.instanceType, "N/A")
+      allowed_jobs                 = try(item.properties.allowedJobs, [])
+      health_errors_count          = try(length(item.properties.healthErrors), 0)
+      resynchronization_required   = try(item.properties.resynchronizationRequired, false)
+    }
+  ] : []
+}
+
+output "protected_items_by_state" {
+  description = "Protected items grouped by protection state"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? {
+    for state in distinct([
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.properties.protectionState, "Unknown")
+    ]) : state => [
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.name, "N/A") if try(item.properties.protectionState, "Unknown") == state
+    ]
+  } : {}
+}
+
+output "protected_items_by_health" {
+  description = "Protected items grouped by replication health"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? {
+    for health in distinct([
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.properties.replicationHealth, "Unknown")
+    ]) : health => [
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.name, "N/A") if try(item.properties.replicationHealth, "Unknown") == health
+    ]
+  } : {}
+}
+
+output "protected_items_with_errors" {
+  description = "List of protected items that have health errors"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? [
+    for item in try(data.azapi_resource_list.protected_items[0].output.value, []) : {
+      name          = try(item.name, "N/A")
+      health_errors = try(item.properties.healthErrors, [])
+    } if try(length(item.properties.healthErrors), 0) > 0
+  ] : []
+}
+
+# ========================================
+# MIGRATE (PLANNED FAILOVER) OUTPUTS
+# ========================================
+
+output "migration_status" {
+  description = "Status of the migration (planned failover) operation"
+  value = local.is_migrate_mode && (length(azapi_resource_action.planned_failover_hyperv) > 0 || length(azapi_resource_action.planned_failover_vmware) > 0) ? {
+    protected_item_id    = var.protected_item_id
+    shutdown_source_vm   = var.shutdown_source_vm
+    operation_status     = "Initiated"
+    message             = "Migration (planned failover) has been successfully initiated for '${var.protected_item_id}'"
+    vm_name             = try(data.azapi_resource.protected_item_to_migrate[0].output.name, "N/A")
+    source_machine_name = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, "N/A")
+    target_vm_name      = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetVmName, "N/A")
+  } : null
+}
+
+output "migration_operation_details" {
+  description = "Detailed response from the migration operation including async operation URL for job tracking"
+  value = local.is_migrate_mode ? try(
+    coalescelist(
+      azapi_resource_action.planned_failover_hyperv[*].output,
+      azapi_resource_action.planned_failover_vmware[*].output
+    )[0],
+    null
+  ) : null
+}
+
+output "migration_protected_item_details" {
+  description = "Details of the protected item being migrated (before migration)"
+  value = local.is_migrate_mode && length(data.azapi_resource.protected_item_to_migrate) > 0 ? {
+    name                      = try(data.azapi_resource.protected_item_to_migrate[0].output.name, "N/A")
+    protection_state          = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.protectionState, "Unknown")
+    protection_description    = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.protectionStateDescription, "N/A")
+    replication_health        = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.replicationHealth, "Unknown")
+    allowed_jobs              = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, [])
+    can_perform_migration     = try(contains(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, "PlannedFailover") || contains(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, "Restart"), false)
+    instance_type             = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.instanceType, "N/A")
+    source_machine_name       = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, "N/A")
+    target_vm_name            = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetVmName, "N/A")
+    target_resource_group_id  = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetResourceGroupId, "N/A")
+    target_hci_cluster_id     = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetHCIClusterId, "N/A")
+  } : null
+}
+
+output "migration_validation_warnings" {
+  description = "Validation warnings or issues detected before migration"
+  value = local.is_migrate_mode && length(data.azapi_resource.protected_item_to_migrate) > 0 ? [
+    for warning in concat(
+      try(data.azapi_resource.protected_item_to_migrate[0].output.properties.healthErrors, []),
+      try(data.azapi_resource.protected_item_to_migrate[0].output.properties.resynchronizationRequired, false) ? [{
+        message = "Resynchronization is required before migration"
+        severity = "Warning"
+      }] : []
+    ) : {
+      message  = try(warning.message, warning.message)
+      severity = try(warning.severity, "Warning")
+      code     = try(warning.errorCode, "N/A")
+    }
+  ] : []
+}

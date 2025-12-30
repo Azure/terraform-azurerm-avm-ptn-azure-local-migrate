@@ -1,6 +1,6 @@
 # Azure Stack HCI Migration Module - Examples
 
-This directory contains examples demonstrating the three main migration commands supported by this module.
+This directory contains examples demonstrating the eight main migration operations supported by this module.
 
 ## Available Examples
 
@@ -12,6 +12,21 @@ Set up replication infrastructure for Azure Stack HCI migration.
 
 ### 3. Replicate VMs (`replicate/`)
 Create VM replication to Azure Stack HCI.
+
+### 4. List Protected Items (`list/`)
+List all protected items (replicated VMs) in the vault.
+
+### 5. Get Protected Item (`get/`)
+Retrieve detailed information about a specific protected item (replicated VM).
+
+### 6. Monitor Jobs (`jobs/`)
+Get replication job status and history.
+
+### 7. Migrate VM (`migrate/`)
+Perform production migration (planned failover) of a VM to Azure Stack HCI.
+
+### 8. Remove Replication (`remove/`)
+Disable replication for a protected item.
 
 ## Quick Start
 
@@ -33,11 +48,22 @@ This Terraform module provides equivalent functionality to these Azure CLI Pytho
 | `operation_mode = "discover"` | `get_discovered_server()` |
 | `operation_mode = "initialize"` | `initialize_replication_infrastructure()` |
 | `operation_mode = "replicate"` | `new_local_server_replication()` |
+| `operation_mode = "list"` | `list_local_server_replications()` |
+| `operation_mode = "get"` | `get_local_server_replication()` |
+| `operation_mode = "jobs"` | `get_replication_jobs()` |
+| `operation_mode = "migrate"` | `start_local_server_migration()` |
+| `operation_mode = "remove"` | `remove_local_server_replication()` |
 
 ## Migration Workflow
 
 1. **Discover** → Find available VMs to migrate
 2. **Initialize** → Set up replication infrastructure
 3. **Replicate** → Start VM replication to Azure Stack HCI
+4. **List** → View all replicating VMs and their status
+5. **Get** → Check detailed status of a specific VM
+6. **Jobs** → Monitor ongoing operations
+7. **Migrate** → Perform production cut-over to Azure Stack HCI
+8. **Remove** → Clean up when done
 
 See individual example directories for detailed usage.
+

@@ -1,6 +1,6 @@
 # Makefile for running Terraform tests
 
-.PHONY: help test test-unit test-integration test-discover test-initialize test-replicate test-jobs test-remove test-workflow test-short test-clean deps fmt vet
+.PHONY: help test test-unit test-integration test-discover test-initialize test-replicate test-jobs test-remove test-get test-list test-migrate test-workflow test-short test-clean deps fmt vet
 
 # Default target
 help:
@@ -18,7 +18,10 @@ help:
 	@echo "  make test-initialize   - Run initialize integration tests"
 	@echo "  make test-replicate    - Run replicate integration tests"
 	@echo "  make test-jobs         - Run jobs integration tests"
+	@echo "  make test-get          - Run get integration tests"
+	@echo "  make test-list         - Run list integration tests"
 	@echo "  make test-remove       - Run remove integration tests (DELETES resources!)"
+	@echo "  make test-migrate      - Run migrate integration tests (PRODUCTION migrations!)"
 	@echo "  make test-workflow     - Run end-to-end workflow tests"
 	@echo ""
 	@echo "All Tests:"
@@ -40,7 +43,7 @@ test-unit: deps
 	@echo "Running UNIT tests (mock values, no Azure resources)"
 	@echo "Duration: 1-5 minutes | Cost: FREE"
 	@echo "=========================================="
-	go test -v -timeout 5m -run "^TestModule|^TestDiscover.*Configuration|^TestInitialize.*Configuration|^TestReplicate.*Configuration|^TestJobs.*Configuration|^TestRemove.*Configuration|^TestOperation.*Validation|^TestVariable|^TestResource|^TestDisk|^TestNetwork"
+	go test -v -timeout 5m -run "^TestModule|^TestDiscover.*Configuration|^TestInitialize.*Configuration|^TestReplicate.*Configuration|^TestJobs.*Configuration|^TestRemove.*Configuration|^TestGet.*Configuration|^TestList.*Configuration|^TestMigrate.*Configuration|^TestOperation.*Validation|^TestVariable|^TestResource|^TestDisk|^TestNetwork"
 
 # Run ALL INTEGRATION tests (slow, creates real Azure resources)
 test-integration: deps
@@ -50,7 +53,7 @@ test-integration: deps
 	@echo "Duration: 30-60 minutes | Cost: $$$"
 	@echo "=========================================="
 	@sleep 3
-	go test -v -timeout 60m -run "^TestDiscover|^TestInitialize|^TestReplicate|^TestJobs|^TestRemove|^TestIntegration"
+	go test -v -timeout 60m -run "^TestDiscover|^TestInitialize|^TestReplicate|^TestJobs|^TestGet|^TestList|^TestRemove|^TestIntegration"
 
 # Run all tests (unit + integration)
 test: test-unit test-integration
@@ -75,6 +78,16 @@ test-jobs: deps
 	@echo "Running jobs integration tests (queries Azure resources)..."
 	go test -v -timeout 20m -run "^TestJobs"
 
+# Run get integration tests
+test-get: deps
+	@echo "Running get integration tests (queries Azure resources)..."
+	go test -v -timeout 20m -run "^TestGetCommand"
+
+# Run list integration tests
+test-list: deps
+	@echo "Running list integration tests (queries Azure resources)..."
+	go test -v -timeout 20m -run "^TestListCommand"
+
 # Run remove integration tests
 test-remove: deps
 	@echo "=========================================="
@@ -84,6 +97,17 @@ test-remove: deps
 	@echo "=========================================="
 	@sleep 5
 	go test -v -timeout 20m -run "^TestRemove"
+
+# Run migrate integration tests
+test-migrate: deps
+	@echo "=========================================="
+	@echo "CRITICAL WARNING: Running MIGRATE integration tests"
+	@echo "This will perform ACTUAL PRODUCTION MIGRATIONS!"
+	@echo "This is a ONE-WAY OPERATION that cannot be reversed!"
+	@echo "Duration: up to 3 hours | Risk: PRODUCTION MIGRATION"
+	@echo "=========================================="
+	@sleep 10
+	go test -v -timeout 180m -run "^TestMigrateCommand"
 
 # Run end-to-end workflow integration tests
 test-workflow: deps

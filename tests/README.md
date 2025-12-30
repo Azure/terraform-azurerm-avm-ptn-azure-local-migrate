@@ -4,11 +4,16 @@ This directory contains comprehensive **unit tests** and **integration tests** f
 
 ## Overview
 
-The test suite is written in Go using [Terratest](https://terratest.gruntwork.io/) and covers all three main operations:
+The test suite is written in Go using [Terratest](https://terratest.gruntwork.io/) and covers all eight main operations:
 
 1. **Discover** - Testing machine discovery functionality
 2. **Initialize** - Testing replication infrastructure setup
 3. **Replicate** - Testing VM replication configuration
+4. **Jobs** - Testing job listing and monitoring
+5. **Get** - Testing single protected item retrieval
+6. **List** - Testing protected items listing
+7. **Remove** - Testing protected item removal/cleanup
+8. **Migrate** - Testing production migration (planned failover)
 
 ## Test Types
 
@@ -21,10 +26,10 @@ The test suite is written in Go using [Terratest](https://terratest.gruntwork.io
 - **Requirements**: No Azure credentials needed (for most tests)
 
 ### Integration Tests (Slow, Creates Real Resources)
-- **Files**: `discover_test.go`, `initialize_test.go`, `replicate_test.go`, `integration_test.go`
+- **Files**: `discover_test.go`, `initialize_test.go`, `replicate_test.go`, `jobs_test.go`, `remove_test.go`, `migrate_test.go`, `integration_test.go`
 - **Purpose**: Test actual Azure resource creation and operations
 - **Methods**: `terraform apply` with real Azure resources
-- **Duration**: 30-60 minutes
+- **Duration**: 30 minutes to 3 hours (migrate tests can take longest)
 - **Cost**: $$$ - Creates actual Azure resources
 - **Requirements**: Valid Azure credentials and permissions
 
@@ -36,6 +41,11 @@ tests/
 ├── discover_test.go       # Integration tests for discover operation
 ├── initialize_test.go     # Integration tests for initialize operation
 ├── replicate_test.go      # Integration tests for replicate operation
+├── jobs_test.go           # Integration tests for jobs operation
+├── get_test.go            # Integration tests for get operation
+├── list_test.go           # Integration tests for list operation
+├── remove_test.go         # Integration tests for remove operation
+├── migrate_test.go        # Integration tests for migrate operation
 ├── integration_test.go    # End-to-end workflow integration tests
 ├── test_helpers.go        # Common test utilities
 ├── go.mod                 # Go module dependencies
@@ -139,6 +149,7 @@ go test -v -timeout 5m -run TestInitializeModeConfiguration
 go test -v -timeout 5m -run TestReplicateModeConfiguration
 go test -v -timeout 5m -run TestJobsModeConfiguration
 go test -v -timeout 5m -run TestRemoveModeConfiguration
+go test -v -timeout 5m -run TestMigrateModeConfiguration
 go test -v -timeout 5m -run TestOperationModeValidation
 
 # Integration tests - Creates Azure resources
@@ -147,10 +158,15 @@ go test -v -timeout 30m -run TestInitializeCommand
 go test -v -timeout 30m -run TestReplicateCommand
 go test -v -timeout 30m -run TestJobsListAll
 go test -v -timeout 30m -run TestJobsGetSpecific
-go test -v -timeout 30m -run TestRemoveReplicationNormal
 
 # WARNING: Remove tests delete protected items!
+go test -v -timeout 30m -run TestRemoveReplicationNormal
 go test -v -timeout 30m -run TestRemoveReplicationForce
+
+# CRITICAL: Migrate tests perform ACTUAL production migrations!
+go test -v -timeout 180m -run TestMigrateCommandWithShutdown
+go test -v -timeout 180m -run TestMigrateCommandHyperV
+go test -v -timeout 180m -run TestMigrateCommandVMware
 
 # Full workflow tests
 go test -v -timeout 60m -run TestIntegrationWorkflow
@@ -307,6 +323,62 @@ export ARM_PROTECTED_ITEM_ID_FORCE="..."   # Item to force remove
 export ARM_PROTECTED_ITEM_ID_IDEMPOTENT="..." # Item for idempotency test
 export ARM_PROJECT_NAME="..."              # For job tracking tests
 ```
+
+### Migrate Tests (`migrate_test.go`)
+
+**Integration tests that perform PRODUCTION migrations (planned failover):**
+
+⚠️ **CRITICAL WARNING**: These tests perform **ACTUAL MIGRATIONS** to production. This is a **ONE-WAY OPERATION**!
+
+- ✅ `TestMigrateCommandWithShutdown` - Migration with source VM shutdown (RECOMMENDED)
+- ✅ `TestMigrateCommandWithoutShutdown` - Migration without shutdown (faster but riskier)
+- ✅ `TestMigrateCommandHyperV` - HyperV to AzStackHCI migration
+- ✅ `TestMigrateCommandVMware` - VMware to AzStackHCI migration
+- ✅ `TestMigrateCommandValidation` - Pre-migration validation checks
+- ✅ `TestMigrateCommandInvalidProtectedItem` - Error handling for invalid items
+- ✅ `TestMigrateCommandOutputs` - Verify all migration outputs
+- ✅ `TestMigrateCommandResourceID` - Protected item resource ID validation
+- ✅ `TestMigrateCommandTimeout` - Migration timeout handling (up to 3 hours)
+- ✅ `TestMigrateCommandInstanceTypeValidation` - Instance type validation
+- ✅ `TestMigrateCommandIdempotency` - Migration idempotency behavior
+- ✅ `TestMigrateCommandTags` - Tag application during migration
+- ✅ `TestMigrateCommandParallelExecution` - Multiple parallel migrations
+
+**Test Coverage:**
+- Protected item validation before migration
+- Planned failover operation initiation
+- Source VM shutdown options (true/false)
+- Both instance types (HyperVToAzStackHCI, VMwareToAzStackHCI)
+- Operation tracking and async job monitoring
+- Migration status, operation details, and validation warnings outputs
+- Resource ID format validation
+- Timeout configuration (180 minutes)
+- Error handling for invalid/non-existent items
+- Idempotency checks
+- Tag propagation
+- Parallel migration support
+
+**Required Environment Variables for Migrate Tests:**
+```bash
+export ARM_SUBSCRIPTION_ID="..."
+export ARM_RESOURCE_GROUP_NAME="..."
+export ARM_PROTECTED_ITEM_ID="..."                  # Item to migrate with shutdown
+export ARM_PROTECTED_ITEM_ID_NO_SHUTDOWN="..."      # Item to migrate without shutdown
+export ARM_PROTECTED_ITEM_ID_HYPERV="..."           # HyperV item to migrate
+export ARM_PROTECTED_ITEM_ID_VMWARE="..."           # VMware item to migrate
+export ARM_PROTECTED_ITEM_ID_1="..."                # Item for parallel test 1
+export ARM_PROTECTED_ITEM_ID_2="..."                # Item for parallel test 2
+```
+
+**Migration Operation Notes:**
+- Migration is the **final step** in the workflow: discover → initialize → replicate → migrate
+- This performs a **planned failover** (production migration) to Azure Stack HCI
+- Once initiated, the operation **cannot be reversed** - source VM will be migrated to target
+- Recommended to set `shutdown_source_vm = true` for data consistency
+- Migration can take **up to 3 hours** depending on VM size and data
+- After migration, the VM runs on Azure Stack HCI cluster
+- Source VM on VMware/HyperV is shut down (if shutdown option enabled)
+- Migration status can be tracked via async operation URL in outputs
 
 ⚠️ **IMPORTANT**: Remove tests will **permanently delete** protected items. Ensure you're using test resources that can be safely removed.
 
