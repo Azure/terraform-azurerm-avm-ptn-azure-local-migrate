@@ -17,6 +17,7 @@ locals {
   is_jobs_mode       = var.operation_mode == "jobs"
   is_remove_mode     = var.operation_mode == "remove"
   is_get_mode        = var.operation_mode == "get"
+  is_list_mode       = var.operation_mode == "list"
 
   # Resource group reference
   resource_group_name = var.resource_group_name
@@ -428,6 +429,26 @@ data "azapi_resource" "protected_item_by_name" {
   type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
   name      = var.protected_item_name
   parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_get[0].id
+}
+
+# ========================================
+# LIST PROTECTED ITEMS OPERATION
+# ========================================
+
+# Get vault from solution (for list mode)
+data "azapi_resource" "vault_for_list" {
+  count = local.is_list_mode ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, var.replication_vault_id)
+}
+
+# List all protected items in the vault
+data "azapi_resource_list" "protected_items" {
+  count = local.is_list_mode ? 1 : 0
+
+  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_list[0].id
 }
 
 # ========================================

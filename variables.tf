@@ -177,12 +177,12 @@ variable "tags" {
 # Operation Mode
 variable "operation_mode" {
   type        = string
-  description = "The migration operation to perform: discover, initialize, replicate, jobs, remove, or get"
+  description = "The migration operation to perform: discover, initialize, replicate, jobs, remove, get, or list"
   default     = "discover"
 
   validation {
-    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove", "get"], var.operation_mode)
-    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove, get."
+    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove", "get", "list"], var.operation_mode)
+    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove, get, list."
   }
 }
 

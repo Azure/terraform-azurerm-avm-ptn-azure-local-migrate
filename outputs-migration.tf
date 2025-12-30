@@ -333,3 +333,75 @@ output "protected_item_custom_properties" {
     try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties, {}) : {})
   ) : {}
 }
+
+# ========================================
+# LIST PROTECTED ITEMS OUTPUTS
+# ========================================
+
+output "protected_items_list" {
+  description = "Complete list of all protected items (replicated VMs) in the vault"
+  value       = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? try(data.azapi_resource_list.protected_items[0].output.value, []) : []
+}
+
+output "protected_items_count" {
+  description = "Total number of protected items found"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? length(try(data.azapi_resource_list.protected_items[0].output.value, [])) : 0
+}
+
+output "protected_items_summary" {
+  description = "Summary list with key information for each protected item"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? [
+    for item in try(data.azapi_resource_list.protected_items[0].output.value, []) : {
+      name                         = try(item.name, "N/A")
+      id                           = try(item.id, "N/A")
+      protection_state             = try(item.properties.protectionState, "Unknown")
+      protection_state_description = try(item.properties.protectionStateDescription, "N/A")
+      replication_health           = try(item.properties.replicationHealth, "Unknown")
+      source_machine_name          = try(item.properties.customProperties.sourceMachineName, "N/A")
+      target_vm_name               = try(item.properties.customProperties.targetVmName, "N/A")
+      target_resource_group_id     = try(item.properties.customProperties.targetResourceGroupId, "N/A")
+      policy_name                  = try(item.properties.policyName, "N/A")
+      replication_extension_name   = try(item.properties.replicationExtensionName, "N/A")
+      instance_type                = try(item.properties.customProperties.instanceType, "N/A")
+      allowed_jobs                 = try(item.properties.allowedJobs, [])
+      health_errors_count          = try(length(item.properties.healthErrors), 0)
+      resynchronization_required   = try(item.properties.resynchronizationRequired, false)
+    }
+  ] : []
+}
+
+output "protected_items_by_state" {
+  description = "Protected items grouped by protection state"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? {
+    for state in distinct([
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.properties.protectionState, "Unknown")
+    ]) : state => [
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.name, "N/A") if try(item.properties.protectionState, "Unknown") == state
+    ]
+  } : {}
+}
+
+output "protected_items_by_health" {
+  description = "Protected items grouped by replication health"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? {
+    for health in distinct([
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.properties.replicationHealth, "Unknown")
+    ]) : health => [
+      for item in try(data.azapi_resource_list.protected_items[0].output.value, []) :
+      try(item.name, "N/A") if try(item.properties.replicationHealth, "Unknown") == health
+    ]
+  } : {}
+}
+
+output "protected_items_with_errors" {
+  description = "List of protected items that have health errors"
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? [
+    for item in try(data.azapi_resource_list.protected_items[0].output.value, []) : {
+      name          = try(item.name, "N/A")
+      health_errors = try(item.properties.healthErrors, [])
+    } if try(length(item.properties.healthErrors), 0) > 0
+  ] : []
+}
