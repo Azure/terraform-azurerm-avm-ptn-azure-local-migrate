@@ -177,12 +177,12 @@ variable "tags" {
 # Operation Mode
 variable "operation_mode" {
   type        = string
-  description = "The migration operation to perform: discover, initialize, replicate, jobs, or remove"
+  description = "The migration operation to perform: discover, initialize, replicate, jobs, remove, or get"
   default     = "discover"
 
   validation {
-    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove"], var.operation_mode)
-    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove."
+    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove", "get"], var.operation_mode)
+    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove, get."
   }
 }
 
@@ -484,4 +484,25 @@ variable "force_remove" {
   type        = bool
   description = "Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state."
   default     = false
+}
+
+# COMMAND 6: GET PROTECTED ITEM Variables
+variable "protected_item_id" {
+  type        = string
+  description = "The full ARM resource ID of the protected item to retrieve. Required for 'get' operation mode when retrieving by ID. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}"
+  default     = null
+
+  validation {
+    condition = (
+      var.protected_item_id == null ||
+      can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.DataReplication/replicationVaults/[^/]+/protectedItems/[^/]+$", var.protected_item_id))
+    )
+    error_message = "protected_item_id must be a valid protected item ARM ID in the format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}"
+  }
+}
+
+variable "protected_item_name" {
+  type        = string
+  description = "The name of the protected item to retrieve. Required for 'get' operation mode when retrieving by name (requires project_name or replication_vault_id)."
+  default     = null
 }
