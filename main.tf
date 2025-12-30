@@ -18,6 +18,7 @@ locals {
   is_remove_mode     = var.operation_mode == "remove"
   is_get_mode        = var.operation_mode == "get"
   is_list_mode       = var.operation_mode == "list"
+  is_migrate_mode    = var.operation_mode == "migrate"
 
   # Resource group reference
   resource_group_name = var.resource_group_name
@@ -449,6 +450,76 @@ data "azapi_resource_list" "protected_items" {
 
   type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
   parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_list[0].id
+}
+
+# ========================================
+# MIGRATE (PLANNED FAILOVER) OPERATION
+# ========================================
+
+# Validate the protected item exists and is ready for migration
+data "azapi_resource" "protected_item_to_migrate" {
+  count = local.is_migrate_mode ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.protected_item_id
+}
+
+# Execute planned failover (migration) operation - HyperV
+resource "azapi_resource_action" "planned_failover_hyperv" {
+  count = local.is_migrate_mode && var.instance_type == "HyperVToAzStackHCI" ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.protected_item_id
+  action      = "plannedFailover"
+  method      = "POST"
+
+  body = {
+    properties = {
+      customProperties = {
+        instanceType      = "HyperVToAzStackHCI"
+        shutdownSourceVM  = var.shutdown_source_vm
+      }
+    }
+  }
+
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_migrate
+  ]
+
+  timeouts {
+    create = "180m"  # Migration can take up to 3 hours
+    update = "180m"
+  }
+}
+
+# Execute planned failover (migration) operation - VMware
+resource "azapi_resource_action" "planned_failover_vmware" {
+  count = local.is_migrate_mode && var.instance_type == "VMwareToAzStackHCI" ? 1 : 0
+
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id = var.protected_item_id
+  action      = "plannedFailover"
+  method      = "POST"
+
+  body = {
+    properties = {
+      customProperties = {
+        instanceType      = "VMwareToAzStackHCI"
+        shutdownSourceVM  = var.shutdown_source_vm
+      }
+    }
+  }
+
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_migrate
+  ]
+
+  timeouts {
+    create = "180m"  # Migration can take up to 3 hours
+    update = "180m"
+  }
 }
 
 # ========================================

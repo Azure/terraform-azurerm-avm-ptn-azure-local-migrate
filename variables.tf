@@ -177,12 +177,12 @@ variable "tags" {
 # Operation Mode
 variable "operation_mode" {
   type        = string
-  description = "The migration operation to perform: discover, initialize, replicate, jobs, remove, get, or list"
+  description = "The migration operation to perform: discover, initialize, replicate, jobs, remove, get, list, or migrate"
   default     = "discover"
 
   validation {
-    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove", "get", "list"], var.operation_mode)
-    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove, get, list."
+    condition     = contains(["discover", "initialize", "replicate", "jobs", "remove", "get", "list", "migrate"], var.operation_mode)
+    error_message = "operation_mode must be one of: discover, initialize, replicate, jobs, remove, get, list, migrate."
   }
 }
 
@@ -505,4 +505,11 @@ variable "protected_item_name" {
   type        = string
   description = "The name of the protected item to retrieve. Required for 'get' operation mode when retrieving by name (requires project_name or replication_vault_id)."
   default     = null
+}
+
+# COMMAND 8: MIGRATE (PLANNED FAILOVER) Variables
+variable "shutdown_source_vm" {
+  type        = bool
+  description = "Whether to shut down the source VM before migration. Recommended to set to true to ensure data consistency. Required for 'migrate' operation mode."
+  default     = false
 }
