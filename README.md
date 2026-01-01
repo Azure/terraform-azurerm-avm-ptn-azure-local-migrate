@@ -27,6 +27,8 @@ The following resources are used by this module:
 - [azapi_resource.replication_extension](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.planned_failover_hyperv](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_resource_action.planned_failover_vmware](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.remove_replication](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.update_solution_storage](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
@@ -40,12 +42,18 @@ The following resources are used by this module:
 - [azapi_resource.discovered_machine](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.discovery_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.migrate_project](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.protected_item_by_id](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.protected_item_by_name](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.protected_item_to_migrate](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_to_remove](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_job](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.vault_for_get](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.vault_for_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.vault_for_list](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource_list.discovered_servers](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.protected_items](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.replication_fabrics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.replication_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -332,7 +340,7 @@ Default: `[]`
 
 ### <a name="input_operation_mode"></a> [operation\_mode](#input\_operation\_mode)
 
-Description: The migration operation to perform: discover, initialize, replicate, jobs, or remove
+Description: The migration operation to perform: discover, initialize, replicate, jobs, remove, get, list, or migrate
 
 Type: `string`
 
@@ -357,6 +365,22 @@ Default: `null`
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
 Description: Azure Migrate project name
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
+
+Description: The full ARM resource ID of the protected item to retrieve. Required for 'get' operation mode when retrieving by ID. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_protected_item_name"></a> [protected\_item\_name](#input\_protected\_item\_name)
+
+Description: The name of the protected item to retrieve. Required for 'get' operation mode when retrieving by name (requires project\_name or replication\_vault\_id).
 
 Type: `string`
 
@@ -425,6 +449,14 @@ Description: Run-as account ARM ID
 Type: `string`
 
 Default: `null`
+
+### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
+
+Description: Whether to shut down the source VM before migration. Recommended to set to true to ensure data consistency. Required for 'migrate' operation mode.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
 
@@ -626,6 +658,22 @@ Description: Machine ID being replicated
 
 Description: Azure Migrate project ID
 
+### <a name="output_migration_operation_details"></a> [migration\_operation\_details](#output\_migration\_operation\_details)
+
+Description: Detailed response from the migration operation including async operation URL for job tracking
+
+### <a name="output_migration_protected_item_details"></a> [migration\_protected\_item\_details](#output\_migration\_protected\_item\_details)
+
+Description: Details of the protected item being migrated (before migration)
+
+### <a name="output_migration_status"></a> [migration\_status](#output\_migration\_status)
+
+Description: Status of the migration (planned failover) operation
+
+### <a name="output_migration_validation_warnings"></a> [migration\_validation\_warnings](#output\_migration\_validation\_warnings)
+
+Description: Validation warnings or issues detected before migration
+
 ### <a name="output_operation_mode"></a> [operation\_mode](#output\_operation\_mode)
 
 Description: Current operation mode
@@ -634,9 +682,21 @@ Description: Current operation mode
 
 Description: Azure Migrate project name
 
+### <a name="output_protected_item"></a> [protected\_item](#output\_protected\_item)
+
+Description: Complete protected item details including replication status, health, and configuration
+
+### <a name="output_protected_item_custom_properties"></a> [protected\_item\_custom\_properties](#output\_protected\_item\_custom\_properties)
+
+Description: Custom properties including fabric-specific details, disk configuration, and network settings
+
 ### <a name="output_protected_item_details"></a> [protected\_item\_details](#output\_protected\_item\_details)
 
 Description: Details of the protected item before removal (for validation)
+
+### <a name="output_protected_item_health_errors"></a> [protected\_item\_health\_errors](#output\_protected\_item\_health\_errors)
+
+Description: List of health errors for the protected item
 
 ### <a name="output_protected_item_id"></a> [protected\_item\_id](#output\_protected\_item\_id)
 
@@ -645,6 +705,34 @@ Description: ID of the protected item (replicated VM)
 ### <a name="output_protected_item_name"></a> [protected\_item\_name](#output\_protected\_item\_name)
 
 Description: Name of the protected item
+
+### <a name="output_protected_item_summary"></a> [protected\_item\_summary](#output\_protected\_item\_summary)
+
+Description: Summary of protected item with key information
+
+### <a name="output_protected_items_by_health"></a> [protected\_items\_by\_health](#output\_protected\_items\_by\_health)
+
+Description: Protected items grouped by replication health
+
+### <a name="output_protected_items_by_state"></a> [protected\_items\_by\_state](#output\_protected\_items\_by\_state)
+
+Description: Protected items grouped by protection state
+
+### <a name="output_protected_items_count"></a> [protected\_items\_count](#output\_protected\_items\_count)
+
+Description: Total number of protected items found
+
+### <a name="output_protected_items_list"></a> [protected\_items\_list](#output\_protected\_items\_list)
+
+Description: Complete list of all protected items (replicated VMs) in the vault
+
+### <a name="output_protected_items_summary"></a> [protected\_items\_summary](#output\_protected\_items\_summary)
+
+Description: Summary list with key information for each protected item
+
+### <a name="output_protected_items_with_errors"></a> [protected\_items\_with\_errors](#output\_protected\_items\_with\_errors)
+
+Description: List of protected items that have health errors
 
 ### <a name="output_removal_operation_headers"></a> [removal\_operation\_headers](#output\_removal\_operation\_headers)
 
