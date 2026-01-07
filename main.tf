@@ -10,7 +10,6 @@
 # ========================================
 
 locals {
-  create_new_vault = local.is_initialize_mode && !local.vault_exists_in_solution
   # Determine operation mode
   is_discover_mode   = var.operation_mode == "discover"
   is_get_mode        = var.operation_mode == "get"
@@ -26,8 +25,10 @@ locals {
   # Storage account name generation (similar to Python generate_hash_for_artifact)
   # Only calculate if we're in initialize mode to avoid null value errors
   storage_account_suffix = local.is_initialize_mode && var.source_appliance_name != null ? substr(md5("${var.source_appliance_name}${var.project_name}"), 0, 14) : ""
-  # Check if vault exists in solution
-  vault_exists_in_solution = local.is_initialize_mode && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null
+  # Check if vault exists in solution (handles both missing solution and missing vaultId)
+  vault_exists_in_solution = local.is_initialize_mode && length(data.azapi_resource.replication_solution) > 0 && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "") != ""
+  # Only create new vault if in initialize mode and vault doesn't exist
+  create_new_vault = local.is_initialize_mode && !local.vault_exists_in_solution
 }
 
 # ========================================
@@ -256,6 +257,13 @@ resource "azapi_resource" "replication_extension" {
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  lifecycle {
+    # Prevent unnecessary recreation when changing between projects
+    create_before_destroy = true
+    # Ignore changes to parent_id to avoid recreation issues
+    ignore_changes = []
+  }
 
   depends_on = [
     azapi_resource.replication_policy,
