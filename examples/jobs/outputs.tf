@@ -1,16 +1,19 @@
-# List all jobs
-output "all_jobs" {
-  description = "All replication jobs"
-  value       = module.list_all_jobs.replication_jobs
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+
+output "replication_jobs" {
+  description = "All replication jobs in the vault (when job_name is null)"
+  value       = module.replication_jobs.replication_jobs
 }
 
-# Specific job details
-output "job_details" {
-  description = "Details of the specific job"
-  value       = module.get_specific_job.replication_job
+output "replication_job" {
+  description = "Details of a specific replication job (when job_name is provided, otherwise null)"
+  value       = module.replication_jobs.replication_job
 }
 
-output "jobs_count" {
-  description = "Total number of jobs"
-  value       = module.list_all_jobs.replication_jobs_count
+output "replication_jobs_count" {
+  description = "Total number of replication jobs (when listing all jobs)"
+  value       = module.replication_jobs.replication_jobs_count
 }

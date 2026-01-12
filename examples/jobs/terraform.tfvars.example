@@ -1,0 +1,26 @@
+# --------------------------------------------------------------------------------------------
+# Example terraform.tfvars for the jobs example
+# Copy this file to terraform.tfvars and customize the values
+# --------------------------------------------------------------------------------------------
+
+# Azure subscription and resource details
+subscription_id     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+resource_group_name = "saif-project-120126-rg"
+project_name        = "saif-project-120126"
+location            = "australiaeast"
+
+# Migration instance type
+instance_type = "VMwareToAzStackHCI"
+
+# Optional: Specify a job name to get details of a specific job
+# If null, lists all jobs in the vault
+job_name = null
+
+# Optional: Replication vault ID (derived from project if not provided)
+replication_vault_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-16712replicationvault"
+
+# Tags
+tags = {
+  Environment = "Test"
+  Purpose     = "ReplicationJobs"
+}
