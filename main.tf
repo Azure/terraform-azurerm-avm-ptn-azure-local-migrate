@@ -450,17 +450,19 @@ data "azapi_resource" "vault_for_get" {
 data "azapi_resource" "protected_item_by_id" {
   count = local.is_get_mode && var.protected_item_id != null ? 1 : 0
 
-  resource_id = var.protected_item_id
-  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  resource_id            = var.protected_item_id
+  type                   = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  response_export_values = ["*"]
 }
 
 # Get protected item by name (requires project/vault lookup)
 data "azapi_resource" "protected_item_by_name" {
   count = local.is_get_mode && var.protected_item_id == null && var.protected_item_name != null ? 1 : 0
 
-  name      = var.protected_item_name
-  parent_id = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_get[0].id
-  type      = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  name                   = var.protected_item_name
+  parent_id              = var.replication_vault_id != null ? var.replication_vault_id : data.azapi_resource.vault_for_get[0].id
+  type                   = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+  response_export_values = ["*"]
 }
 
 # ========================================

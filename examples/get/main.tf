@@ -1,101 +1,50 @@
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Example: Get Protected Item Details
+# This example demonstrates how to retrieve details of a protected (replicating) VM
+#
+
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.5"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = "~> 2.4"
+      version = ">= 1.9, < 3.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 3.71, < 5.0"
     }
   }
 }
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
-provider "azapi" {
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+# Get protected item details
+module "get_protected_item" {
+  source = "../../"
+
+  location            = var.location
+  name                = "get-protected-item"
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "get"
+  project_name        = var.project_name
+
+  # Get by ID (preferred) or by name
+  protected_item_id    = var.protected_item_id
+  protected_item_name  = var.protected_item_name
+  replication_vault_id = var.replication_vault_id
+
+  tags = var.tags
 }
-
-# ========================================
-# Example 1: Get Protected Item by ID
-# ========================================
-
-module "get_by_id" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-by-id"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  # Get by full resource ID
-  protected_item_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinaliVMWGABBreplicationvault/protectedItems/your-vm-name"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# Example 2: Get Protected Item by Name
-# ========================================
-
-module "get_by_name" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-by-name"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  project_name   = "saifaldinali-vmw-ga-bb"
-  # Get by name (requires project name to locate vault)
-  protected_item_name = "your-vm-name"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# Example 3: Get with Explicit Vault ID
-# ========================================
-
-module "get_with_vault" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-with-vault"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  # Get by name with explicit vault ID
-  protected_item_name  = "your-vm-name"
-  replication_vault_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinaliVMWGABBreplicationvault"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# OUTPUTS
-# ========================================
 
 
 

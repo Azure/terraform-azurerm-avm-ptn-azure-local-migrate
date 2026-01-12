@@ -1,32 +1,29 @@
-output "protected_item_by_id_health" {
-  description = "Health errors for protected item retrieved by ID"
-  value       = module.get_by_id.protected_item_health_errors
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+
+output "protected_item_id" {
+  description = "The ID of the protected item"
+  value       = module.get_protected_item.protected_item_id
 }
 
-# Example 1 outputs
-output "protected_item_by_id_summary" {
-  description = "Summary of protected item retrieved by ID"
-  value       = module.get_by_id.protected_item_summary
+output "protected_item_summary" {
+  description = "Summary of the protected item"
+  value       = module.get_protected_item.protected_item_summary
 }
 
-output "protected_item_by_name_full" {
-  description = "Full details of protected item retrieved by name"
-  value       = module.get_by_name.protected_item
+output "protected_item_health_errors" {
+  description = "Health errors for the protected item"
+  value       = module.get_protected_item.protected_item_health_errors
 }
 
-# Example 2 outputs
-output "protected_item_by_name_summary" {
-  description = "Summary of protected item retrieved by name"
-  value       = module.get_by_name.protected_item_summary
+output "protected_item_custom_properties" {
+  description = "Custom properties of the protected item"
+  value       = module.get_protected_item.protected_item_custom_properties
 }
 
-output "protected_item_with_vault_allowed_operations" {
-  description = "Allowed operations on protected item"
-  value       = try(module.get_with_vault.protected_item_summary.allowed_jobs, [])
-}
-
-# Example 3 outputs
-output "protected_item_with_vault_custom_properties" {
-  description = "Custom properties of protected item"
-  value       = module.get_with_vault.protected_item_custom_properties
+output "replication_state" {
+  description = "The replication state of the protected item"
+  value       = module.get_protected_item.replication_state
 }

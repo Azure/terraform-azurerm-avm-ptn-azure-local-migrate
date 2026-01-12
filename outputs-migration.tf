@@ -192,10 +192,10 @@ output "protected_item_custom_properties" {
   description = "Custom properties including fabric-specific details, disk configuration, and network settings"
   value = local.is_get_mode ? (
     var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
-    try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties, {}) :
+    try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties, null) :
     (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
-    try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties, {}) : {})
-  ) : {}
+    try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties, null) : null)
+  ) : null
 }
 
 output "protected_item_details" {
