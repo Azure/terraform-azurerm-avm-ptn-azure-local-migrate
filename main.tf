@@ -72,7 +72,7 @@ data "azapi_resource" "replication_solution" {
 }
 
 # ========================================
-# COMMAND 1: DISCOVER SERVERS
+# DISCOVER SERVERS
 # ========================================
 
 # Query discovered servers from VMware or HyperV sites
@@ -84,7 +84,7 @@ data "azapi_resource_list" "discovered_servers" {
 }
 
 # ========================================
-# COMMAND 2: INITIALIZE REPLICATION INFRASTRUCTURE
+#  INITIALIZE REPLICATION INFRASTRUCTURE
 # ========================================
 
 # Create replication vault if it doesn't exist
@@ -279,7 +279,7 @@ resource "azapi_resource" "replication_extension" {
 }
 
 # ========================================
-# COMMAND 3: CREATE SERVER REPLICATION
+# CREATE SERVER REPLICATION
 # ========================================
 
 # Get discovered machine details (if machine_id provided)
@@ -376,7 +376,7 @@ resource "azapi_resource" "protected_item" {
 }
 
 # ========================================
-# COMMAND 4: GET REPLICATION JOBS
+#  GET REPLICATION JOBS
 # ========================================
 
 # Get vault from solution (for jobs mode)
@@ -516,7 +516,7 @@ resource "azapi_resource_action" "planned_failover_hyperv" {
   }
 
   timeouts {
-    create = "180m" # Migration can take up to 3 hours
+    create = "180m"
     update = "180m"
   }
 
@@ -544,7 +544,7 @@ resource "azapi_resource_action" "planned_failover_vmware" {
   }
 
   timeouts {
-    create = "180m" # Migration can take up to 3 hours
+    create = "180m"
     update = "180m"
   }
 
