@@ -15,31 +15,24 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
 provider "azapi" {
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
 # Test Discovery
 module "discover_vms" {
   source = "../.."
 
-  location = "eastus" # Change to your region
-  # Required variables
+  location            = var.location
   name                = "migrate-discover"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI" # or "HyperVToAzStackHCI"
-  # Operation mode
-  operation_mode = "discover"
-  # Discovery Configuration
-  project_name = "saifaldinali-vmw-ga-bb"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "Discovery"
-  }
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "discover"
+  project_name        = var.project_name
+  tags                = var.tags
 }
 
 

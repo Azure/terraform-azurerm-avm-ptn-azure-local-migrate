@@ -4,6 +4,60 @@
 
 This example demonstrates how to initialize replication infrastructure using the `initialize` operation mode.
 
+## Prerequisites
+
+Before running this example, you need:
+
+1. An Azure Migrate project with discovery already completed
+2. Source and target replication fabrics created in Azure Migrate
+3. The fabric resource IDs (can be obtained from Azure Portal or CLI)
+
+## Getting Fabric IDs
+
+To find your fabric IDs:
+
+**Using Azure Portal:**
+1. Navigate to your Azure Migrate project
+2. Go to "Servers" > "Azure Migrate: Server Migration"
+3. Select "Replication" and view the fabric details
+
+**Using Azure CLI:**
+```bash
+az rest --method get \
+  --url "https://management.azure.com/subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationFabrics?api-version=2024-09-01"
+```
+
+## Configuration
+
+1. Copy the example tfvars file:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+
+2. Edit `terraform.tfvars` and update these required values:
+   - `subscription_id` - Your Azure subscription ID
+   - `resource_group_name` - Resource group containing your Migrate project
+   - `project_name` - Your Azure Migrate project name
+   - `source_fabric_id` - Full resource ID of the source fabric
+   - `target_fabric_id` - Full resource ID of the target fabric
+
+3. (Optional) Customize additional settings:
+   - `location` - Azure region (default: eastus)
+   - `app_consistent_frequency_minutes` - Snapshot frequency (default: 240)
+   - `crash_consistent_frequency_minutes` - Crash snapshot frequency (default: 60)
+   - `recovery_point_history_minutes` - Retention period (default: 4320)
+   - `tags` - Custom resource tags
+
+## Usage
+
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+## Example Configuration
+
 ```hcl
 # --------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
@@ -32,38 +86,34 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
 module "initialize_replication" {
   source = "../../"
 
-  location = "eastus"
+  location = var.location
   name     = "hci-migration-init"
   # Resource configuration
-  resource_group_name                = "saifaldinali-vmw-ga-bb-rg"
-  app_consistent_frequency_minutes   = 240 # 4 hours
-  crash_consistent_frequency_minutes = 60  # 1 hour
+  resource_group_name                = var.resource_group_name
+  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
+  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
   # Instance type (VMware to HCI or HyperV to HCI)
-  instance_type = "VMwareToAzStackHCI"
+  instance_type = var.instance_type
   # Operation mode
   operation_mode = "initialize"
   # Migration project
-  project_name = "saifaldinali-vmw-ga-bb"
+  project_name = var.project_name
   # Replication policy settings
-  recovery_point_history_minutes = 4320 # 72 hours
+  recovery_point_history_minutes = var.recovery_point_history_minutes
   # Appliance names
-  source_appliance_name = "src"
+  source_appliance_name = var.source_appliance_name
   # Fabric IDs (obtained from Azure Migrate)
-  source_fabric_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/src23b3replicationfabric"
-  tags = {
-    Environment = "Production"
-    Purpose     = "HCI Migration Infrastructure"
-    Owner       = "IT Team"
-  }
-  target_appliance_name = "tgt2"
-  target_fabric_id      = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/tgt28eb7replicationfabric"
+  source_fabric_id      = var.source_fabric_id
+  tags                  = var.tags
+  target_appliance_name = var.target_appliance_name
+  target_fabric_id      = var.target_fabric_id
 }
 
 

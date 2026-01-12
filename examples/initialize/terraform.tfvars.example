@@ -1,0 +1,47 @@
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and update with your actual values
+#
+
+# Azure Subscription ID
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# Resource Group containing your Azure Migrate project
+resource_group_name = "my-resource-group"
+
+# Azure Migrate Project name
+project_name = "my-migrate-project"
+
+# Source Fabric ID (obtained from Azure Migrate portal or CLI)
+# Navigate to: Azure Migrate Project > Servers > Replication Fabrics
+source_fabric_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationFabrics/srcXXXXreplicationfabric"
+
+# Target Fabric ID (obtained from Azure Migrate portal or CLI)
+target_fabric_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationFabrics/tgtXXXXreplicationfabric"
+
+# Optional: Azure region for deployment
+# location = "eastus"
+
+# Optional: Appliance name prefixes
+# source_appliance_name = "src"
+# target_appliance_name = "tgt"
+
+# Optional: Replication policy settings
+# app_consistent_frequency_minutes   = 240  # 4 hours
+# crash_consistent_frequency_minutes = 60   # 1 hour
+# recovery_point_history_minutes     = 4320 # 72 hours
+
+# Optional: Instance type
+# instance_type = "VMwareToAzStackHCI"  # or "HyperVToAzStackHCI"
+
+# Optional: Custom tags
+# tags = {
+#   Environment = "Production"
+#   Purpose     = "HCI Migration Infrastructure"
+#   Owner       = "IT Team"
+#   Project     = "my-project"
+# }

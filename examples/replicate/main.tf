@@ -24,59 +24,42 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
 # Create replication for a specific VM
 module "replicate_vm" {
   source = "../../"
 
-  location = "eastus"
-  name     = "vm-replication"
-  # Resource configuration
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  # Custom location and HCI cluster
-  custom_location_id        = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/EDGECI-REGISTRATION-rr1n26r1508-PWxduHTU/providers/Microsoft.ExtendedLocation/customLocations/hci-custom-location"
-  hyperv_generation         = "2"
-  instance_type             = "VMwareToAzStackHCI"
-  is_dynamic_memory_enabled = false
-  # Machine to replicate - GPOTest-PC2 (using GUID as machine name)
-  machine_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.Migrate/migrateprojects/saifaldinali-vmw-ga-bb/machines/502337ea-92b2-0431-f9bf-a191c0f58a34"
-  # Operation mode
-  operation_mode = "replicate"
-  # OS Disk (from GPOTest-PC2 machine)
-  os_disk_id  = "6000C29f-7e33-32c7-73bc-5d4136822573"
-  policy_name = "saifaldinalivmwgabbreplicationvaultVMwareToAzStackHCIpolicy"
-  # Azure Migrate Project
-  project_name               = "saifaldinali-vmw-ga-bb"
-  replication_extension_name = "src23b3replicationfabric-tgt28eb7replicationfabric-MigReplicationExtn"
-  # Replication configuration
-  replication_vault_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinalivmwgabbreplicationvault"
-  run_as_account_id    = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.OffAzure/VMwareSites/vmware-site/runAsAccounts/vcenter-account"
-  # Appliance names
-  source_appliance_name = "src"
-  # Fabric and DRA configuration
-  source_fabric_agent_name = "vmware-source-dra"
-  # Source VM metadata
-  source_vm_cpu_cores = 2
-  source_vm_ram_mb    = 4096
-  tags = {
-    Environment = "Production"
-    Purpose     = "VM Migration"
-    Project     = "saifaldinali-vmw-ga-bb"
-  }
-  target_appliance_name    = "tgt2"
-  target_fabric_agent_name = "hci-target-dra"
-  target_hci_cluster_id    = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/EDGECI-REGISTRATION-rr1n26r1508-PWxduHTU/providers/Microsoft.AzureStackHCI/clusters/hci-cluster-01"
-  target_resource_group_id = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/saifaldinali-vmx-ga-bb-rg"
-  target_storage_path_id   = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/EDGECI-REGISTRATION-rr1n26r1508-PWxduHTU/providers/Microsoft.AzureStackHCI/storageContainers/UserStorage1-21ad348ce97c47d286143fa0a53dcd86"
-  # Virtual Switch (Network)
-  target_virtual_switch_id = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/EDGECI-REGISTRATION-rr1n26r1508-PWxduHTU/providers/Microsoft.AzureStackHCI/logicalnetworks/n26r1508-lnet"
-  # VM sizing
-  target_vm_cpu_cores = 4
-  # Target configuration
-  target_vm_name   = "MigratedVmAzCLI"
-  target_vm_ram_mb = 8192
+  location                  = var.location
+  name                      = "vm-replication"
+  resource_group_name       = var.resource_group_name
+  custom_location_id        = var.custom_location_id
+  hyperv_generation         = var.hyperv_generation
+  instance_type             = var.instance_type
+  is_dynamic_memory_enabled = var.is_dynamic_memory_enabled
+  machine_id                = var.machine_id
+  operation_mode            = "replicate"
+  os_disk_id                = var.os_disk_id
+  policy_name               = var.policy_name
+  project_name              = var.project_name
+  replication_extension_name = var.replication_extension_name
+  replication_vault_id      = var.replication_vault_id
+  run_as_account_id         = var.run_as_account_id
+  source_appliance_name     = var.source_appliance_name
+  source_fabric_agent_name  = var.source_fabric_agent_name
+  source_vm_cpu_cores       = var.source_vm_cpu_cores
+  source_vm_ram_mb          = var.source_vm_ram_mb
+  tags                      = var.tags
+  target_appliance_name     = var.target_appliance_name
+  target_fabric_agent_name  = var.target_fabric_agent_name
+  target_hci_cluster_id     = var.target_hci_cluster_id
+  target_resource_group_id  = var.target_resource_group_id
+  target_storage_path_id    = var.target_storage_path_id
+  target_virtual_switch_id  = var.target_virtual_switch_id
+  target_vm_cpu_cores       = var.target_vm_cpu_cores
+  target_vm_name            = var.target_vm_name
+  target_vm_ram_mb          = var.target_vm_ram_mb
 }
 
 

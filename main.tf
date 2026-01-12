@@ -258,11 +258,17 @@ resource "azapi_resource" "replication_extension" {
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
+  timeouts {
+    create = "30m" # Replication extension setup can take 15-20 minutes
+    delete = "30m"
+    read   = "5m"
+  }
+
   lifecycle {
     # Prevent unnecessary recreation when changing between projects
     create_before_destroy = true
-    # Ignore changes to parent_id to avoid recreation issues
-    ignore_changes = []
+    # Ignore changes to body as updates often fail on this resource once created
+    ignore_changes = [body]
   }
 
   depends_on = [
@@ -300,7 +306,7 @@ resource "azapi_resource" "protected_item" {
         targetArcClusterCustomLocationId = var.custom_location_id
         customLocationRegion             = var.location
         fabricDiscoveryMachineId         = var.machine_id != null ? var.machine_id : "${data.azapi_resource.migrate_project[0].id}/machines/${var.machine_name}"
-        disksToInclude = [
+        disksToInclude = length(var.disks_to_include) > 0 ? [
           for disk in var.disks_to_include : {
             diskId                 = disk.disk_id
             diskSizeGB             = disk.disk_size_gb
@@ -309,7 +315,14 @@ resource "azapi_resource" "protected_item" {
             isDynamic              = disk.is_dynamic
             diskPhysicalSectorSize = 512
           }
-        ]
+        ] : var.os_disk_id != null ? [{
+          diskId                 = var.os_disk_id
+          diskSizeGB             = 60
+          diskFileFormat         = "VHDX"
+          isOsDisk               = true
+          isDynamic              = true
+          diskPhysicalSectorSize = 512
+        }] : []
         targetVmName            = var.target_vm_name
         targetResourceGroupId   = var.target_resource_group_id
         storageContainerId      = var.target_storage_path_id
@@ -317,14 +330,14 @@ resource "azapi_resource" "protected_item" {
         targetCpuCores          = var.target_vm_cpu_cores
         sourceCpuCores          = var.source_vm_cpu_cores
         isDynamicRam            = var.is_dynamic_memory_enabled
-        sourceMemoryInMegaBytes = var.source_vm_ram_mb
-        targetMemoryInMegaBytes = var.target_vm_ram_mb
+        sourceMemoryInMegaBytes = tonumber(var.source_vm_ram_mb)
+        targetMemoryInMegaBytes = tonumber(var.target_vm_ram_mb)
         nicsToInclude = [
           for nic in var.nics_to_include : {
             nicId                    = nic.nic_id
             selectionTypeForFailover = nic.selection_type
             targetNetworkId          = nic.target_network_id
-            testNetworkId            = nic.test_network_id
+            testNetworkId            = nic.test_network_id != null ? nic.test_network_id : ""
           }
         ]
         dynamicMemoryConfig = {
@@ -342,12 +355,22 @@ resource "azapi_resource" "protected_item" {
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_missing_property   = true
   schema_validation_enabled = false
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values    = ["*"]
+  locks                     = []
 
   timeouts {
-    create = "120m"
-    update = "120m"
+    create = "5m"
+    update = "5m"
+    read   = "10m"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      body
+    ]
   }
 }
 

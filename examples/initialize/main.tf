@@ -25,38 +25,34 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
 module "initialize_replication" {
   source = "../../"
 
-  location = "eastus"
+  location = var.location
   name     = "hci-migration-init"
   # Resource configuration
-  resource_group_name                = "saifaldinali-vmw-ga-bb-rg"
-  app_consistent_frequency_minutes   = 240 # 4 hours
-  crash_consistent_frequency_minutes = 60  # 1 hour
+  resource_group_name                = var.resource_group_name
+  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
+  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
   # Instance type (VMware to HCI or HyperV to HCI)
-  instance_type = "VMwareToAzStackHCI"
+  instance_type = var.instance_type
   # Operation mode
   operation_mode = "initialize"
   # Migration project
-  project_name = "saifaldinali-vmw-ga-bb"
+  project_name = var.project_name
   # Replication policy settings
-  recovery_point_history_minutes = 4320 # 72 hours
+  recovery_point_history_minutes = var.recovery_point_history_minutes
   # Appliance names
-  source_appliance_name = "src"
+  source_appliance_name = var.source_appliance_name
   # Fabric IDs (obtained from Azure Migrate)
-  source_fabric_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/src23b3replicationfabric"
-  tags = {
-    Environment = "Production"
-    Purpose     = "HCI Migration Infrastructure"
-    Owner       = "IT Team"
-  }
-  target_appliance_name = "tgt2"
-  target_fabric_id      = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationFabrics/tgt28eb7replicationfabric"
+  source_fabric_id      = var.source_fabric_id
+  tags                  = var.tags
+  target_appliance_name = var.target_appliance_name
+  target_fabric_id      = var.target_fabric_id
 }
 
 

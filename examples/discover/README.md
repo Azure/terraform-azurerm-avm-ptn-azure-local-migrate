@@ -4,6 +4,48 @@
 
 This example demonstrates how to discover machines in an Azure Migrate project using the `discover` operation mode.
 
+## Prerequisites
+
+Before running this example, you need:
+
+1. An Azure Migrate project with appliances configured
+2. Discovery appliances deployed and running
+3. Access to the resource group containing the Migrate project
+
+## Configuration
+
+1. Copy the example tfvars file:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+
+2. Edit `terraform.tfvars` and update these required values:
+   - `subscription_id` - Your Azure subscription ID
+   - `resource_group_name` - Resource group containing your Migrate project
+   - `project_name` - Your Azure Migrate project name
+
+3. (Optional) Customize additional settings:
+   - `location` - Azure region (default: eastus)
+   - `instance_type` - VMwareToAzStackHCI or HyperVToAzStackHCI (default: VMwareToAzStackHCI)
+   - `tags` - Custom resource tags
+
+## Usage
+
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+## What This Does
+
+The discover operation:
+- Queries the Azure Migrate project for discovered machines
+- Retrieves detailed information about each discovered VM
+- Returns the list of machines with their properties and assessment data
+
+## Example Configuration
+
 ```hcl
 terraform {
   required_version = ">= 1.9"
@@ -22,31 +64,24 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "00000000-0000-0000-0000-000000000000"
+  subscription_id = var.subscription_id
 }
 
 provider "azapi" {
-  subscription_id = "00000000-0000-0000-0000-000000000000"
+  subscription_id = var.subscription_id
 }
 
 # Test Discovery
 module "discover_vms" {
   source = "../.."
 
-  location = "eastus" # Change to your region
-  # Required variables
+  location            = var.location
   name                = "migrate-discover"
-  resource_group_name = "my-resource-group"
-  instance_type       = "VMwareToAzStackHCI" # or "HyperVToAzStackHCI"
-  # Operation mode
-  operation_mode = "discover"
-  # Discovery Configuration
-  project_name = "my-migrate-project"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "Discovery"
-  }
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "discover"
+  project_name        = var.project_name
+  tags                = var.tags
 }
 
 

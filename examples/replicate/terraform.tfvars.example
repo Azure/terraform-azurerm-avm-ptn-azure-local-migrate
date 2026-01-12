@@ -1,0 +1,72 @@
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and update with your actual values
+#
+
+# Azure Subscription ID
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+# Resource Group containing your Azure Migrate project
+resource_group_name = "my-resource-group"
+
+# Azure Migrate Project name
+project_name = "my-migrate-project"
+
+# Machine to replicate (full resource ID from discover operation)
+machine_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.Migrate/migrateprojects/my-migrate-project/machines/machine-guid"
+
+# OS Disk ID of the source VM
+os_disk_id = "6000C29x-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Replication infrastructure (from initialize operation)
+replication_vault_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationVaults/my-vault"
+replication_extension_name = "srcXXXXreplicationfabric-tgtXXXXreplicationfabric-MigReplicationExtn"
+policy_name                = "my-replication-policy"
+
+# vCenter/Hyper-V authentication
+run_as_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.OffAzure/VMwareSites/my-site/runAsAccounts/my-account"
+
+# Azure Stack HCI target configuration
+custom_location_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.ExtendedLocation/customLocations/my-custom-location"
+target_hci_cluster_id    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/clusters/my-hci-cluster"
+target_resource_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-target-rg"
+target_storage_path_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/storageContainers/my-storage"
+target_virtual_switch_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/logicalnetworks/my-network"
+
+# Target VM configuration
+target_vm_name = "MigratedVM"
+
+# Optional: Source VM specifications
+# source_vm_cpu_cores = 2
+# source_vm_ram_mb    = 4096
+
+# Optional: Target VM specifications (can be different from source)
+# target_vm_cpu_cores = 4
+# target_vm_ram_mb    = 8192
+
+# Optional: Hyper-V settings
+# hyperv_generation         = "2"
+# is_dynamic_memory_enabled = false
+
+# Optional: Appliance and DRA names
+# source_appliance_name    = "src"
+# target_appliance_name    = "tgt"
+# source_fabric_agent_name = "vmware-source-dra"
+# target_fabric_agent_name = "hci-target-dra"
+
+# Optional: Azure region
+# location = "eastus"
+
+# Optional: Instance type
+# instance_type = "VMwareToAzStackHCI"  # or "HyperVToAzStackHCI"
+
+# Optional: Custom tags
+# tags = {
+#   Environment = "Production"
+#   Purpose     = "VM Migration"
+#   Project     = "my-project"
+# }
