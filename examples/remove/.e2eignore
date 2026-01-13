@@ -1,4 +1,0 @@
-# This example requires an existing protected item to remove
-# and is DESTRUCTIVE (deletes replication).
-# It is not suitable for automated end-to-end testing.
-# It should be tested manually with disposable test resources only.
