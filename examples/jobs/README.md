@@ -5,63 +5,48 @@
 This example demonstrates how to retrieve replication job information using the `jobs` operation mode.
 
 ```hcl
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
 # Example: Get Replication Jobs
 # This example demonstrates how to retrieve replication job status
+#
 
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.5"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 2.7.0"
+      version = ">= 1.9, < 3.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.49.0"
+      version = ">= 3.71, < 5.0"
     }
   }
 }
 
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
 }
 
-provider "azapi" {}
-
-# Example 1: List all jobs in a vault
-module "list_all_jobs" {
+# Get replication jobs
+module "replication_jobs" {
   source = "../../"
 
-  location = "eastus"
-  # Required
-  name                = "migration-jobs-list"
-  resource_group_name = "your-resource-group"
-  # Operation mode
-  operation_mode = "jobs"
-  # Project details (to find vault from solution)
-  project_name = "your-migrate-project"
+  name                = "replication-jobs"
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "jobs"
+  project_name        = var.project_name
+  # Use explicit vault ID
+  replication_vault_id = var.replication_vault_id
+  tags                 = var.tags
 }
-
-# Example 2: Get a specific job by name
-module "get_specific_job" {
-  source = "../../"
-
-  location = "eastus"
-  # Required
-  name                = "migration-job-detail"
-  resource_group_name = "your-resource-group"
-  # Job to retrieve
-  job_name = "your-job-name"
-  # Operation mode
-  operation_mode = "jobs"
-  # Vault ID (required when getting specific job)
-  replication_vault_id = "/subscriptions/xxx/resourceGroups/xxx/providers/Microsoft.DataReplication/replicationVaults/xxx"
-}
-
-# Outputs
-
-
 
 ```
 
@@ -70,11 +55,11 @@ module "get_specific_job" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 2.7.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.49.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71, < 5.0)
 
 ## Resources
 
@@ -87,35 +72,84 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126"`
+
+### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
+
+Description: The full resource ID of the replication vault (optional, derived from project if not provided)
+
+Type: `string`
+
+Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-16712replicationvault"`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126-rg"`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Test",
+  "Purpose": "ReplicationJobs"
+}
+```
 
 ## Outputs
 
 The following outputs are exported:
 
-### <a name="output_all_jobs"></a> [all\_jobs](#output\_all\_jobs)
+### <a name="output_replication_job"></a> [replication\_job](#output\_replication\_job)
 
-Description: All replication jobs
+Description: Details of a specific replication job (when job\_name is provided, otherwise null)
 
-### <a name="output_job_details"></a> [job\_details](#output\_job\_details)
+### <a name="output_replication_jobs"></a> [replication\_jobs](#output\_replication\_jobs)
 
-Description: Details of the specific job
+Description: All replication jobs in the vault (when job\_name is null)
 
-### <a name="output_jobs_count"></a> [jobs\_count](#output\_jobs\_count)
+### <a name="output_replication_jobs_count"></a> [replication\_jobs\_count](#output\_replication\_jobs\_count)
 
-Description: Total number of jobs
+Description: Total number of replication jobs (when listing all jobs)
 
 ## Modules
 
 The following Modules are called:
 
-### <a name="module_get_specific_job"></a> [get\_specific\_job](#module\_get\_specific\_job)
-
-Source: ../../
-
-Version:
-
-### <a name="module_list_all_jobs"></a> [list\_all\_jobs](#module\_list\_all\_jobs)
+### <a name="module_replication_jobs"></a> [replication\_jobs](#module\_replication\_jobs)
 
 Source: ../../
 

@@ -35,10 +35,8 @@ module "list_protected_items" {
   resource_group_name = var.resource_group_name
   instance_type       = var.instance_type
   operation_mode      = "list"
-
   # List by project name (vault auto-discovered)
   project_name = var.project_name
-
-  tags = var.tags
+  tags         = var.tags
 }
 

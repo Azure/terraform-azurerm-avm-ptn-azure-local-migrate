@@ -4,48 +4,6 @@
 
 This example demonstrates how to discover machines in an Azure Migrate project using the `discover` operation mode.
 
-## Prerequisites
-
-Before running this example, you need:
-
-1. An Azure Migrate project with appliances configured
-2. Discovery appliances deployed and running
-3. Access to the resource group containing the Migrate project
-
-## Configuration
-
-1. Copy the example tfvars file:
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
-2. Edit `terraform.tfvars` and update these required values:
-   - `subscription_id` - Your Azure subscription ID
-   - `resource_group_name` - Resource group containing your Migrate project
-   - `project_name` - Your Azure Migrate project name
-
-3. (Optional) Customize additional settings:
-   - `location` - Azure region (default: eastus)
-   - `instance_type` - VMwareToAzStackHCI or HyperVToAzStackHCI (default: VMwareToAzStackHCI)
-   - `tags` - Custom resource tags
-
-## Usage
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
-## What This Does
-
-The discover operation:
-- Queries the Azure Migrate project for discovered machines
-- Retrieves detailed information about each discovered VM
-- Returns the list of machines with their properties and assessment data
-
-## Example Configuration
-
 ```hcl
 terraform {
   required_version = ">= 1.9"
@@ -75,7 +33,6 @@ provider "azapi" {
 module "discover_vms" {
   source = "../.."
 
-  location            = var.location
   name                = "migrate-discover"
   resource_group_name = var.resource_group_name
   instance_type       = var.instance_type
@@ -109,7 +66,62 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Optional: The Azure region. If not specified, uses the resource group's location.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-010626"`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-010626-rg"`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to all resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Test",
+  "Purpose": "Discovery"
+}
+```
 
 ## Outputs
 

@@ -455,11 +455,6 @@ output "resource_group_name_output" {
   value       = data.azurerm_resource_group.this.name
 }
 
-output "source_fabric_id" {
-  description = "Source fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
-  value       = local.is_initialize_mode ? local.resolved_source_fabric_id : var.source_fabric_id
-}
-
 output "source_fabric_discovered" {
   description = "Details of the auto-discovered source fabric (when using appliance name)"
   value = local.is_initialize_mode && local.discovered_source_fabric != null ? {
@@ -470,9 +465,9 @@ output "source_fabric_discovered" {
   } : null
 }
 
-output "target_fabric_id" {
-  description = "Target fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
-  value       = local.is_initialize_mode ? local.resolved_target_fabric_id : var.target_fabric_id
+output "source_fabric_id" {
+  description = "Source fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
+  value       = local.is_initialize_mode ? local.resolved_source_fabric_id : var.source_fabric_id
 }
 
 output "target_fabric_discovered" {
@@ -483,6 +478,11 @@ output "target_fabric_discovered" {
     instance_type = try(local.discovered_target_fabric.properties.customProperties.instanceType, "N/A")
     state         = try(local.discovered_target_fabric.properties.provisioningState, "N/A")
   } : null
+}
+
+output "target_fabric_id" {
+  description = "Target fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
+  value       = local.is_initialize_mode ? local.resolved_target_fabric_id : var.target_fabric_id
 }
 
 output "target_vm_name_output" {

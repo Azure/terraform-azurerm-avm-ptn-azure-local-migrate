@@ -49,11 +49,11 @@ module "initialize_replication" {
   recovery_point_history_minutes = var.recovery_point_history_minutes
   # Appliance names - fabrics are auto-discovered from these
   source_appliance_name = var.source_appliance_name
-  target_appliance_name = var.target_appliance_name
   # Optional: explicit fabric IDs (override auto-discovery if needed)
-  source_fabric_id = var.source_fabric_id
-  target_fabric_id = var.target_fabric_id
-  tags             = var.tags
+  source_fabric_id      = var.source_fabric_id
+  tags                  = var.tags
+  target_appliance_name = var.target_appliance_name
+  target_fabric_id      = var.target_fabric_id
 }
 
 

@@ -31,13 +31,13 @@ provider "azurerm" {
 module "replicate_vm" {
   source = "../../"
 
-  location                   = var.location
   name                       = "vm-replication"
   resource_group_name        = var.resource_group_name
   custom_location_id         = var.custom_location_id
   hyperv_generation          = var.hyperv_generation
   instance_type              = var.instance_type
   is_dynamic_memory_enabled  = var.is_dynamic_memory_enabled
+  location                   = var.location
   machine_id                 = var.machine_id
   operation_mode             = "replicate"
   os_disk_id                 = var.os_disk_id

@@ -19,6 +19,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.9)
+
 ## Resources
 
 The following resources are used by this module:
@@ -27,25 +29,27 @@ The following resources are used by this module:
 - [azapi_resource.replication_extension](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource_action.planned_failover_hyperv](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
-- [azapi_resource_action.planned_failover_vmware](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
-- [azapi_resource_action.remove_replication](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.update_solution_storage](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
+- [azurerm_role_assignment.source_dra_storage_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.source_dra_storage_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.target_dra_storage_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.target_dra_storage_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.vault_storage_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.vault_storage_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_storage_account.cache](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [time_sleep.wait_for_role_propagation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [time_sleep.wait_for_solution_sync](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [time_sleep.wait_for_solution_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_resource.discovered_machine](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.discovery_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.migrate_project](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_id](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_name](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
-- [azapi_resource.protected_item_to_migrate](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
-- [azapi_resource.protected_item_to_remove](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_job](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -56,6 +60,8 @@ The following resources are used by this module:
 - [azapi_resource_list.protected_items](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.replication_fabrics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.replication_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.source_fabric_agents](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.target_fabric_agents](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -64,12 +70,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region where the resource should be deployed.
-
-Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
@@ -256,6 +256,14 @@ Default: `false`
 ### <a name="input_job_name"></a> [job\_name](#input\_job\_name)
 
 Description: Specific job name to retrieve. If not provided, all jobs will be listed.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region where the resource should be deployed. If not specified, the resource group's location will be used.
 
 Type: `string`
 
@@ -750,6 +758,10 @@ Description: ID of the replication extension
 
 Description: Name of the replication extension
 
+### <a name="output_replication_fabrics_available"></a> [replication\_fabrics\_available](#output\_replication\_fabrics\_available)
+
+Description: List of all available replication fabrics in the resource group (useful for troubleshooting appliance discovery)
+
 ### <a name="output_replication_job"></a> [replication\_job](#output\_replication\_job)
 
 Description: Detailed information for a specific replication job
@@ -782,13 +794,21 @@ Description: Managed identity of the replication vault
 
 Description: Name of the resource group
 
+### <a name="output_source_fabric_discovered"></a> [source\_fabric\_discovered](#output\_source\_fabric\_discovered)
+
+Description: Details of the auto-discovered source fabric (when using appliance name)
+
 ### <a name="output_source_fabric_id"></a> [source\_fabric\_id](#output\_source\_fabric\_id)
 
-Description: Source fabric ID used for replication
+Description: Source fabric ID used for replication (auto-discovered from appliance name or explicitly provided)
+
+### <a name="output_target_fabric_discovered"></a> [target\_fabric\_discovered](#output\_target\_fabric\_discovered)
+
+Description: Details of the auto-discovered target fabric (when using appliance name)
 
 ### <a name="output_target_fabric_id"></a> [target\_fabric\_id](#output\_target\_fabric\_id)
 
-Description: Target fabric ID used for replication
+Description: Target fabric ID used for replication (auto-discovered from appliance name or explicitly provided)
 
 ### <a name="output_target_vm_name_output"></a> [target\_vm\_name\_output](#output\_target\_vm\_name\_output)
 

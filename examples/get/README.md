@@ -5,104 +5,48 @@
 This example demonstrates retrieving details about a protected item (replicated VM).
 
 ```hcl
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Example: Get Protected Item Details
+# This example demonstrates how to retrieve details of a protected (replicating) VM
+#
+
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.5"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = "~> 2.4"
+      version = ">= 1.9, < 3.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 3.71, < 5.0"
     }
   }
 }
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
-provider "azapi" {
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+# Get protected item details
+module "get_protected_item" {
+  source = "../../"
+
+  name                = "get-protected-item"
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "get"
+  project_name        = var.project_name
+  # Get by ID
+  protected_item_id = var.protected_item_id
+  tags              = var.tags
 }
-
-# ========================================
-# Example 1: Get Protected Item by ID
-# ========================================
-
-module "get_by_id" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-by-id"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  # Get by full resource ID
-  protected_item_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinaliVMWGABBreplicationvault/protectedItems/your-vm-name"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# Example 2: Get Protected Item by Name
-# ========================================
-
-module "get_by_name" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-by-name"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  project_name   = "saifaldinali-vmw-ga-bb"
-  # Get by name (requires project name to locate vault)
-  protected_item_name = "your-vm-name"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# Example 3: Get with Explicit Vault ID
-# ========================================
-
-module "get_with_vault" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-get-with-vault"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "get"
-  # Get by name with explicit vault ID
-  protected_item_name  = "your-vm-name"
-  replication_vault_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinaliVMWGABBreplicationvault"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "GetProtectedItem"
-  }
-}
-
-# ========================================
-# OUTPUTS
-# ========================================
 
 
 
@@ -116,11 +60,11 @@ module "get_with_vault" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71, < 5.0)
 
 ## Resources
 
@@ -133,55 +77,94 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126"`
+
+### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
+
+Description: The full resource ID of the protected item to retrieve
+
+Type: `string`
+
+Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-16712replicationvault/protectedItems/100-69-177-104-f0d9ffab-ffc9-4567-84a3-792f2f01fc57_5023a8b8-6ecc-b7ad-4e88-8db9f80f737c"`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126-rg"`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Test",
+  "Purpose": "GetProtectedItem"
+}
+```
 
 ## Outputs
 
 The following outputs are exported:
 
-### <a name="output_protected_item_by_id_health"></a> [protected\_item\_by\_id\_health](#output\_protected\_item\_by\_id\_health)
+### <a name="output_protected_item_custom_properties"></a> [protected\_item\_custom\_properties](#output\_protected\_item\_custom\_properties)
 
-Description: Health errors for protected item retrieved by ID
+Description: Custom properties of the protected item
 
-### <a name="output_protected_item_by_id_summary"></a> [protected\_item\_by\_id\_summary](#output\_protected\_item\_by\_id\_summary)
+### <a name="output_protected_item_health_errors"></a> [protected\_item\_health\_errors](#output\_protected\_item\_health\_errors)
 
-Description: Summary of protected item retrieved by ID
+Description: Health errors for the protected item
 
-### <a name="output_protected_item_by_name_full"></a> [protected\_item\_by\_name\_full](#output\_protected\_item\_by\_name\_full)
+### <a name="output_protected_item_id"></a> [protected\_item\_id](#output\_protected\_item\_id)
 
-Description: Full details of protected item retrieved by name
+Description: The ID of the protected item
 
-### <a name="output_protected_item_by_name_summary"></a> [protected\_item\_by\_name\_summary](#output\_protected\_item\_by\_name\_summary)
+### <a name="output_protected_item_summary"></a> [protected\_item\_summary](#output\_protected\_item\_summary)
 
-Description: Summary of protected item retrieved by name
+Description: Summary of the protected item
 
-### <a name="output_protected_item_with_vault_allowed_operations"></a> [protected\_item\_with\_vault\_allowed\_operations](#output\_protected\_item\_with\_vault\_allowed\_operations)
+### <a name="output_replication_state"></a> [replication\_state](#output\_replication\_state)
 
-Description: Allowed operations on protected item
-
-### <a name="output_protected_item_with_vault_custom_properties"></a> [protected\_item\_with\_vault\_custom\_properties](#output\_protected\_item\_with\_vault\_custom\_properties)
-
-Description: Custom properties of protected item
+Description: The replication state of the protected item
 
 ## Modules
 
 The following Modules are called:
 
-### <a name="module_get_by_id"></a> [get\_by\_id](#module\_get\_by\_id)
+### <a name="module_get_protected_item"></a> [get\_protected\_item](#module\_get\_protected\_item)
 
-Source: ../..
-
-Version:
-
-### <a name="module_get_by_name"></a> [get\_by\_name](#module\_get\_by\_name)
-
-Source: ../..
-
-Version:
-
-### <a name="module_get_with_vault"></a> [get\_with\_vault](#module\_get\_with\_vault)
-
-Source: ../..
+Source: ../../
 
 Version:
 

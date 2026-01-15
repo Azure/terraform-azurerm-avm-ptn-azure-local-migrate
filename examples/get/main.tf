@@ -36,11 +36,9 @@ module "get_protected_item" {
   instance_type       = var.instance_type
   operation_mode      = "get"
   project_name        = var.project_name
-
   # Get by ID
   protected_item_id = var.protected_item_id
-
-  tags = var.tags
+  tags              = var.tags
 }
 
 

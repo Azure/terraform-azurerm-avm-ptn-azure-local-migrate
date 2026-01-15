@@ -2,13 +2,6 @@
 # MIGRATION-SPECIFIC VARIABLES
 # ========================================
 
-variable "location" {
-  type        = string
-  default     = null
-  description = "Azure region where the resource should be deployed. If not specified, the resource group's location will be used."
-  nullable    = true
-}
-
 variable "name" {
   type        = string
   description = "The name of the migration resource."
@@ -191,6 +184,12 @@ variable "job_name" {
   type        = string
   default     = null
   description = "Specific job name to retrieve. If not provided, all jobs will be listed."
+}
+
+variable "location" {
+  type        = string
+  default     = null
+  description = "Azure region where the resource should be deployed. If not specified, the resource group's location will be used."
 }
 
 variable "lock" {

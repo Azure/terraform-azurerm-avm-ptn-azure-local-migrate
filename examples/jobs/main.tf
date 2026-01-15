@@ -36,10 +36,8 @@ module "replication_jobs" {
   instance_type       = var.instance_type
   operation_mode      = "jobs"
   project_name        = var.project_name
-
   # Use explicit vault ID
   replication_vault_id = var.replication_vault_id
-
-  tags = var.tags
+  tags                 = var.tags
 }
 

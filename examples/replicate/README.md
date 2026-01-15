@@ -4,79 +4,6 @@
 
 This example demonstrates how to configure VM replication using the `replicate` operation mode.
 
-## Prerequisites
-
-Before running this example, ensure you have:
-
-1. Completed the **initialize** operation to set up replication infrastructure
-2. Completed the **discover** operation to identify VMs to migrate
-3. Azure Stack HCI cluster with:
-   - Custom location configured
-   - Storage containers available
-   - Logical networks/virtual switches configured
-4. The following resource IDs from previous operations:
-   - Replication vault ID
-   - Replication extension name
-   - Policy name
-   - Machine ID (from discover output)
-
-## Getting Required IDs
-
-### From Initialize Output
-```bash
-terraform output -state=../initialize/terraform.tfstate replication_vault_id
-terraform output -state=../initialize/terraform.tfstate replication_extension_name
-terraform output -state=../initialize/terraform.tfstate replication_policy_id
-```
-
-### From Discover Output
-```bash
-terraform output -state=../discover/terraform.tfstate discovered_servers
-```
-
-### Azure Stack HCI Resource IDs
-Use Azure CLI or Portal to find:
-- Custom location ID
-- HCI cluster ID
-- Storage container ID
-- Logical network (virtual switch) ID
-
-## Configuration
-
-1. Copy the example tfvars file:
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
-2. Edit `terraform.tfvars` with your values:
-   - **From Azure Migrate**: subscription_id, resource_group_name, project_name, machine_id
-   - **From Initialize**: replication_vault_id, replication_extension_name, policy_name
-   - **From Azure Stack HCI**: custom_location_id, target_hci_cluster_id, target_storage_path_id, target_virtual_switch_id
-   - **Target VM Config**: target_vm_name, target_vm_cpu_cores, target_vm_ram_mb
-
-3. (Optional) Customize VM specifications:
-   - source_vm_cpu_cores, source_vm_ram_mb
-   - target_vm_cpu_cores, target_vm_ram_mb
-   - hyperv_generation, is_dynamic_memory_enabled
-
-## Usage
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
-## What This Does
-
-The replicate operation:
-- Creates a protected item for the VM in the replication vault
-- Configures replication settings and target specifications
-- Begins initial data synchronization from source to target
-- Monitors replication health and progress
-
-## Example Configuration
-
 ```hcl
 # --------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
@@ -111,42 +38,35 @@ provider "azurerm" {
 module "replicate_vm" {
   source = "../../"
 
-  location                  = var.location
-  name                      = "vm-replication"
-  resource_group_name       = var.resource_group_name
-  custom_location_id        = var.custom_location_id
-  hyperv_generation         = var.hyperv_generation
-  instance_type             = var.instance_type
-  is_dynamic_memory_enabled = var.is_dynamic_memory_enabled
-  machine_id                = var.machine_id
-  operation_mode            = "replicate"
-  os_disk_id                = var.os_disk_id
-  policy_name               = var.policy_name
-  project_name              = var.project_name
+  name                       = "vm-replication"
+  resource_group_name        = var.resource_group_name
+  custom_location_id         = var.custom_location_id
+  hyperv_generation          = var.hyperv_generation
+  instance_type              = var.instance_type
+  is_dynamic_memory_enabled  = var.is_dynamic_memory_enabled
+  location                   = var.location
+  machine_id                 = var.machine_id
+  operation_mode             = "replicate"
+  os_disk_id                 = var.os_disk_id
+  policy_name                = var.policy_name
+  project_name               = var.project_name
   replication_extension_name = var.replication_extension_name
-  replication_vault_id      = var.replication_vault_id
-  run_as_account_id         = var.run_as_account_id
-  source_appliance_name     = var.source_appliance_name
-  source_fabric_agent_name  = var.source_fabric_agent_name
-  source_vm_cpu_cores       = var.source_vm_cpu_cores
-  source_vm_ram_mb          = var.source_vm_ram_mb
-  tags                      = var.tags
-  target_appliance_name     = var.target_appliance_name
-  target_fabric_agent_name  = var.target_fabric_agent_name
-  target_hci_cluster_id     = var.target_hci_cluster_id
-  target_resource_group_id  = var.target_resource_group_id
-  target_storage_path_id    = var.target_storage_path_id
-  target_virtual_switch_id  = var.target_virtual_switch_id
-  target_vm_cpu_cores       = var.target_vm_cpu_cores
-  target_vm_name            = var.target_vm_name
-  target_vm_ram_mb          = var.target_vm_ram_mb
-}
-  target_virtual_switch_id = "/subscriptions/304d8fdf-1c02-4907-9c3a-ddbd677199cd/resourceGroups/EDGECI-REGISTRATION-rr1n26r1508-PWxduHTU/providers/Microsoft.AzureStackHCI/logicalnetworks/n26r1508-lnet"
-  # VM sizing
-  target_vm_cpu_cores = 4
-  # Target configuration
-  target_vm_name   = "MigratedVmAzCLI"
-  target_vm_ram_mb = 8192
+  replication_vault_id       = var.replication_vault_id
+  run_as_account_id          = var.run_as_account_id
+  source_appliance_name      = var.source_appliance_name
+  source_fabric_agent_name   = var.source_fabric_agent_name
+  source_vm_cpu_cores        = var.source_vm_cpu_cores
+  source_vm_ram_mb           = var.source_vm_ram_mb
+  tags                       = var.tags
+  target_appliance_name      = var.target_appliance_name
+  target_fabric_agent_name   = var.target_fabric_agent_name
+  target_hci_cluster_id      = var.target_hci_cluster_id
+  target_resource_group_id   = var.target_resource_group_id
+  target_storage_path_id     = var.target_storage_path_id
+  target_virtual_switch_id   = var.target_virtual_switch_id
+  target_vm_cpu_cores        = var.target_vm_cpu_cores
+  target_vm_name             = var.target_vm_name
+  target_vm_ram_mb           = var.target_vm_ram_mb
 }
 
 
@@ -175,7 +95,275 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_custom_location_id"></a> [custom\_location\_id](#input\_custom\_location\_id)
+
+Description: The full resource ID of the Azure Stack HCI custom location
+
+Type: `string`
+
+Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.ExtendedLocation/customLocations/n25r1606-cl-customLocation"`
+
+### <a name="input_disks_to_include"></a> [disks\_to\_include](#input\_disks\_to\_include)
+
+Description: Disks to include for replication (from machine properties)
+
+Type:
+
+```hcl
+list(object({
+    disk_id                   = string
+    disk_size_gb              = number
+    disk_file_format          = optional(string, "VHDX")
+    is_os_disk                = optional(bool, true)
+    is_dynamic                = optional(bool, true)
+    disk_physical_sector_size = optional(number, 512)
+  }))
+```
+
+Default: `[]`
+
+### <a name="input_hyperv_generation"></a> [hyperv\_generation](#input\_hyperv\_generation)
+
+Description: Hyper-V generation (1 or 2)
+
+Type: `string`
+
+Default: `"2"`
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_is_dynamic_memory_enabled"></a> [is\_dynamic\_memory\_enabled](#input\_is\_dynamic\_memory\_enabled)
+
+Description: Whether dynamic memory is enabled for the target VM
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Optional: The Azure region (custom location region). If not specified, uses the resource group's location.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_machine_id"></a> [machine\_id](#input\_machine\_id)
+
+Description: The full resource ID of the machine to replicate (OffAzure/VMwareSites path)
+
+Type: `string`
+
+Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.OffAzure/VMwareSites/src3225site/machines/100-69-177-104-f0d9ffab-ffc9-4567-84a3-792f2f01fc57_5023a8b8-6ecc-b7ad-4e88-8db9f80f737c"`
+
+### <a name="input_nics_to_include"></a> [nics\_to\_include](#input\_nics\_to\_include)
+
+Description: NICs to include for replication (from machine properties)
+
+Type:
+
+```hcl
+list(object({
+    nic_id            = string
+    target_network_id = string
+    test_network_id   = optional(string)
+    selection_type    = optional(string, "SelectedByUser")
+  }))
+```
+
+Default: `[]`
+
+### <a name="input_os_disk_id"></a> [os\_disk\_id](#input\_os\_disk\_id)
+
+Description: The OS disk ID of the source VM
+
+Type: `string`
+
+Default: `"6000C291-b808-b317-6162-d298b124743b"`
+
+### <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name)
+
+Description: The name of the replication policy
+
+Type: `string`
+
+Default: `"saif-project-16712replicationvaultVMwareToAzStackHCIpolicy"`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126"`
+
+### <a name="input_replication_extension_name"></a> [replication\_extension\_name](#input\_replication\_extension\_name)
+
+Description: The name of the replication extension
+
+Type: `string`
+
+Default: `"srcd586replicationfabric-tgt7f56replicationfabric-MigReplicationExtn"`
+
+### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
+
+Description: The full resource ID of the replication vault
+
+Type: `string`
+
+Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-16712replicationvault"`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126-rg"`
+
+### <a name="input_run_as_account_id"></a> [run\_as\_account\_id](#input\_run\_as\_account\_id)
+
+Description: The full resource ID of the run as account (from vCenter)
+
+Type: `string`
+
+Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-120126-rg/providers/Microsoft.OffAzure/VMwareSites/src3225site/runasaccounts/58093f44-117a-561b-be13-d751e1b22ca9"`
+
+### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
+
+Description: The name prefix for the source appliance
+
+Type: `string`
+
+Default: `"src"`
+
+### <a name="input_source_fabric_agent_name"></a> [source\_fabric\_agent\_name](#input\_source\_fabric\_agent\_name)
+
+Description: The name of the source fabric DRA
+
+Type: `string`
+
+Default: `"srcd586dra"`
+
+### <a name="input_source_vm_cpu_cores"></a> [source\_vm\_cpu\_cores](#input\_source\_vm\_cpu\_cores)
+
+Description: Number of CPU cores in the source VM
+
+Type: `number`
+
+Default: `4`
+
+### <a name="input_source_vm_ram_mb"></a> [source\_vm\_ram\_mb](#input\_source\_vm\_ram\_mb)
+
+Description: Amount of RAM in MB in the source VM
+
+Type: `number`
+
+Default: `8192`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to all resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Production",
+  "Owner": "IT Team",
+  "Purpose": "HCI Migration Infrastructure"
+}
+```
+
+### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
+
+Description: The name prefix for the target appliance (from initialize variables)
+
+Type: `string`
+
+Default: `"tgt"`
+
+### <a name="input_target_fabric_agent_name"></a> [target\_fabric\_agent\_name](#input\_target\_fabric\_agent\_name)
+
+Description: The name of the target fabric DRA
+
+Type: `string`
+
+Default: `"tgt7f56dra"`
+
+### <a name="input_target_hci_cluster_id"></a> [target\_hci\_cluster\_id](#input\_target\_hci\_cluster\_id)
+
+Description: The full resource ID of the target Azure Stack HCI cluster
+
+Type: `string`
+
+Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/clusters/n25r1606-cl"`
+
+### <a name="input_target_resource_group_id"></a> [target\_resource\_group\_id](#input\_target\_resource\_group\_id)
+
+Description: The full resource ID of the target resource group
+
+Type: `string`
+
+Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/saif-project-120126-rg"`
+
+### <a name="input_target_storage_path_id"></a> [target\_storage\_path\_id](#input\_target\_storage\_path\_id)
+
+Description: The full resource ID of the target storage path
+
+Type: `string`
+
+Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/storageContainers/UserStorage1-bd705ded518141ff99bbefb30642e19f"`
+
+### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
+
+Description: The full resource ID of the target virtual switch/network
+
+Type: `string`
+
+Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/logicalnetworks/lnet-n25r1606-cl"`
+
+### <a name="input_target_vm_cpu_cores"></a> [target\_vm\_cpu\_cores](#input\_target\_vm\_cpu\_cores)
+
+Description: Number of CPU cores for the target VM
+
+Type: `number`
+
+Default: `4`
+
+### <a name="input_target_vm_name"></a> [target\_vm\_name](#input\_target\_vm\_name)
+
+Description: The name for the migrated VM on Azure Stack HCI
+
+Type: `string`
+
+Default: `"MigratedVmTerraform"`
+
+### <a name="input_target_vm_ram_mb"></a> [target\_vm\_ram\_mb](#input\_target\_vm\_ram\_mb)
+
+Description: Amount of RAM in MB for the target VM
+
+Type: `number`
+
+Default: `8192`
 
 ## Outputs
 

@@ -4,60 +4,6 @@
 
 This example demonstrates how to initialize replication infrastructure using the `initialize` operation mode.
 
-## Prerequisites
-
-Before running this example, you need:
-
-1. An Azure Migrate project with discovery already completed
-2. Source and target replication fabrics created in Azure Migrate
-3. The fabric resource IDs (can be obtained from Azure Portal or CLI)
-
-## Getting Fabric IDs
-
-To find your fabric IDs:
-
-**Using Azure Portal:**
-1. Navigate to your Azure Migrate project
-2. Go to "Servers" > "Azure Migrate: Server Migration"
-3. Select "Replication" and view the fabric details
-
-**Using Azure CLI:**
-```bash
-az rest --method get \
-  --url "https://management.azure.com/subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationFabrics?api-version=2024-09-01"
-```
-
-## Configuration
-
-1. Copy the example tfvars file:
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
-2. Edit `terraform.tfvars` and update these required values:
-   - `subscription_id` - Your Azure subscription ID
-   - `resource_group_name` - Resource group containing your Migrate project
-   - `project_name` - Your Azure Migrate project name
-   - `source_fabric_id` - Full resource ID of the source fabric
-   - `target_fabric_id` - Full resource ID of the target fabric
-
-3. (Optional) Customize additional settings:
-   - `location` - Azure region (default: eastus)
-   - `app_consistent_frequency_minutes` - Snapshot frequency (default: 240)
-   - `crash_consistent_frequency_minutes` - Crash snapshot frequency (default: 60)
-   - `recovery_point_history_minutes` - Retention period (default: 4320)
-   - `tags` - Custom resource tags
-
-## Usage
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
-## Example Configuration
-
 ```hcl
 # --------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
@@ -90,11 +36,12 @@ provider "azurerm" {
 }
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
+# NOTE: Fabric IDs are automatically discovered from appliance names
+# You only need to provide source_appliance_name and target_appliance_name
 module "initialize_replication" {
   source = "../../"
 
-  location = var.location
-  name     = "hci-migration-init"
+  name = "hci-migration-init"
   # Resource configuration
   resource_group_name                = var.resource_group_name
   app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
@@ -107,9 +54,9 @@ module "initialize_replication" {
   project_name = var.project_name
   # Replication policy settings
   recovery_point_history_minutes = var.recovery_point_history_minutes
-  # Appliance names
+  # Appliance names - fabrics are auto-discovered from these
   source_appliance_name = var.source_appliance_name
-  # Fabric IDs (obtained from Azure Migrate)
+  # Optional: explicit fabric IDs (override auto-discovery if needed)
   source_fabric_id      = var.source_fabric_id
   tags                  = var.tags
   target_appliance_name = var.target_appliance_name
@@ -144,7 +91,119 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_app_consistent_frequency_minutes"></a> [app\_consistent\_frequency\_minutes](#input\_app\_consistent\_frequency\_minutes)
+
+Description: Application-consistent snapshot frequency in minutes
+
+Type: `number`
+
+Default: `240`
+
+### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
+
+Description: Crash-consistent snapshot frequency in minutes
+
+Type: `number`
+
+Default: `60`
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-011326"`
+
+### <a name="input_recovery_point_history_minutes"></a> [recovery\_point\_history\_minutes](#input\_recovery\_point\_history\_minutes)
+
+Description: Recovery point history retention in minutes
+
+Type: `number`
+
+Default: `4320`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-011326-rg"`
+
+### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
+
+Description: The name of the source appliance (e.g., 'src' for VMware or HyperV). The module will automatically discover the corresponding fabric.
+
+Type: `string`
+
+Default: `"src"`
+
+### <a name="input_source_fabric_id"></a> [source\_fabric\_id](#input\_source\_fabric\_id)
+
+Description: Optional: Explicit source fabric ID. If not provided, it will be auto-discovered from source\_appliance\_name.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"de3c4d5e-af08-451a-a873-438d86ab6f4b"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to all resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Production",
+  "Owner": "IT Team",
+  "Purpose": "HCI Migration Infrastructure"
+}
+```
+
+### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
+
+Description: The name of the target appliance (e.g., 'tgt' for Azure Stack HCI). The module will automatically discover the corresponding fabric.
+
+Type: `string`
+
+Default: `"tgt"`
+
+### <a name="input_target_fabric_id"></a> [target\_fabric\_id](#input\_target\_fabric\_id)
+
+Description: Optional: Explicit target fabric ID. If not provided, it will be auto-discovered from target\_appliance\_name.
+
+Type: `string`
+
+Default: `null`
 
 ## Outputs
 

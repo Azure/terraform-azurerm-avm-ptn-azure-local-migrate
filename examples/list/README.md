@@ -5,98 +5,47 @@
 This example demonstrates listing all protected items (replicated VMs) in a vault.
 
 ```hcl
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
+#
+# Example: List Protected Items
+# This example demonstrates how to list all protected (replicating) VMs in a vault
+#
+
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.5"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = "~> 2.4"
+      version = ">= 1.9, < 3.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 3.71, < 5.0"
     }
   }
 }
 
 provider "azurerm" {
   features {}
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  subscription_id = var.subscription_id
 }
 
-provider "azapi" {
-  subscription_id = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+# List all protected items in the vault
+module "list_protected_items" {
+  source = "../../"
+
+  name                = "list-protected-items"
+  resource_group_name = var.resource_group_name
+  instance_type       = var.instance_type
+  operation_mode      = "list"
+  # List by project name (vault auto-discovered)
+  project_name = var.project_name
+  tags         = var.tags
 }
-
-# ========================================
-# Example 1: List All Protected Items by Project
-# ========================================
-
-module "list_by_project" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-list"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "list"
-  # List by project name (vault will be auto-discovered)
-  project_name = "saifaldinali-vmw-ga-bb"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "ListProtectedItems"
-  }
-}
-
-# ========================================
-# Example 2: List Protected Items by Vault ID
-# ========================================
-
-module "list_by_vault" {
-  source = "../.."
-
-  location = "eastus"
-  # Required variables
-  name                = "migrate-list-vault"
-  resource_group_name = "saifaldinali-vmw-ga-bb-rg"
-  instance_type       = "VMwareToAzStackHCI"
-  # Operation mode
-  operation_mode = "list"
-  # List by explicit vault ID
-  replication_vault_id = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saifaldinali-vmw-ga-bb-rg/providers/Microsoft.DataReplication/replicationVaults/saifaldinaliVMWGABBreplicationvault"
-  # Tags
-  tags = {
-    Environment = "Test"
-    Purpose     = "ListProtectedItems"
-  }
-}
-
-# ========================================
-# OUTPUTS - Example 1
-# ========================================
-
-
-
-
-
-
-# ========================================
-# OUTPUTS - Example 2
-# ========================================
-
-
-
-# ========================================
-# DERIVED OUTPUTS - Useful Statistics
-# ========================================
-
-
-
-
 
 ```
 
@@ -105,11 +54,11 @@ module "list_by_vault" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71, < 5.0)
 
 ## Resources
 
@@ -122,7 +71,62 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
+
+Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
+
+Type: `string`
+
+Default: `"VMwareToAzStackHCI"`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Optional: The Azure region. If not specified, uses the resource group's location.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
+
+Description: The name of the Azure Migrate project (used to auto-discover vault)
+
+Type: `string`
+
+Default: `"saif-project-120126"`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group containing the Azure Migrate project
+
+Type: `string`
+
+Default: `"saif-project-120126-rg"`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: The Azure subscription ID where resources will be deployed
+
+Type: `string`
+
+Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to resources
+
+Type: `map(string)`
+
+Default:
+
+```json
+{
+  "Environment": "Test",
+  "Purpose": "ListProtectedItems"
+}
+```
 
 ## Outputs
 
@@ -132,63 +136,45 @@ The following outputs are exported:
 
 Description: Count of items with Normal health
 
-### <a name="output_items_by_health"></a> [items\_by\_health](#output\_items\_by\_health)
-
-Description: Protected items grouped by replication health
-
-### <a name="output_items_by_state"></a> [items\_by\_state](#output\_items\_by\_state)
-
-Description: Protected items grouped by protection state
-
 ### <a name="output_items_needing_attention_count"></a> [items\_needing\_attention\_count](#output\_items\_needing\_attention\_count)
 
 Description: Count of items with health errors
 
 ### <a name="output_items_ready_for_migrate"></a> [items\_ready\_for\_migrate](#output\_items\_ready\_for\_migrate)
 
-Description: Items that can perform migration
-
-### <a name="output_items_ready_for_test_migrate"></a> [items\_ready\_for\_test\_migrate](#output\_items\_ready\_for\_test\_migrate)
-
-Description: Items that can perform test migration
+Description: Items that can perform planned failover (migration)
 
 ### <a name="output_items_requiring_resync"></a> [items\_requiring\_resync](#output\_items\_requiring\_resync)
 
 Description: Items that require resynchronization
 
-### <a name="output_items_with_errors"></a> [items\_with\_errors](#output\_items\_with\_errors)
+### <a name="output_protected_items_by_health"></a> [protected\_items\_by\_health](#output\_protected\_items\_by\_health)
 
-Description: Protected items that have health errors
+Description: Protected items grouped by replication health
+
+### <a name="output_protected_items_by_state"></a> [protected\_items\_by\_state](#output\_protected\_items\_by\_state)
+
+Description: Protected items grouped by protection state
+
+### <a name="output_protected_items_count"></a> [protected\_items\_count](#output\_protected\_items\_count)
+
+Description: Total number of protected items
 
 ### <a name="output_protected_items_summary"></a> [protected\_items\_summary](#output\_protected\_items\_summary)
 
-Description: Summary of all protected items
+Description: Summary of all protected items with key details
 
-### <a name="output_total_protected_items"></a> [total\_protected\_items](#output\_total\_protected\_items)
+### <a name="output_protected_items_with_errors"></a> [protected\_items\_with\_errors](#output\_protected\_items\_with\_errors)
 
-Description: Total number of replicated VMs
-
-### <a name="output_vault_protected_items_count"></a> [vault\_protected\_items\_count](#output\_vault\_protected\_items\_count)
-
-Description: Number of protected items in vault
-
-### <a name="output_vault_protected_items_names"></a> [vault\_protected\_items\_names](#output\_vault\_protected\_items\_names)
-
-Description: Names of all protected items in vault
+Description: Protected items that have health errors
 
 ## Modules
 
 The following Modules are called:
 
-### <a name="module_list_by_project"></a> [list\_by\_project](#module\_list\_by\_project)
+### <a name="module_list_protected_items"></a> [list\_protected\_items](#module\_list\_protected\_items)
 
-Source: ../..
-
-Version:
-
-### <a name="module_list_by_vault"></a> [list\_by\_vault](#module\_list\_by\_vault)
-
-Source: ../..
+Source: ../../
 
 Version:
 
