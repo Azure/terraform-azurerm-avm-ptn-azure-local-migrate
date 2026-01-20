@@ -648,6 +648,39 @@ data "azapi_resource_list" "protected_items" {
 }
 
 # ========================================
+# REMOVE PROTECTED ITEMS OPERATION
+# ========================================
+
+# Get vault from solution (for remove mode)
+data "azapi_resource" "protected_item_to_be_removed" {
+  count = local.is_remove_mode ? 1 : 0
+
+  resource_id = var.target_object_id
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+}
+
+
+# Remove protected item (VM replication)
+resource "azapi_resource_action" "remove_replication" {
+  count = local.is_remove_mode ? 1 : 0
+
+  action      = ""
+  method      = "DELETE"
+  resource_id = var.target_object_id
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
+
+  # Add forceDelete query parameter as a map of lists
+  query_parameters = {
+    forceDelete = [tostring(var.force_remove)]
+  }
+
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_be_removed
+  ]
+}
+
+# ========================================
 # AVM REQUIRED INTERFACES
 # ========================================
 
