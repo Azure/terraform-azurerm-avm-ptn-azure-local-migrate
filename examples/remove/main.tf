@@ -33,9 +33,9 @@ module "remove_replication" {
 
   name                = "remove-replication"
   resource_group_name = var.resource_group_name
+  force_remove        = var.force_remove
   location            = var.location
   operation_mode      = "remove"
-  target_object_id    = var.target_object_id
-  force_remove        = var.force_remove
   tags                = var.tags
+  target_object_id    = var.target_object_id
 }
