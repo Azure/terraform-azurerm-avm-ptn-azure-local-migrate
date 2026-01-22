@@ -654,15 +654,15 @@ data "azapi_resource_list" "protected_items" {
 # Validate the protected item exists and is ready for migration
 data "azapi_resource" "protected_item_to_migrate" {
   count = local.is_migrate_mode ? 1 : 0
- 
+
   resource_id = var.protected_item_id
   type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
 }
- 
+
 # Execute planned failover (migration) operation - HyperV
 resource "azapi_resource_action" "planned_failover_hyperv" {
   count = local.is_migrate_mode && var.instance_type == "HyperVToAzStackHCI" ? 1 : 0
- 
+
   action      = "plannedFailover"
   method      = "POST"
   resource_id = var.protected_item_id
@@ -675,22 +675,22 @@ resource "azapi_resource_action" "planned_failover_hyperv" {
       }
     }
   }
- 
+
   timeouts {
     create = "180m"
     update = "180m"
   }
- 
+
   # Ensure validation happens first
   depends_on = [
     data.azapi_resource.protected_item_to_migrate
   ]
 }
- 
+
 # Execute planned failover (migration) operation - VMware
 resource "azapi_resource_action" "planned_failover_vmware" {
   count = local.is_migrate_mode && var.instance_type == "VMwareToAzStackHCI" ? 1 : 0
- 
+
   action      = "plannedFailover"
   method      = "POST"
   resource_id = var.protected_item_id
@@ -703,12 +703,12 @@ resource "azapi_resource_action" "planned_failover_vmware" {
       }
     }
   }
- 
+
   timeouts {
     create = "180m"
     update = "180m"
   }
- 
+
   # Ensure validation happens first
   depends_on = [
     data.azapi_resource.protected_item_to_migrate
@@ -732,15 +732,14 @@ data "azapi_resource" "protected_item_to_remove" {
 resource "azapi_resource_action" "remove_replication" {
   count = local.is_remove_mode ? 1 : 0
 
-  action      = ""
-  method      = "DELETE"
-  resource_id = var.target_object_id
-  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
-
+  action = ""
+  method = "DELETE"
   # Add forceDelete query parameter as a map of lists
   query_parameters = {
     forceDelete = [tostring(var.force_remove)]
   }
+  resource_id = var.target_object_id
+  type        = "Microsoft.DataReplication/replicationVaults/protectedItems@2024-09-01"
 
   # Ensure validation happens first
   depends_on = [
