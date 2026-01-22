@@ -6,19 +6,19 @@
 variable "subscription_id" {
   type        = string
   description = "The Azure subscription ID where resources will be deployed"
-  default     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
+  default     = "de3c4d5e-af08-451a-a873-438d86ab6f4b"
 }
 
 variable "resource_group_name" {
   type        = string
   description = "The name of the resource group containing the Azure Migrate project"
-  default     = "saif-project-010626-rg"
+  default     = "saif-project-011326-rg"
 }
 
 variable "project_name" {
   type        = string
   description = "The name of the Azure Migrate project"
-  default     = "saif-project-010626"
+  default     = "saif-project-011326"
 }
 
 variable "location" {
