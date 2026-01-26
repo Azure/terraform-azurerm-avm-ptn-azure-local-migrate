@@ -29,7 +29,7 @@ module "create_migrate_project" {
   name                   = "create-project"
   resource_group_name    = var.resource_group_name
   instance_type          = var.instance_type
-  operation_mode         = "discover"
+  operation_mode         = "create-project"
   project_name           = var.project_name
   create_migrate_project = true # Set to true to create new project
   create_resource_group  = true # Set to true to create new resource group

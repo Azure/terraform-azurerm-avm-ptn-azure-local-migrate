@@ -51,14 +51,15 @@ locals {
   # These check if the user provided either explicit IDs or appliance names for discovery
   has_fabric_inputs = (var.source_fabric_id != null || var.source_appliance_name != null) && (var.target_fabric_id != null || var.target_appliance_name != null)
   # Determine operation mode
-  is_discover_mode   = var.operation_mode == "discover"
-  is_get_mode        = var.operation_mode == "get"
-  is_initialize_mode = var.operation_mode == "initialize"
-  is_jobs_mode       = var.operation_mode == "jobs"
-  is_list_mode       = var.operation_mode == "list"
-  is_migrate_mode    = var.operation_mode == "migrate"
-  is_remove_mode     = var.operation_mode == "remove"
-  is_replicate_mode  = var.operation_mode == "replicate"
+  is_create_project_mode = var.operation_mode == "create-project"
+  is_discover_mode       = var.operation_mode == "discover"
+  is_get_mode            = var.operation_mode == "get"
+  is_initialize_mode     = var.operation_mode == "initialize"
+  is_jobs_mode           = var.operation_mode == "jobs"
+  is_list_mode           = var.operation_mode == "list"
+  is_migrate_mode        = var.operation_mode == "migrate"
+  is_remove_mode         = var.operation_mode == "remove"
+  is_replicate_mode      = var.operation_mode == "replicate"
   # Resolve fabric IDs: priority order is explicit ID > auto-discovered from appliance name
   resolved_source_fabric_id = var.source_fabric_id != null ? var.source_fabric_id : (
     local.discovered_source_fabric != null ? try(local.discovered_source_fabric.id, null) : null
