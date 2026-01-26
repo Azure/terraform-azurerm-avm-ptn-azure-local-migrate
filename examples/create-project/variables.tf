@@ -11,25 +11,25 @@ variable "instance_type" {
 
 variable "location" {
   type        = string
-  default     = "eastus"
-  description = "The Azure region where the Migrate project will be created"
+  default     = "westus2"
+  description = "The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: centralus, westus2, northeurope, westeurope, etc."
 }
 
 variable "project_name" {
   type        = string
-  default     = "my-new-migrate-project"
+  default     = "saif-project-012626"
   description = "The name of the new Azure Migrate project to create"
 }
 
 variable "resource_group_name" {
   type        = string
-  default     = "my-migrate-project-rg"
+  default     = "saif-project-012626-rg"
   description = "The name of the resource group where the Migrate project will be created"
 }
 
 variable "subscription_id" {
   type        = string
-  default     = "00000000-0000-0000-0000-000000000000"
+  default     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
   description = "The Azure subscription ID where resources will be deployed"
 }
 

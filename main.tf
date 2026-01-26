@@ -10,6 +10,8 @@
 # ========================================
 
 locals {
+  # Create new resource group if requested
+  create_new_resource_group = var.create_resource_group
   # Create new Migrate project if project_name is provided but create_migrate_project is true
   create_new_project = var.create_migrate_project && var.project_name != null
   # Only create new vault if in initialize mode and vault doesn't exist
@@ -68,6 +70,8 @@ locals {
   migrate_project_id = local.create_new_project ? azapi_resource.migrate_project[0].id : (
     length(data.azapi_resource.migrate_project_existing) > 0 ? data.azapi_resource.migrate_project_existing[0].id : null
   )
+  # Resolved resource group (created or existing)
+  resource_group_id = local.create_new_resource_group ? azapi_resource.resource_group[0].id : data.azapi_resource.resource_group_existing[0].id
   # Resource group reference
   resource_group_name = var.resource_group_name
   # Extract DRA (Fabric Agent) identity object IDs for role assignments
@@ -109,8 +113,28 @@ locals {
 # Get current subscription
 data "azapi_client_config" "current" {}
 
-# Get resource group
-data "azapi_resource" "resource_group" {
+# Create new resource group (if requested)
+resource "azapi_resource" "resource_group" {
+  count = local.create_new_resource_group ? 1 : 0
+
+  location  = var.location
+  name      = var.resource_group_name
+  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+  body = {
+    properties = {}
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+}
+
+# Get existing resource group
+data "azapi_resource" "resource_group_existing" {
+  count = !local.create_new_resource_group ? 1 : 0
+
   name      = var.resource_group_name
   parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
   type      = "Microsoft.Resources/resourceGroups@2021-04-01"
@@ -120,18 +144,18 @@ data "azapi_resource" "resource_group" {
 resource "azapi_resource" "migrate_project" {
   count = local.create_new_project ? 1 : 0
 
-  location  = jsondecode(data.azapi_resource.resource_group.output).location
+  location  = var.location
   name      = var.project_name
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
   body = {
     properties = {}
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  tags           = var.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 # Get existing Azure Migrate Project (for all modes)
@@ -139,7 +163,7 @@ data "azapi_resource" "migrate_project_existing" {
   count = !local.create_new_project && var.project_name != null ? 1 : 0
 
   name      = var.project_name
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
 }
 
@@ -170,7 +194,7 @@ data "azapi_resource" "replication_solution" {
 data "azapi_resource_list" "discovered_servers" {
   count = local.is_discover_mode ? 1 : 0
 
-  parent_id = var.appliance_name != null ? "${data.azapi_resource.resource_group.id}/providers/Microsoft.OffAzure/${var.source_machine_type == "HyperV" ? "HyperVSites" : "VMwareSites"}/${var.appliance_name}" : local.migrate_project_id
+  parent_id = var.appliance_name != null ? "${local.resource_group_id}/providers/Microsoft.OffAzure/${var.source_machine_type == "HyperV" ? "HyperVSites" : "VMwareSites"}/${var.appliance_name}" : local.migrate_project_id
   type      = var.appliance_name != null ? (var.source_machine_type == "HyperV" ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06") : "Microsoft.Migrate/migrateprojects/machines@2020-05-01"
 }
 
@@ -182,9 +206,9 @@ data "azapi_resource_list" "discovered_servers" {
 resource "azapi_resource" "replication_vault" {
   count = local.create_new_vault ? 1 : 0
 
-  location  = jsondecode(data.azapi_resource.resource_group.output).location
+  location  = var.location
   name      = "${replace(var.project_name, "-", "")}replicationvault"
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
   body = {
     properties = {}
@@ -214,7 +238,7 @@ data "azapi_resource" "replication_vault" {
 data "azapi_resource_list" "replication_fabrics" {
   count = local.is_initialize_mode ? 1 : 0
 
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
 
   depends_on = [azapi_resource.replication_vault]
@@ -274,9 +298,9 @@ resource "azapi_resource" "replication_policy" {
 resource "azapi_resource" "cache_storage_account" {
   count = local.is_initialize_mode && var.cache_storage_account_id == null ? 1 : 0
 
-  location  = jsondecode(data.azapi_resource.resource_group.output).location
+  location  = var.location
   name      = local.storage_account_name
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.Storage/storageAccounts@2023-01-01"
   body = {
     kind = "StorageV2"
@@ -583,7 +607,7 @@ resource "azapi_resource" "protected_item" {
       customProperties = {
         instanceType                     = var.instance_type
         targetArcClusterCustomLocationId = var.custom_location_id
-        customLocationRegion             = coalesce(var.location, jsondecode(data.azapi_resource.resource_group.output).location)
+        customLocationRegion             = var.location
         fabricDiscoveryMachineId         = var.machine_id != null ? var.machine_id : "${local.migrate_project_id}/machines/${var.machine_name}"
         disksToInclude = length(var.disks_to_include) > 0 ? [
           for disk in var.disks_to_include : {
@@ -841,7 +865,7 @@ resource "azapi_resource" "management_lock" {
   count = var.lock != null ? 1 : 0
 
   name      = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.Authorization/locks@2020-05-01"
   body = {
     properties = {
@@ -858,7 +882,7 @@ resource "azapi_resource" "role_assignment" {
   for_each = var.role_assignments
 
   name      = "role-${each.key}"
-  parent_id = data.azapi_resource.resource_group.id
+  parent_id = local.resource_group_id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
     properties = {

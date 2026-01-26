@@ -48,6 +48,12 @@ variable "create_migrate_project" {
   description = "Whether to create a new Azure Migrate project. If false, an existing project is queried."
 }
 
+variable "create_resource_group" {
+  type        = bool
+  default     = false
+  description = "Whether to create a new resource group. If false, an existing resource group is queried. When true, location must be specified."
+}
+
 variable "custom_location_id" {
   type        = string
   default     = null
@@ -195,7 +201,7 @@ variable "job_name" {
 variable "location" {
   type        = string
   default     = null
-  description = "Azure region where the resource should be deployed. If not specified, the resource group's location will be used."
+  description = "Azure region where resources should be deployed. Required when create_resource_group or create_migrate_project is true."
 }
 
 variable "lock" {

@@ -9,7 +9,7 @@
 subscription_id      = "00000000-0000-0000-0000-000000000000"
 resource_group_name  = "my-migrate-project-rg"
 project_name         = "my-new-migrate-project"
-location             = "eastus"
+location             = "centralus"  # Use a supported region: centralus, westus2, northeurope, westeurope, etc.
 instance_type        = "VMwareToAzStackHCI"
 
 tags = {

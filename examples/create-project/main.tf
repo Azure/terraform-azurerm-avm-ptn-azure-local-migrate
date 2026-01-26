@@ -32,6 +32,7 @@ module "create_migrate_project" {
   operation_mode         = "discover"
   project_name           = var.project_name
   create_migrate_project = true # Set to true to create new project
+  create_resource_group  = true # Set to true to create new resource group
   location               = var.location
   tags                   = var.tags
 }

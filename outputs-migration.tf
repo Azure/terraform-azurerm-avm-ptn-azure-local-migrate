@@ -66,17 +66,12 @@ output "discovered_servers_count" {
 
 output "location_output" {
   description = "Azure region where resources are deployed"
-  value       = data.azurerm_resource_group.this.location
+  value       = var.location
 }
 
 output "machine_id" {
   description = "Machine ID being replicated"
   value       = var.machine_id
-}
-
-output "migrate_project_id" {
-  description = "Azure Migrate project ID"
-  value       = length(data.azapi_resource.migrate_project) > 0 ? data.azapi_resource.migrate_project[0].id : null
 }
 
 output "migration_operation_details" {
@@ -421,7 +416,7 @@ output "replication_vault_identity" {
 
 output "resource_group_name_output" {
   description = "Name of the resource group"
-  value       = data.azurerm_resource_group.this.name
+  value       = var.resource_group_name
 }
 
 output "source_fabric_discovered" {
