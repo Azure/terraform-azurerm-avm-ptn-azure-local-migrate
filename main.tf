@@ -52,6 +52,7 @@ locals {
   has_fabric_inputs = (var.source_fabric_id != null || var.source_appliance_name != null) && (var.target_fabric_id != null || var.target_appliance_name != null)
   # Determine operation mode
   is_create_project_mode = var.operation_mode == "create-project"
+  is_discover_mode       = var.operation_mode == "discover"
   is_get_mode            = var.operation_mode == "get"
   is_initialize_mode     = var.operation_mode == "initialize"
   is_jobs_mode           = var.operation_mode == "jobs"
@@ -313,6 +314,13 @@ data "azapi_resource" "replication_solution" {
 }
 
 
+# Query discovered servers from VMware or HyperV sites
+data "azapi_resource_list" "discovered_servers" {
+  count = local.is_discover_mode ? 1 : 0
+
+  parent_id = var.appliance_name != null ? "${local.resource_group_id}/providers/Microsoft.OffAzure/${var.source_machine_type == "HyperV" ? "HyperVSites" : "VMwareSites"}/${var.appliance_name}" : local.migrate_project_id
+  type      = var.appliance_name != null ? (var.source_machine_type == "HyperV" ? "Microsoft.OffAzure/HyperVSites/machines@2023-06-06" : "Microsoft.OffAzure/VMwareSites/machines@2023-06-06") : "Microsoft.Migrate/migrateprojects/machines@2020-05-01"
+}
 
 # ========================================
 #  INITIALIZE REPLICATION INFRASTRUCTURE

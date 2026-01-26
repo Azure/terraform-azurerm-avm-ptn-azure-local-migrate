@@ -277,12 +277,12 @@ variable "nics_to_include" {
 # Operation Mode
 variable "operation_mode" {
   type        = string
-  default     = "initialize"
-  description = "The migration operation to perform: create-project, initialize, replicate, jobs, remove, get, list, or migrate. Note: Discovery of VMs must be done from the Azure Portal."
+  default     = "discover"
+  description = "The migration operation to perform: create-project, discover, initialize, replicate, jobs, remove, get, list, or migrate"
 
   validation {
-    condition     = contains(["create-project", "initialize", "replicate", "jobs", "remove", "get", "list", "migrate"], var.operation_mode)
-    error_message = "operation_mode must be one of: create-project, initialize, replicate, jobs, remove, get, list, migrate."
+    condition     = contains(["create-project", "discover", "initialize", "replicate", "jobs", "remove", "get", "list", "migrate"], var.operation_mode)
+    error_message = "operation_mode must be one of: create-project, discover, initialize, replicate, jobs, remove, get, list, migrate."
   }
 }
 
