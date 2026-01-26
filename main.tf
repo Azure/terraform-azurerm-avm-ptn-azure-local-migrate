@@ -148,9 +148,39 @@ resource "azapi_resource" "migrate_project" {
   location  = var.location
   name      = var.project_name
   parent_id = local.resource_group_id
-  type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
+  type      = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
   body = {
     properties = {}
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  tags = merge(var.tags, {
+    "Migrate Project" = var.project_name
+  })
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# Solution 1: Servers-Assessment-ServerAssessment (Active)
+resource "azapi_resource" "solution_assessment" {
+  count = local.create_new_project ? 1 : 0
+
+  name      = "Servers-Assessment-ServerAssessment"
+  parent_id = azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
+  body = {
+    properties = {
+      tool    = "ServerAssessment"
+      purpose = "Assessment"
+      goal    = "Servers"
+      status  = "Active"
+      details = null
+    }
   }
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -159,13 +189,109 @@ resource "azapi_resource" "migrate_project" {
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
+# Solution 2: Servers-Discovery-ServerDiscovery (Inactive)
+resource "azapi_resource" "solution_discovery" {
+  count = local.create_new_project ? 1 : 0
+
+  name      = "Servers-Discovery-ServerDiscovery"
+  parent_id = azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
+  body = {
+    properties = {
+      tool    = "ServerDiscovery"
+      purpose = "Discovery"
+      goal    = "Servers"
+      status  = "Inactive"
+      details = null
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.solution_assessment]
+}
+
+# Solution 3: Servers-Migration-ServerMigration (Active)
+resource "azapi_resource" "solution_migration" {
+  count = local.create_new_project ? 1 : 0
+
+  name      = "Servers-Migration-ServerMigration"
+  parent_id = azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
+  body = {
+    properties = {
+      tool    = "ServerMigration"
+      purpose = "Migration"
+      goal    = "Servers"
+      status  = "Active"
+      details = null
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.solution_discovery]
+}
+
+# Solution 4: Servers-Migration-ServerMigration_DataReplication (Inactive)
+resource "azapi_resource" "solution_data_replication" {
+  count = local.create_new_project ? 1 : 0
+
+  name      = "Servers-Migration-ServerMigration_DataReplication"
+  parent_id = azapi_resource.migrate_project[0].id
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
+  body = {
+    properties = {
+      tool    = "ServerMigration_DataReplication"
+      purpose = "Migration"
+      goal    = "Servers"
+      status  = "Inactive"
+      details = null
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.solution_migration]
+}
+
+# Grant Azure Migrate Assessor role to project's managed identity on resource group
+resource "azapi_resource" "migrate_project_role_assignment" {
+  count = local.create_new_project ? 1 : 0
+
+  name      = uuidv5("dns", "${azapi_resource.migrate_project[0].id}-assessor")
+  parent_id = local.resource_group_id
+  type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  body = {
+    properties = {
+      principalId      = azapi_resource.migrate_project[0].identity[0].principal_id
+      roleDefinitionId = "/subscriptions/${data.azapi_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/ba480ccd-6499-4709-b581-8f38bb215c63"
+      principalType    = "ServicePrincipal"
+    }
+  }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.solution_data_replication]
+}
+
 # Get existing Azure Migrate Project (for all modes)
 data "azapi_resource" "migrate_project_existing" {
   count = !local.create_new_project && var.project_name != null ? 1 : 0
 
   name      = var.project_name
   parent_id = local.resource_group_id
-  type      = "Microsoft.Migrate/migrateprojects@2020-05-01"
+  type      = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
 }
 
 # Get Discovery Solution (needed for appliance mapping)
@@ -174,7 +300,7 @@ data "azapi_resource" "discovery_solution" {
 
   name      = "Servers-Discovery-ServerDiscovery"
   parent_id = local.migrate_project_id
-  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
+  type      = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
 }
 
 # Get Data Replication Solution
@@ -183,13 +309,10 @@ data "azapi_resource" "replication_solution" {
 
   name                   = "Servers-Migration-ServerMigration_DataReplication"
   parent_id              = local.migrate_project_id
-  type                   = "Microsoft.Migrate/migrateprojects/solutions@2020-05-01"
+  type                   = "Microsoft.Migrate/migrateprojects/solutions@2020-06-01-preview"
   response_export_values = ["*"]
 }
 
-# ========================================
-# DISCOVER SERVERS
-# ========================================
 
 # Query discovered servers from VMware or HyperV sites
 data "azapi_resource_list" "discovered_servers" {
@@ -306,10 +429,10 @@ resource "azapi_resource" "cache_storage_account" {
   body = {
     kind = "StorageV2"
     properties = {
-      allowBlobPublicAccess        = false
-      allowCrossTenantReplication  = true
-      minimumTlsVersion            = "TLS1_2"
-      supportsHttpsTrafficOnly     = true
+      allowBlobPublicAccess       = false
+      allowCrossTenantReplication = true
+      minimumTlsVersion           = "TLS1_2"
+      supportsHttpsTrafficOnly    = true
     }
     sku = {
       name = "Standard_LRS"
