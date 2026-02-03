@@ -1,3 +1,5 @@
-# terraform-azurerm-avm-template
+# terraform-azurerm-avm-res-migrate
 
-This is a template repo for Terraform Azure Verified Modules.
+> ⚠️ **Preview Version** - This module is currently in preview. Features and APIs may change before the stable release.
+
+This Terraform module provides infrastructure as code (IaC) capabilities for Azure Migrate, enabling automated discovery, replication, and migration of virtual machines to Azure Stack HCI.
