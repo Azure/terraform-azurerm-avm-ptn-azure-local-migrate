@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-
 output "replication_job" {
   description = "Details of a specific replication job (when job_name is provided, otherwise null)"
   value       = module.replication_jobs.replication_job

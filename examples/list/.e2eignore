@@ -1,0 +1,4 @@
+# This example contains hardcoded subscription IDs, resource group names,
+# and project names specific to a development environment.
+# It requires customization with actual Azure resources before use.
+# Not suitable for automated end-to-end testing without environment-specific configuration.

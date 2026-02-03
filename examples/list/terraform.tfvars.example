@@ -3,9 +3,10 @@
 # Copy this file to terraform.tfvars and customize the values
 # --------------------------------------------------------------------------------------------
 
-# Azure subscription and resource details
-subscription_id     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
-resource_group_name = "saif-project-120126-rg"
+# Resource Group ID where your Azure Migrate project resides
+# Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+
 project_name        = "saif-project-120126"
 location            = "australiaeast"
 
@@ -20,3 +21,4 @@ tags = {
   Environment = "Test"
   Purpose     = "ListProtectedItems"
 }
+

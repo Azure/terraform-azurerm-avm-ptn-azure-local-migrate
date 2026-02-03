@@ -17,8 +17,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.9)
-
 ## Resources
 
 The following resources are used by this module:
@@ -31,7 +29,6 @@ The following resources are used by this module:
 - [azapi_resource.replication_extension](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.role_assignment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.solution_assessment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.solution_data_replication](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -41,7 +38,6 @@ The following resources are used by this module:
 - [azapi_resource.source_dra_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.target_dra_storage_blob_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.target_dra_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.target_resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vault_storage_blob_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vault_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.planned_failover_hyperv](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
@@ -50,13 +46,7 @@ The following resources are used by this module:
 - [azapi_update_resource.update_solution_storage](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
-- [time_sleep.wait_for_role_propagation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [time_sleep.wait_for_solution_sync](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [time_sleep.wait_for_solution_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
-- [azapi_resource.discovered_machine](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
-- [azapi_resource.discovery_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.migrate_project_existing](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_id](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_name](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -65,7 +55,6 @@ The following resources are used by this module:
 - [azapi_resource.replication_job](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
-- [azapi_resource.resource_group_existing](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.vault_for_get](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.vault_for_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.vault_for_list](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -82,15 +71,21 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region where resources should be deployed. Required when create\_migrate\_project is true.
+
+Type: `string`
+
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: The name of the migration resource.
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The resource group where the resources will be deployed.
+Description: The resource ID of the resource group where resources will be deployed. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
 
 Type: `string`
 
@@ -138,43 +133,11 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_create_resource_group"></a> [create\_resource\_group](#input\_create\_resource\_group)
-
-Description: Whether to create a new resource group. If false, an existing resource group is queried. When true, location must be specified.
-
-Type: `bool`
-
-Default: `false`
-
 ### <a name="input_custom_location_id"></a> [custom\_location\_id](#input\_custom\_location\_id)
 
 Description: Custom location ARM ID for Arc
 
 Type: `string`
-
-Default: `null`
-
-### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
-
-Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
-
-Type:
-
-```hcl
-object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-```
 
 Default: `null`
 
@@ -214,7 +177,13 @@ Default: `{}`
 
 ### <a name="input_disks_to_include"></a> [disks\_to\_include](#input\_disks\_to\_include)
 
-Description: Disks to include for replication (power user mode)
+Description: A list of disks to include for replication (power user mode). Each object in the list includes the following properties:
+
+- `disk_id` - (Required) The unique identifier of the disk to replicate.
+- `disk_size_gb` - (Required) The size of the disk in gigabytes.
+- `disk_file_format` - (Optional) The file format of the disk. Defaults to `"VHDX"`.
+- `is_os_disk` - (Required) Whether this disk is the operating system disk.
+- `is_dynamic` - (Optional) Whether the disk is dynamic. Defaults to `true`.
 
 Type:
 
@@ -229,14 +198,6 @@ list(object({
 ```
 
 Default: `[]`
-
-### <a name="input_display_name"></a> [display\_name](#input\_display\_name)
-
-Description: Source machine display name for filtering
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -288,14 +249,6 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region where resources should be deployed. Required when create\_resource\_group or create\_migrate\_project is true.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
 Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
@@ -319,14 +272,6 @@ Default: `null`
 Description: Machine ARM ID of the discovered server to migrate
 
 Type: `string`
-
-Default: `null`
-
-### <a name="input_machine_index"></a> [machine\_index](#input\_machine\_index)
-
-Description: Index of the discovered server from the list (1-based)
-
-Type: `number`
 
 Default: `null`
 
@@ -366,7 +311,12 @@ Default: `null`
 
 ### <a name="input_nics_to_include"></a> [nics\_to\_include](#input\_nics\_to\_include)
 
-Description: NICs to include for replication (power user mode)
+Description: A list of NICs to include for replication (power user mode). Each object in the list includes the following properties:
+
+- `nic_id` - (Required) The unique identifier of the network interface card to replicate.
+- `target_network_id` - (Required) The ARM resource ID of the target logical network for the NIC.
+- `test_network_id` - (Optional) The ARM resource ID of the test logical network for the NIC.
+- `selection_type` - (Optional) The selection type for the NIC. Defaults to `"SelectedByUser"`.
 
 Type:
 
@@ -821,9 +771,13 @@ Description: ID of the replication vault
 
 Description: Managed identity of the replication vault
 
-### <a name="output_resource_group_name_output"></a> [resource\_group\_name\_output](#output\_resource\_group\_name\_output)
+### <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id)
 
-Description: Name of the resource group
+Description: The resource group ID (same as parent\_id)
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of the primary resource managed by this module. For AVM compliance (RMFR7).
 
 ### <a name="output_source_fabric_discovered"></a> [source\_fabric\_discovered](#output\_source\_fabric\_discovered)
 

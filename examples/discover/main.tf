@@ -9,20 +9,19 @@ terraform {
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Test Discovery
 module "discover_vms" {
   source = "../.."
 
-  name                = "migrate-discover"
-  resource_group_name = var.resource_group_name
-  instance_type       = var.instance_type
-  operation_mode      = "discover"
-  project_name        = var.project_name
-  tags                = var.tags
+  location       = var.location
+  name           = "migrate-discover"
+  parent_id      = var.parent_id
+  instance_type  = var.instance_type
+  operation_mode = "discover"
+  project_name   = var.project_name
+  tags           = var.tags
 }
 
 

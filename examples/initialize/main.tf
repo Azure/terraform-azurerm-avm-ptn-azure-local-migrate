@@ -1,27 +1,20 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example: Initialize Replication Infrastructure
 # This example demonstrates how to initialize the replication infrastructure
 # for Azure Stack HCI migration
 #
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 1.9, < 3.0"
+      version = "~> 2.4"
     }
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
 # NOTE: Fabric IDs are automatically discovered from appliance names
@@ -29,20 +22,20 @@ provider "azapi" {
 module "initialize_replication" {
   source = "../../"
 
-  name = "hci-migration-init"
-  # Resource configuration
-  resource_group_name                = var.resource_group_name
+  # Location for resources
+  location  = var.location
+  name      = "hci-migration-init"
+  parent_id = var.parent_id
+  # Replication policy settings
   app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
   crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
   # Instance type (VMware to HCI or HyperV to HCI)
   instance_type = var.instance_type
-  # Location for resources
-  location = var.location
   # Operation mode
   operation_mode = "initialize"
   # Migration project
   project_name = var.project_name
-  # Replication policy settings
+  # Recovery point retention
   recovery_point_history_minutes = var.recovery_point_history_minutes
   # Appliance names - fabrics are auto-discovered from these
   source_appliance_name = var.source_appliance_name

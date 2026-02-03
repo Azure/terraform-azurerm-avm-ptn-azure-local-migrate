@@ -27,40 +27,32 @@ This example demonstrates how to create a new Azure Migrate project using the mo
 - **VM Discovery must be performed from the Azure Portal after project creation**
 
 ```hcl
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example: Create New Azure Migrate Project
 # This example demonstrates how to create a new Azure Migrate project
-#
+# Note: The resource group must already exist. Use parent_id to specify it.
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 1.9, < 3.0"
+      version = "~> 2.4"
     }
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Create a new Azure Migrate project
 module "create_migrate_project" {
   source = "../../"
 
-  name                   = "create-project"
-  resource_group_name    = var.resource_group_name
-  create_migrate_project = true # Set to true to create new project
-  create_resource_group  = true # Set to true to create new resource group
-  instance_type          = var.instance_type
   location               = var.location
+  name                   = "create-project"
+  parent_id              = var.parent_id
+  create_migrate_project = true # Set to true to create new project
+  instance_type          = var.instance_type
   operation_mode         = "create-project"
   project_name           = var.project_name
   tags                   = var.tags
@@ -72,9 +64,9 @@ module "create_migrate_project" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
 ## Resources
 
@@ -83,7 +75,13 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -113,22 +111,6 @@ Type: `string`
 
 Default: `"saif-project-012726"`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group where the Migrate project will be created
-
-Type: `string`
-
-Default: `"saif-project-012726-rg"`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The Azure subscription ID where resources will be deployed
-
-Type: `string`
-
-Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
-
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Tags to apply to the Azure Migrate project
@@ -157,9 +139,9 @@ Description: The resource ID of the created Azure Migrate project
 
 Description: The name of the created Azure Migrate project
 
-### <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name)
+### <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id)
 
-Description: The resource group containing the Migrate project
+Description: The resource group ID containing the Migrate project
 
 ## Modules
 

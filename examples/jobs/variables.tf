@@ -1,7 +1,7 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
+variable "parent_id" {
+  type        = string
+  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+}
 
 variable "instance_type" {
   type        = string
@@ -11,8 +11,8 @@ variable "instance_type" {
 
 variable "location" {
   type        = string
-  default     = "eastus"
-  description = "Optional: The Azure region. If not specified, uses the resource group's location."
+  default     = "westus2"
+  description = "Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location."
 }
 
 variable "project_name" {
@@ -25,18 +25,6 @@ variable "replication_vault_id" {
   type        = string
   default     = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault"
   description = "The full resource ID of the replication vault (optional, derived from project if not provided)"
-}
-
-variable "resource_group_name" {
-  type        = string
-  default     = "saif-project-012726-rg"
-  description = "The name of the resource group containing the Azure Migrate project"
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
-  description = "The Azure subscription ID where resources will be deployed"
 }
 
 variable "tags" {

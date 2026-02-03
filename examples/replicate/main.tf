@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example: Create VM Replication
 # This example demonstrates how to create replication for a VM to Azure Stack HCI
 #
@@ -20,32 +15,30 @@
 #
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 1.9, < 3.0"
+      version = "~> 2.4"
     }
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Create replication for a specific VM (POWER USER MODE)
 module "replicate_vm" {
   source = "../../"
 
+  location                   = var.location
   name                       = "vm-replication"
-  resource_group_name        = var.resource_group_name
+  parent_id                  = var.parent_id
   custom_location_id         = var.custom_location_id
   disks_to_include           = var.disks_to_include
   hyperv_generation          = var.hyperv_generation
   instance_type              = var.instance_type
   is_dynamic_memory_enabled  = var.is_dynamic_memory_enabled
-  location                   = var.location
   machine_id                 = var.machine_id
   nic_id                     = var.nic_id # For default user mode
   nics_to_include            = var.nics_to_include

@@ -5,30 +5,23 @@
 This example demonstrates how to initialize replication infrastructure using the `initialize` operation mode.
 
 ```hcl
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example: Initialize Replication Infrastructure
 # This example demonstrates how to initialize the replication infrastructure
 # for Azure Stack HCI migration
 #
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 1.9, < 3.0"
+      version = "~> 2.4"
     }
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Initialize replication infrastructure for VMware to Azure Stack HCI migration
 # NOTE: Fabric IDs are automatically discovered from appliance names
@@ -36,20 +29,20 @@ provider "azapi" {
 module "initialize_replication" {
   source = "../../"
 
-  name = "hci-migration-init"
-  # Resource configuration
-  resource_group_name                = var.resource_group_name
+  # Location for resources
+  location  = var.location
+  name      = "hci-migration-init"
+  parent_id = var.parent_id
+  # Replication policy settings
   app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
   crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
   # Instance type (VMware to HCI or HyperV to HCI)
   instance_type = var.instance_type
-  # Location for resources
-  location = var.location
   # Operation mode
   operation_mode = "initialize"
   # Migration project
   project_name = var.project_name
-  # Replication policy settings
+  # Recovery point retention
   recovery_point_history_minutes = var.recovery_point_history_minutes
   # Appliance names - fabrics are auto-discovered from these
   source_appliance_name = var.source_appliance_name
@@ -71,9 +64,9 @@ module "initialize_replication" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
 ## Resources
 
@@ -82,7 +75,13 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -136,14 +135,6 @@ Type: `number`
 
 Default: `4320`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group containing the Azure Migrate project
-
-Type: `string`
-
-Default: `"saif-project-012726-rg"`
-
 ### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
 
 Description: The name of the source appliance (e.g., 'src' for VMware or HyperV). The module will automatically discover the corresponding fabric.
@@ -159,14 +150,6 @@ Description: Optional: Explicit source fabric ID. If not provided, it will be au
 Type: `string`
 
 Default: `null`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The Azure subscription ID where resources will be deployed
-
-Type: `string`
-
-Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

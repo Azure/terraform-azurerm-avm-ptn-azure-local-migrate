@@ -1,7 +1,7 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
+variable "parent_id" {
+  type        = string
+  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+}
 
 variable "app_consistent_frequency_minutes" {
   type        = number
@@ -39,12 +39,6 @@ variable "recovery_point_history_minutes" {
   description = "Recovery point history retention in minutes"
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = "saif-project-012726-rg"
-  description = "The name of the resource group containing the Azure Migrate project"
-}
-
 variable "source_appliance_name" {
   type        = string
   default     = "src"
@@ -55,12 +49,6 @@ variable "source_fabric_id" {
   type        = string
   default     = null
   description = "Optional: Explicit source fabric ID. If not provided, it will be auto-discovered from source_appliance_name."
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
-  description = "The Azure subscription ID where resources will be deployed"
 }
 
 variable "tags" {

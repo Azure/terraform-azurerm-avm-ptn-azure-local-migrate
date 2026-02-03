@@ -1,23 +1,13 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example terraform.tfvars file
 # Copy this file to terraform.tfvars and update with your actual values
 #
 
-# Azure Subscription ID
-subscription_id = "00000000-0000-0000-0000-000000000000"
-
-# Resource Group containing your Azure Migrate project
-resource_group_name = "my-resource-group"
+# Resource Group ID where your Azure Migrate project resides
+# Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
 
 # Azure Migrate Project name
 project_name = "my-migrate-project"
-
-# Optional: Azure region for deployment
-# location = "eastus"
 
 # Optional: Instance type
 # instance_type = "VMwareToAzStackHCI"  # or "HyperVToAzStackHCI"
@@ -28,3 +18,4 @@ project_name = "my-migrate-project"
 #   Purpose     = "Discovery"
 #   Team        = "Migration Team"
 # }
+

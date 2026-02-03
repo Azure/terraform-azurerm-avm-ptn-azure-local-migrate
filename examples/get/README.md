@@ -5,41 +5,33 @@
 This example demonstrates retrieving details about a protected item (replicated VM).
 
 ```hcl
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example: Get Protected Item Details
 # This example demonstrates how to retrieve details of a protected (replicating) VM
 #
 
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.9"
 
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = ">= 1.9, < 3.0"
+      version = "~> 2.4"
     }
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Get protected item details
 module "get_protected_item" {
   source = "../../"
 
-  name                = "get-protected-item"
-  resource_group_name = var.resource_group_name
-  instance_type       = var.instance_type
-  location            = var.location
-  operation_mode      = "get"
-  project_name        = var.project_name
-  # Get by ID
+  location          = var.location
+  name              = "get-protected-item"
+  parent_id         = var.parent_id
+  instance_type     = var.instance_type
+  operation_mode    = "get"
+  project_name      = var.project_name
   protected_item_id = var.protected_item_id
   tags              = var.tags
 }
@@ -56,9 +48,9 @@ module "get_protected_item" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.9, < 3.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
 ## Resources
 
@@ -67,7 +59,13 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -83,11 +81,11 @@ Default: `"VMwareToAzStackHCI"`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: Optional: The Azure region. If not specified, uses the resource group's location.
+Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
 
 Type: `string`
 
-Default: `"eastus"`
+Default: `"westus2"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -104,22 +102,6 @@ Description: The full resource ID of the protected item to retrieve
 Type: `string`
 
 Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault/protectedItems/100-69-177-104-36bf83bc-c03b-4c08-853c-187db9aa17e8_50232086-5a0d-7205-68e2-bc2391e7a0a7"`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group containing the Azure Migrate project
-
-Type: `string`
-
-Default: `"saif-project-012726-rg"`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The Azure subscription ID where resources will be deployed
-
-Type: `string`
-
-Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

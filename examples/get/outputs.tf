@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-
 output "protected_item_custom_properties" {
   description = "Custom properties of the protected item"
   value       = module.get_protected_item.protected_item_custom_properties

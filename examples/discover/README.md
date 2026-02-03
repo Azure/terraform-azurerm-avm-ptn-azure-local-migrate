@@ -16,20 +16,19 @@ terraform {
   }
 }
 
-provider "azapi" {
-  subscription_id = var.subscription_id
-}
+provider "azapi" {}
 
 # Test Discovery
 module "discover_vms" {
   source = "../.."
 
-  name                = "migrate-discover"
-  resource_group_name = var.resource_group_name
-  instance_type       = var.instance_type
-  operation_mode      = "discover"
-  project_name        = var.project_name
-  tags                = var.tags
+  location       = var.location
+  name           = "migrate-discover"
+  parent_id      = var.parent_id
+  instance_type  = var.instance_type
+  operation_mode = "discover"
+  project_name   = var.project_name
+  tags           = var.tags
 }
 
 
@@ -51,7 +50,13 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
+The following input variables are required:
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
 
 ## Optional Inputs
 
@@ -67,7 +72,7 @@ Default: `"VMwareToAzStackHCI"`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: Optional: The Azure region. If not specified, uses the resource group's location.
+Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
 
 Type: `string`
 
@@ -80,22 +85,6 @@ Description: The name of the Azure Migrate project
 Type: `string`
 
 Default: `"saif-project-012726"`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The name of the resource group containing the Azure Migrate project
-
-Type: `string`
-
-Default: `"saif-project-012726-rg"`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The Azure subscription ID where resources will be deployed
-
-Type: `string`
-
-Default: `"f6f66a94-f184-45da-ac12-ffbfd8a6eb29"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

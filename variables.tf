@@ -2,6 +2,12 @@
 # MIGRATION-SPECIFIC VARIABLES
 # ========================================
 
+variable "location" {
+  type        = string
+  description = "Azure region where resources should be deployed. Required when create_migrate_project is true."
+}
+
+# tflint-ignore: terraform_unused_declarations
 variable "name" {
   type        = string
   description = "The name of the migration resource."
@@ -12,10 +18,14 @@ variable "name" {
   }
 }
 
-# This is required for most resource modules
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "The resource group where the resources will be deployed."
+  description = "The resource ID of the resource group where resources will be deployed. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+
+  validation {
+    condition     = can(regex("^/subscriptions/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/resourceGroups/[^/]+$", var.parent_id))
+    error_message = "The parent_id must be a valid resource group ARM ID in the format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+  }
 }
 
 variable "app_consistent_frequency_minutes" {
@@ -48,12 +58,6 @@ variable "create_migrate_project" {
   description = "Whether to create a new Azure Migrate project. If false, an existing project is queried."
 }
 
-variable "create_resource_group" {
-  type        = bool
-  default     = false
-  description = "Whether to create a new resource group. If false, an existing resource group is queried. When true, location must be specified."
-}
-
 variable "custom_location_id" {
   type        = string
   default     = null
@@ -63,26 +67,6 @@ variable "custom_location_id" {
 # required AVM interfaces
 # remove only if not supported by the resource
 # tflint-ignore: terraform_unused_declarations
-variable "customer_managed_key" {
-  type = object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-  default     = null
-  description = <<DESCRIPTION
-A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
-DESCRIPTION
-}
-
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
@@ -137,13 +121,15 @@ variable "disks_to_include" {
     is_dynamic       = optional(bool, true)
   }))
   default     = []
-  description = "Disks to include for replication (power user mode)"
-}
+  description = <<DESCRIPTION
+A list of disks to include for replication (power user mode). Each object in the list includes the following properties:
 
-variable "display_name" {
-  type        = string
-  default     = null
-  description = "Source machine display name for filtering"
+- `disk_id` - (Required) The unique identifier of the disk to replicate.
+- `disk_size_gb` - (Required) The size of the disk in gigabytes.
+- `disk_file_format` - (Optional) The file format of the disk. Defaults to `"VHDX"`.
+- `is_os_disk` - (Required) Whether this disk is the operating system disk.
+- `is_dynamic` - (Optional) Whether the disk is dynamic. Defaults to `true`.
+DESCRIPTION
 }
 
 variable "enable_telemetry" {
@@ -198,12 +184,6 @@ variable "job_name" {
   description = "Specific job name to retrieve. If not provided, all jobs will be listed."
 }
 
-variable "location" {
-  type        = string
-  default     = null
-  description = "Azure region where resources should be deployed. Required when create_resource_group or create_migrate_project is true."
-}
-
 variable "lock" {
   type = object({
     kind = string
@@ -228,17 +208,6 @@ variable "machine_id" {
   type        = string
   default     = null
   description = "Machine ARM ID of the discovered server to migrate"
-}
-
-variable "machine_index" {
-  type        = number
-  default     = null
-  description = "Index of the discovered server from the list (1-based)"
-
-  validation {
-    condition     = var.machine_index == null || var.machine_index >= 1
-    error_message = "machine_index must be a positive integer (1 or greater)."
-  }
 }
 
 variable "machine_name" {
@@ -277,7 +246,14 @@ variable "nics_to_include" {
     selection_type    = optional(string, "SelectedByUser")
   }))
   default     = []
-  description = "NICs to include for replication (power user mode)"
+  description = <<DESCRIPTION
+A list of NICs to include for replication (power user mode). Each object in the list includes the following properties:
+
+- `nic_id` - (Required) The unique identifier of the network interface card to replicate.
+- `target_network_id` - (Required) The ARM resource ID of the target logical network for the NIC.
+- `test_network_id` - (Optional) The ARM resource ID of the test logical network for the NIC.
+- `selection_type` - (Optional) The selection type for the NIC. Defaults to `"SelectedByUser"`.
+DESCRIPTION
 }
 
 # Operation Mode

@@ -1,7 +1,7 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
+variable "parent_id" {
+  type        = string
+  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+}
 
 variable "custom_location_id" {
   type        = string
@@ -135,12 +135,6 @@ variable "replication_vault_id" {
   description = "The full resource ID of the replication vault"
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = "saif-project-012726-rg"
-  description = "The name of the resource group containing the Azure Migrate project"
-}
-
 variable "run_as_account_id" {
   type        = string
   default     = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.OffAzure/VMwareSites/src7681site/runasaccounts/58093f44-117a-561b-be13-d751e1b22ca9"
@@ -169,12 +163,6 @@ variable "source_vm_ram_mb" {
   type        = number
   default     = 4096
   description = "Amount of RAM in MB in the source VM"
-}
-
-variable "subscription_id" {
-  type        = string
-  default     = "f6f66a94-f184-45da-ac12-ffbfd8a6eb29"
-  description = "The Azure subscription ID where resources will be deployed"
 }
 
 variable "tags" {

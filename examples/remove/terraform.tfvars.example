@@ -1,17 +1,10 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-#
 # Example terraform.tfvars file for remove operation
 # Copy this file to terraform.tfvars and update with your values
 #
 
-# Required: Azure subscription ID
-subscription_id = "00000000-0000-0000-0000-000000000000"
-
-# Required: Resource group where the replication vault exists
-resource_group_name = "my-migrate-rg"
+# Resource Group ID where your Azure Migrate project resides
+# Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
 
 # Required: The protected item ARM ID to remove
 # This is the full resource ID of the protected item in the replication vault
@@ -29,3 +22,4 @@ tags = {
   environment = "production"
   purpose     = "migration-cleanup"
 }
+

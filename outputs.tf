@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for license information.
-# --------------------------------------------------------------------------------------------
-
 # ========================================
 # DISCOVER SERVERS OUTPUTS
 # ========================================
@@ -399,9 +394,15 @@ output "replication_vault_identity" {
   value       = local.is_initialize_mode ? (local.create_new_vault ? azapi_resource.replication_vault[0].identity[0].principal_id : data.azapi_resource.replication_vault[0].output.identity.principalId) : null
 }
 
-output "resource_group_name_output" {
-  description = "Name of the resource group"
-  value       = var.resource_group_name
+output "resource_group_id" {
+  description = "The resource group ID (same as parent_id)"
+  value       = local.resource_group_id
+}
+
+# tflint-ignore: terraform_unused_declarations
+output "resource_id" {
+  description = "The resource ID of the primary resource managed by this module. For AVM compliance (RMFR7)."
+  value       = local.migrate_project_id
 }
 
 output "source_fabric_discovered" {
