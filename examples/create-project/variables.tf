@@ -30,3 +30,9 @@ variable "tags" {
   }
   description = "Tags to apply to the Azure Migrate project"
 }
+
+variable "connectivity_method" {
+  type        = string
+  default     = "Public-endpoint"
+  description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'."
+}
