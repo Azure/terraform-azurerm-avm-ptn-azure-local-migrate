@@ -58,6 +58,17 @@ variable "create_migrate_project" {
   description = "Whether to create a new Azure Migrate project. If false, an existing project is queried."
 }
 
+variable "connectivity_method" {
+  type        = string
+  default     = "Public-endpoint"
+  description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' (default) or 'Private-endpoint'."
+
+  validation {
+    condition     = contains(["Public-endpoint", "Private-endpoint"], var.connectivity_method)
+    error_message = "connectivity_method must be either 'Public-endpoint' or 'Private-endpoint'."
+  }
+}
+
 variable "custom_location_id" {
   type        = string
   default     = null

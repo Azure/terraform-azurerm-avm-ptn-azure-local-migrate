@@ -23,6 +23,7 @@ module "create_migrate_project" {
   name                   = "create-project"
   parent_id              = var.parent_id
   create_migrate_project = true # Set to true to create new project
+  connectivity_method    = var.connectivity_method
   instance_type          = var.instance_type
   operation_mode         = "create-project"
   project_name           = var.project_name
