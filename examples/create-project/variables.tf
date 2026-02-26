@@ -12,8 +12,8 @@ variable "instance_type" {
 
 variable "location" {
   type        = string
-  default     = "centralus"
-  description = "The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: centralus, westus2, northeurope, westeurope, etc."
+  default     = "eastus"
+  description = "The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: eastus, westus2, northeurope, westeurope, etc."
 }
 
 variable "project_name" {

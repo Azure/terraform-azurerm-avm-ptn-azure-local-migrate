@@ -12,7 +12,7 @@ variable "force_remove" {
 
 variable "location" {
   type        = string
-  default     = "centralus"
+  default     = "eastus"
   description = "Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location."
 }
 
