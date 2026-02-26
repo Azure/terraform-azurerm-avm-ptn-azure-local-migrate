@@ -136,6 +136,49 @@ locals {
   ) : null
   target_fabric_instance_type = "AzStackHCI"
   # ========================================
+  # BROWNFIELD DETECTION
+  # ========================================
+  # Detect existing role assignments on the cache storage account.
+  # When cache_storage_account_id is provided (brownfield), query Azure for existing assignments
+  # and skip creation if an assignment for the same principal+role already exists.
+  # In greenfield (cache_storage_account_id is null), these are always false → create everything.
+  _existing_role_assignment_keys = var.cache_storage_account_id != null && length(data.azapi_resource_list.cache_storage_role_assignments) > 0 ? toset([
+    for ra in try(data.azapi_resource_list.cache_storage_role_assignments[0].output.value, []) :
+    "${lower(try(ra.properties.principalId, ""))}-${lower(basename(try(ra.properties.roleDefinitionId, "")))}"
+  ]) : toset([])
+  # Contributor role GUID
+  _contributor_role_guid = "b24988ac-6180-42a0-ab88-20f7382dd24c"
+  # Storage Blob Data Contributor role GUID
+  _blob_contributor_role_guid = "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+  # Vault principal ID from existing vault data source (brownfield)
+  _vault_principal_id = local.vault_exists_in_solution ? try(data.azapi_resource.replication_vault[0].output.identity.principalId, null) : null
+  # Per-resource brownfield checks
+  vault_contributor_exists          = local._vault_principal_id != null && contains(local._existing_role_assignment_keys, "${lower(local._vault_principal_id)}-${local._contributor_role_guid}")
+  vault_blob_contributor_exists     = local._vault_principal_id != null && contains(local._existing_role_assignment_keys, "${lower(local._vault_principal_id)}-${local._blob_contributor_role_guid}")
+  source_dra_contributor_exists     = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._contributor_role_guid}")
+  source_dra_blob_exists            = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._blob_contributor_role_guid}")
+  target_dra_contributor_exists     = local.target_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.target_dra_object_id)}-${local._contributor_role_guid}")
+  target_dra_blob_exists            = local.target_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.target_dra_object_id)}-${local._blob_contributor_role_guid}")
+  # Detect existing replication policy (brownfield)
+  replication_policy_exists = local.vault_exists_in_solution && length(data.azapi_resource_list.existing_policies) > 0 && length([
+    for p in try(data.azapi_resource_list.existing_policies[0].output.value, []) :
+    p if try(p.properties.customProperties.instanceType, "") == var.instance_type
+  ]) > 0
+  # Get existing policy ID for outputs
+  existing_policy_id = local.replication_policy_exists ? try([
+    for p in data.azapi_resource_list.existing_policies[0].output.value :
+    p.id if try(p.properties.customProperties.instanceType, "") == var.instance_type
+  ][0], null) : null
+  # Detect existing replication extension (brownfield)
+  _expected_extension_name = local.has_fabric_inputs && local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ? "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" : ""
+  replication_extension_exists = local.vault_exists_in_solution && local.has_fabric_inputs && length(data.azapi_resource_list.existing_extensions) > 0 && length([
+    for e in try(data.azapi_resource_list.existing_extensions[0].output.value, []) :
+    e if try(e.name, "") == local._expected_extension_name
+  ]) > 0
+  # Get existing extension details for outputs
+  existing_extension_id   = local.replication_extension_exists ? try([for e in data.azapi_resource_list.existing_extensions[0].output.value : e.id if try(e.name, "") == local._expected_extension_name][0], null) : null
+  existing_extension_name = local.replication_extension_exists ? local._expected_extension_name : null
+  # ========================================
   # REPLICATION VAULT
   # ========================================
   # Check if vault exists in solution (handles both missing solution and missing vaultId)

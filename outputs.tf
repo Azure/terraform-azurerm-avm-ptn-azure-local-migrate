@@ -253,7 +253,7 @@ output "protected_items_count" {
 
 output "protected_items_list" {
   description = "Complete list of all protected items (replicated VMs) in the vault"
-  value       = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? try(data.azapi_resource_list.protected_items[0].output.value, []) : []
+  value       = try(data.azapi_resource_list.protected_items[0].output.value, [])
 }
 
 output "protected_items_summary" {
@@ -305,12 +305,12 @@ output "removal_status" {
 
 output "replication_extension_id" {
   description = "ID of the replication extension"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].id : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].id : local.existing_extension_id) : null
 }
 
 output "replication_extension_name" {
   description = "Name of the replication extension"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].name : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].name : local.existing_extension_name) : null
 }
 
 output "replication_fabrics_available" {
@@ -376,7 +376,7 @@ output "replication_jobs_count" {
 
 output "replication_policy_id" {
   description = "ID of the replication policy"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_policy) > 0 ? azapi_resource.replication_policy[0].id : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_policy) > 0 ? azapi_resource.replication_policy[0].id : local.existing_policy_id) : null
 }
 
 output "replication_state" {

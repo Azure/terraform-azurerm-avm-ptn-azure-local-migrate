@@ -176,9 +176,9 @@ resource "azapi_resource" "replication_vault" {
   }
 }
 
-# Create or update replication policy
+# Create or update replication policy (skip if it already exists in brownfield)
 resource "azapi_resource" "replication_policy" {
-  count = local.is_initialize_mode ? 1 : 0
+  count = local.is_initialize_mode && !local.replication_policy_exists ? 1 : 0
 
   name      = var.policy_name != null ? var.policy_name : "${split("/", local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id)[8]}${var.instance_type}policy"
   parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
@@ -230,9 +230,9 @@ resource "azapi_resource" "cache_storage_account" {
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
-# Grant Contributor role to vault identity on storage account
+# Grant Contributor role to vault identity on storage account (skip if exists in brownfield)
 resource "azapi_resource" "vault_storage_contributor" {
-  count = local.is_initialize_mode ? 1 : 0
+  count = local.is_initialize_mode && !local.vault_contributor_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-vault-contributor")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -250,9 +250,9 @@ resource "azapi_resource" "vault_storage_contributor" {
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
-# Grant Storage Blob Data Contributor role to vault identity
+# Grant Storage Blob Data Contributor role to vault identity (skip if exists in brownfield)
 resource "azapi_resource" "vault_storage_blob_contributor" {
-  count = local.is_initialize_mode ? 1 : 0
+  count = local.is_initialize_mode && !local.vault_blob_contributor_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-vault-blob-contributor")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -278,9 +278,9 @@ resource "azapi_resource" "vault_storage_blob_contributor" {
 #       which is the expected behavior.
 # ========================================
 
-# Grant Contributor role to source DRA identity
+# Grant Contributor role to source DRA identity (skip if exists in brownfield)
 resource "azapi_resource" "source_dra_storage_contributor" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.is_initialize_mode && local.has_fabric_inputs && !local.source_dra_contributor_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-source-dra-contributor")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -300,9 +300,9 @@ resource "azapi_resource" "source_dra_storage_contributor" {
   depends_on = [data.azapi_resource_list.source_fabric_agents]
 }
 
-# Grant Storage Blob Data Contributor role to source DRA identity
+# Grant Storage Blob Data Contributor role to source DRA identity (skip if exists in brownfield)
 resource "azapi_resource" "source_dra_storage_blob_contributor" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.is_initialize_mode && local.has_fabric_inputs && !local.source_dra_blob_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-source-dra-blob")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -322,9 +322,9 @@ resource "azapi_resource" "source_dra_storage_blob_contributor" {
   depends_on = [data.azapi_resource_list.source_fabric_agents]
 }
 
-# Grant Contributor role to target DRA identity
+# Grant Contributor role to target DRA identity (skip if exists in brownfield)
 resource "azapi_resource" "target_dra_storage_contributor" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.is_initialize_mode && local.has_fabric_inputs && !local.target_dra_contributor_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-target-dra-contributor")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -344,9 +344,9 @@ resource "azapi_resource" "target_dra_storage_contributor" {
   depends_on = [data.azapi_resource_list.target_fabric_agents]
 }
 
-# Grant Storage Blob Data Contributor role to target DRA identity
+# Grant Storage Blob Data Contributor role to target DRA identity (skip if exists in brownfield)
 resource "azapi_resource" "target_dra_storage_blob_contributor" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.is_initialize_mode && local.has_fabric_inputs && !local.target_dra_blob_exists ? 1 : 0
 
   name      = uuidv5("dns", "${local.storage_account_name}-target-dra-blob")
   parent_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : azapi_resource.cache_storage_account[0].id
@@ -410,9 +410,9 @@ resource "azapi_update_resource" "update_solution_storage" {
   ]
 }
 
-# Create replication extension
+# Create replication extension (skip if it already exists in brownfield)
 resource "azapi_resource" "replication_extension" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.is_initialize_mode && local.has_fabric_inputs && !local.replication_extension_exists ? 1 : 0
 
   name      = "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn"
   parent_id = local.create_new_vault ? azapi_resource.replication_vault[0].id : data.azapi_resource.replication_vault[0].id
@@ -547,9 +547,9 @@ resource "azapi_resource" "protected_item" {
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
-    create = "5m"
+    create = "30m"
     read   = "10m"
-    update = "5m"
+    update = "30m"
   }
 
   lifecycle {

@@ -1,5 +1,6 @@
 variable "parent_id" {
   type        = string
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
   description = "The resource ID of the resource group where the replication vault exists. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
@@ -11,7 +12,7 @@ variable "force_remove" {
 
 variable "location" {
   type        = string
-  default     = "westus2"
+  default     = "eastus"
   description = "Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location."
 }
 
@@ -23,7 +24,7 @@ variable "tags" {
 
 variable "target_object_id" {
   type        = string
-  default     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-migrate-project-rg/providers/Microsoft.DataReplication/replicationVaults/myprojectreplicationvault/protectedItems/my-vm-name"
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50230032-a843-484c-a72b-28f60291b43e"
   description = "The protected item ARM ID for which replication needs to be disabled. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.DataReplication/replicationVaults/{vault-name}/protectedItems/{item-name}"
 
   validation {

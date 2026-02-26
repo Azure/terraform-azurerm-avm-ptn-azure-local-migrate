@@ -16,7 +16,7 @@ terraform {
 
 provider "azapi" {}
 
-# Initialize replication infrastructure for VMware to Azure Stack HCI migration
+# Initialize replication infrastructure for VMware to Azure Local migration
 # NOTE: Fabric IDs are automatically discovered from appliance names
 # You only need to provide source_appliance_name and target_appliance_name
 module "initialize_replication" {
@@ -24,12 +24,14 @@ module "initialize_replication" {
 
   # Location for resources
   location  = var.location
-  name      = "hci-migration-init"
+  name      = "az-local-migration-init"
   parent_id = var.parent_id
   # Replication policy settings
   app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
   crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
-  # Instance type (VMware to HCI or HyperV to HCI)
+  # Use existing cache storage account (created by CLI) to avoid name mismatch
+  cache_storage_account_id = var.cache_storage_account_id
+  # Instance type (VMware HyperV)
   instance_type = var.instance_type
   # Operation mode
   operation_mode = "initialize"
