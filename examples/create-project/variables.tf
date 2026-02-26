@@ -1,5 +1,6 @@
 variable "parent_id" {
   type        = string
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
   description = "The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
@@ -11,13 +12,13 @@ variable "instance_type" {
 
 variable "location" {
   type        = string
-  default     = "westus2"
+  default     = "centralus"
   description = "The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: centralus, westus2, northeurope, westeurope, etc."
 }
 
 variable "project_name" {
   type        = string
-  default     = "saif-project-012726"
+  default     = "saif-project-021826"
   description = "The name of the new Azure Migrate project to create"
 }
 

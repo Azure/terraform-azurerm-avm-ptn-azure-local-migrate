@@ -305,12 +305,12 @@ output "removal_status" {
 
 output "replication_extension_id" {
   description = "ID of the replication extension"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].id : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].id : local.existing_extension_id) : null
 }
 
 output "replication_extension_name" {
   description = "Name of the replication extension"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].name : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_extension) > 0 ? azapi_resource.replication_extension[0].name : local.existing_extension_name) : null
 }
 
 output "replication_fabrics_available" {
@@ -376,7 +376,7 @@ output "replication_jobs_count" {
 
 output "replication_policy_id" {
   description = "ID of the replication policy"
-  value       = local.is_initialize_mode && length(azapi_resource.replication_policy) > 0 ? azapi_resource.replication_policy[0].id : null
+  value       = local.is_initialize_mode ? (length(azapi_resource.replication_policy) > 0 ? azapi_resource.replication_policy[0].id : local.existing_policy_id) : null
 }
 
 output "replication_state" {
