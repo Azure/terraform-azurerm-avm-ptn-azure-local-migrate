@@ -119,6 +119,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_connectivity_method"></a> [connectivity\_method](#input\_connectivity\_method)
+
+Description: The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' (default) or 'Private-endpoint'.
+
+Type: `string`
+
+Default: `"Public-endpoint"`
+
 ### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
 
 Description: Crash consistent snapshot frequency in minutes

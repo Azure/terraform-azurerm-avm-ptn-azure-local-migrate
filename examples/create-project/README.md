@@ -51,6 +51,7 @@ module "create_migrate_project" {
   location               = var.location
   name                   = "create-project"
   parent_id              = var.parent_id
+  connectivity_method    = var.connectivity_method
   create_migrate_project = true # Set to true to create new project
   instance_type          = var.instance_type
   operation_mode         = "create-project"
@@ -86,6 +87,14 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_connectivity_method"></a> [connectivity\_method](#input\_connectivity\_method)
+
+Description: The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'.
+
+Type: `string`
+
+Default: `"Public-endpoint"`
 
 ### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
 
