@@ -3,6 +3,12 @@ variable "parent_id" {
   description = "The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
+variable "connectivity_method" {
+  type        = string
+  default     = "Public-endpoint"
+  description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'."
+}
+
 variable "instance_type" {
   type        = string
   default     = "VMwareToAzStackHCI"
@@ -29,10 +35,4 @@ variable "tags" {
     ManagedBy   = "Terraform"
   }
   description = "Tags to apply to the Azure Migrate project"
-}
-
-variable "connectivity_method" {
-  type        = string
-  default     = "Public-endpoint"
-  description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'."
 }
