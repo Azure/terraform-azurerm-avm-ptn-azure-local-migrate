@@ -21,15 +21,15 @@ variable "disks_to_include" {
   }))
   default = [
     {
-      disk_id          = "6000C29c-262c-2f47-4313-0869276a9574"
-      disk_size_gb     = 100
+      disk_id          = "6000C293-4981-c37f-b411-3791dbf4bfcc"
+      disk_size_gb     = 16
       disk_file_format = "VHDX"
       is_os_disk       = true
       is_dynamic       = true
     },
     {
-      disk_id          = "6000C29c-41ff-3488-a9eb-d30f16a58561"
-      disk_size_gb     = 200
+      disk_id          = "6000C291-1810-f030-4327-ad1d208f9ca7"
+      disk_size_gb     = 10
       disk_file_format = "VHDX"
       is_os_disk       = false
       is_dynamic       = true
@@ -40,7 +40,7 @@ variable "disks_to_include" {
 
 variable "hyperv_generation" {
   type        = string
-  default     = "1"
+  default     = "2"
   description = "Hyper-V generation (1 or 2)"
 }
 
@@ -58,13 +58,13 @@ variable "is_dynamic_memory_enabled" {
 
 variable "location" {
   type        = string
-  default     = "centralus"
+  default     = "eastus"
   description = "The Azure region (custom location region). Must be a region where Microsoft.AzureStackHCI resources are available."
 }
 
 variable "machine_id" {
   type        = string
-  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/machines/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_5023157d-5a3b-ef48-1e7d-bbc8885ce7d4"
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/machines/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50236aa8-35fb-7f53-50a1-0da9f0930c4f"
   description = "The full resource ID of the machine to replicate (OffAzure/VMwareSites path)"
 }
 
@@ -95,13 +95,13 @@ variable "nics_to_include" {
 
 variable "os_disk_id" {
   type        = string
-  default     = "6000C29c-262c-2f47-4313-0869276a9574"
+  default     = "6000C293-4981-c37f-b411-3791dbf4bfcc"
   description = "The OS disk ID of the source VM. Used for DEFAULT USER MODE when disks_to_include is not provided."
 }
 
 variable "os_disk_size_gb" {
   type        = number
-  default     = 100
+  default     = 16
   description = "The OS disk size in GB for DEFAULT USER MODE. Used when disks_to_include is not provided."
 }
 
@@ -213,7 +213,7 @@ variable "target_vm_cpu_cores" {
 
 variable "target_vm_name" {
   type        = string
-  default     = "LH-WS2022-11-migrated"
+  default     = "test-vm5-RHEL8-migrated"
   description = "The name for the migrated VM on Azure Stack HCI"
 }
 

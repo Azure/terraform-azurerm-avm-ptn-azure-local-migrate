@@ -170,7 +170,7 @@ locals {
     p.id if try(p.properties.customProperties.instanceType, "") == var.instance_type
   ][0], null) : null
   # Detect existing replication extension (brownfield)
-  _expected_extension_name = local.has_fabric_inputs ? "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" : ""
+  _expected_extension_name = local.has_fabric_inputs && local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ? "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" : ""
   replication_extension_exists = local.vault_exists_in_solution && local.has_fabric_inputs && length(data.azapi_resource_list.existing_extensions) > 0 && length([
     for e in try(data.azapi_resource_list.existing_extensions[0].output.value, []) :
     e if try(e.name, "") == local._expected_extension_name
