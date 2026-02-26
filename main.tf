@@ -545,9 +545,9 @@ resource "azapi_resource" "protected_item" {
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
-    create = "5m"
+    create = "30m"
     read   = "10m"
-    update = "5m"
+    update = "30m"
   }
 
   lifecycle {

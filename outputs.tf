@@ -253,7 +253,7 @@ output "protected_items_count" {
 
 output "protected_items_list" {
   description = "Complete list of all protected items (replicated VMs) in the vault"
-  value       = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? try(data.azapi_resource_list.protected_items[0].output.value, []) : []
+  value       = try(data.azapi_resource_list.protected_items[0].output.value, [])
 }
 
 output "protected_items_summary" {
