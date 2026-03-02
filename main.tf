@@ -14,7 +14,9 @@ resource "azapi_resource" "migrate_project" {
   parent_id = local.resource_group_id
   type      = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
   body = {
-    properties = {}
+    properties = {
+      publicNetworkAccess = var.connectivity_method == "Public-endpoint" ? "Enabled" : "Disabled"
+    }
   }
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

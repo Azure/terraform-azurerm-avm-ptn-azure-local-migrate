@@ -46,6 +46,17 @@ variable "cache_storage_account_id" {
   description = "Storage Account ARM ID for cache/private endpoint scenario"
 }
 
+variable "connectivity_method" {
+  type        = string
+  default     = "Public-endpoint"
+  description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' (default) or 'Private-endpoint'."
+
+  validation {
+    condition     = contains(["Public-endpoint", "Private-endpoint"], var.connectivity_method)
+    error_message = "connectivity_method must be either 'Public-endpoint' or 'Private-endpoint'."
+  }
+}
+
 variable "crash_consistent_frequency_minutes" {
   type        = number
   default     = 60 # 1 hour
