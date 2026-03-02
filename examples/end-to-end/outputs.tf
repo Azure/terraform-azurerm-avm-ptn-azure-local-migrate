@@ -55,35 +55,20 @@ output "replication_status" {
   }
 }
 
-output "next_step" {
-  description = "Guidance on what to do next"
-  value = alltrue([
-    for key, status in module.check_status :
-    try(contains(status.protected_item_summary.allowed_jobs, "PlannedFailover"), false)
-    ]) ? "READY: All VMs replicated. Run 'terraform apply -var=\"perform_migration=true\"' to start migration" : (
-    "WAITING: Not all VMs are ready. Re-run 'terraform apply' to refresh status."
-  )
-}
-
 # ========================================
-# STEP 3: MIGRATION OUTPUTS (when perform_migration = true)
+# STEP 3: MIGRATION OUTPUTS
 # ========================================
-
-output "migration_triggered" {
-  description = "Whether migration was triggered in this apply"
-  value       = var.perform_migration
-}
 
 output "migration_operation_details" {
-  description = "Details of the migration operation per VM (only populated when perform_migration = true)"
-  value = var.perform_migration ? {
+  description = "Details of the migration operation per VM"
+  value = {
     for key, vm in module.migrate_vm : key => vm.migration_operation_details
-  } : null
+  }
 }
 
 output "migration_protected_item_details" {
-  description = "Protected item details at time of migration per VM (only populated when perform_migration = true)"
-  value = var.perform_migration ? {
+  description = "Protected item details at time of migration per VM"
+  value = {
     for key, vm in module.migrate_vm : key => vm.migration_protected_item_details
-  } : null
+  }
 }

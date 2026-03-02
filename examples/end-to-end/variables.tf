@@ -279,12 +279,6 @@ variable "vms" {
 # MIGRATION CONTROL VARIABLES (Step 3)
 # ========================================
 
-variable "perform_migration" {
-  type        = bool
-  default     = false
-  description = "Set to true to trigger planned failover (migration). Only set this after replication_status shows 'Protected'."
-}
-
 variable "shutdown_source_vm" {
   type        = bool
   default     = true

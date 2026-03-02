@@ -8,13 +8,10 @@
 #   Step 3: Migrate - Perform planned failover (for each VM)
 #
 # Usage:
-#   1. First run: terraform apply
-#      - Initializes replication infrastructure if needed
-#      - Creates replication for all VMs and waits for completion
-#      - Once complete, outputs will show READY status per VM
-#
-#   2. Migrate: terraform apply -var="perform_migration=true"
-#      - Triggers planned failover for all replicated VMs
+#   terraform apply
+#     - Initializes replication infrastructure if needed
+#     - Replicates all VMs and waits for initial replication to complete
+#     - Automatically migrates (planned failover) all VMs once ready
 #
 
 terraform {
@@ -214,11 +211,11 @@ module "check_status" {
 # ========================================
 # STEP 3: MIGRATE (Planned Failover)
 # ========================================
-# Only runs when perform_migration = true.
-# The user should set this after confirming replication state = "Protected".
+# Automatically performs planned failover for each VM after replication
+# is confirmed complete.
 module "migrate_vm" {
   source   = "../../"
-  for_each = var.perform_migration ? var.vms : {}
+  for_each = var.vms
 
   depends_on = [module.check_status]
 
