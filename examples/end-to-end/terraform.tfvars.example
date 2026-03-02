@@ -1,0 +1,31 @@
+# Example terraform.tfvars file for end-to-end migration
+# Copy this file to terraform.tfvars and update with your actual values
+
+# Common settings
+parent_id    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+project_name = "my-migrate-project"
+location     = "eastus"
+
+# Source VM to replicate
+machine_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.OffAzure/VMwareSites/my-site/machines/machine-guid"
+os_disk_id = "6000C293-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Replication infrastructure
+replication_vault_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationVaults/my-vault"
+replication_extension_name = "srcXXXXreplicationfabric-tgtXXXXreplicationfabric-MigReplicationExtn"
+policy_name                = "my-replication-policy"
+run_as_account_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.OffAzure/VMwareSites/my-site/runAsAccounts/my-account"
+
+# Azure Stack HCI target
+custom_location_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.ExtendedLocation/customLocations/my-custom-location"
+target_hci_cluster_id    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/clusters/my-cluster"
+target_resource_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-target-rg"
+target_storage_path_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/storageContainers/my-storage"
+target_virtual_switch_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-hci-rg/providers/Microsoft.AzureStackHCI/logicalnetworks/my-network"
+
+# Target VM
+target_vm_name = "my-vm-migrated"
+
+# Migration control - set to true once replication_status shows "Protected"
+# perform_migration = true
+# shutdown_source_vm = true
