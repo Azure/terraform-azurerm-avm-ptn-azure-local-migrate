@@ -23,7 +23,7 @@ terraform {
 
 provider "azapi" {}
 
-# Initialize replication infrastructure for VMware to Azure Stack HCI migration
+# Initialize replication infrastructure for VMware to Azure Local migration
 # NOTE: Fabric IDs are automatically discovered from appliance names
 # You only need to provide source_appliance_name and target_appliance_name
 module "initialize_replication" {
@@ -31,12 +31,14 @@ module "initialize_replication" {
 
   # Location for resources
   location  = var.location
-  name      = "hci-migration-init"
+  name      = "az-local-migration-init"
   parent_id = var.parent_id
   # Replication policy settings
-  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
+  app_consistent_frequency_minutes = var.app_consistent_frequency_minutes
+  # Use existing cache storage account (created by CLI) to avoid name mismatch
+  cache_storage_account_id           = var.cache_storage_account_id
   crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
-  # Instance type (VMware to HCI or HyperV to HCI)
+  # Instance type (VMware HyperV)
   instance_type = var.instance_type
   # Operation mode
   operation_mode = "initialize"
@@ -75,13 +77,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -94,6 +90,14 @@ Description: Application-consistent snapshot frequency in minutes
 Type: `number`
 
 Default: `240`
+
+### <a name="input_cache_storage_account_id"></a> [cache\_storage\_account\_id](#input\_cache\_storage\_account\_id)
+
+Description: Optional: Existing cache storage account ID. If provided, the module will use this account instead of creating a new one. Use this when the environment was previously initialized (e.g., via CLI).
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.Storage/storageAccounts/migratersa2220948737"`
 
 ### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
 
@@ -117,7 +121,15 @@ Description: Optional: The Azure region where resources will be deployed. If not
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -125,7 +137,7 @@ Description: The name of the Azure Migrate project
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"saif-project-021826"`
 
 ### <a name="input_recovery_point_history_minutes"></a> [recovery\_point\_history\_minutes](#input\_recovery\_point\_history\_minutes)
 
@@ -137,11 +149,11 @@ Default: `4320`
 
 ### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
 
-Description: The name of the source appliance (e.g., 'src' for VMware or HyperV). The module will automatically discover the corresponding fabric.
+Description: The name of the source appliance (e.g., 'src2' for VMware). The module will automatically discover the corresponding fabric.
 
 Type: `string`
 
-Default: `"src"`
+Default: `"src2"`
 
 ### <a name="input_source_fabric_id"></a> [source\_fabric\_id](#input\_source\_fabric\_id)
 
@@ -149,7 +161,7 @@ Description: Optional: Explicit source fabric ID. If not provided, it will be au
 
 Type: `string`
 
-Default: `null`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationFabrics/src27987replicationfabric"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
@@ -169,11 +181,11 @@ Default:
 
 ### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
 
-Description: The name of the target appliance (e.g., 'tgt' for Azure Stack HCI). The module will automatically discover the corresponding fabric.
+Description: The name of the target appliance (e.g., 'tgt2' for Azure Stack HCI). The module will automatically discover the corresponding fabric.
 
 Type: `string`
 
-Default: `"tgt"`
+Default: `"tgt2"`
 
 ### <a name="input_target_fabric_id"></a> [target\_fabric\_id](#input\_target\_fabric\_id)
 
@@ -181,7 +193,7 @@ Description: Optional: Explicit target fabric ID. If not provided, it will be au
 
 Type: `string`
 
-Default: `null`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationFabrics/tgt28c21replicationfabric"`
 
 ## Outputs
 

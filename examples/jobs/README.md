@@ -55,13 +55,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -81,7 +75,15 @@ Description: Optional: The Azure region where resources will be deployed. If not
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -89,7 +91,7 @@ Description: The name of the Azure Migrate project
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"saif-project-021826"`
 
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
@@ -97,7 +99,7 @@ Description: The full resource ID of the replication vault (optional, derived fr
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

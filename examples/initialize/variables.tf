@@ -1,19 +1,13 @@
-variable "parent_id" {
-  type        = string
-  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
-  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
+variable "app_consistent_frequency_minutes" {
+  type        = number
+  default     = 240
+  description = "Application-consistent snapshot frequency in minutes"
 }
 
 variable "cache_storage_account_id" {
   type        = string
   default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.Storage/storageAccounts/migratersa2220948737"
   description = "Optional: Existing cache storage account ID. If provided, the module will use this account instead of creating a new one. Use this when the environment was previously initialized (e.g., via CLI)."
-}
-
-variable "app_consistent_frequency_minutes" {
-  type        = number
-  default     = 240
-  description = "Application-consistent snapshot frequency in minutes"
 }
 
 variable "crash_consistent_frequency_minutes" {
@@ -32,6 +26,12 @@ variable "location" {
   type        = string
   default     = "eastus"
   description = "Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location."
+}
+
+variable "parent_id" {
+  type        = string
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
+  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
 variable "project_name" {

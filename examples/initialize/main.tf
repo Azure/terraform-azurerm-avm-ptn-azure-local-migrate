@@ -27,10 +27,10 @@ module "initialize_replication" {
   name      = "az-local-migration-init"
   parent_id = var.parent_id
   # Replication policy settings
-  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
-  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
+  app_consistent_frequency_minutes = var.app_consistent_frequency_minutes
   # Use existing cache storage account (created by CLI) to avoid name mismatch
-  cache_storage_account_id = var.cache_storage_account_id
+  cache_storage_account_id           = var.cache_storage_account_id
+  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
   # Instance type (VMware HyperV)
   instance_type = var.instance_type
   # Operation mode

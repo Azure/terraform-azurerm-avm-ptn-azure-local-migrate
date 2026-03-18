@@ -60,14 +60,13 @@ module "initialize" {
 # When initialize runs, we derive vault/policy/extension from its outputs.
 # When skipped, we use the explicit variable values.
 locals {
-  replication_vault_id       = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
-  replication_extension_name = var.skip_initialize ? var.replication_extension_name : module.initialize[0].replication_extension_name
-  policy_name                = var.skip_initialize ? var.policy_name : basename(module.initialize[0].replication_policy_id)
-
+  policy_name = var.skip_initialize ? var.policy_name : basename(module.initialize[0].replication_policy_id)
   # Build a protected_item_id for each VM
   protected_item_ids = {
     for key, vm in var.vms : key => "${local.replication_vault_id}/protectedItems/${basename(vm.machine_id)}"
   }
+  replication_extension_name = var.skip_initialize ? var.replication_extension_name : module.initialize[0].replication_extension_name
+  replication_vault_id       = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
 }
 
 # ========================================
@@ -78,8 +77,6 @@ locals {
 module "replicate_vm" {
   source   = "../../"
   for_each = var.vms
-
-  depends_on = [module.initialize]
 
   location                   = var.location
   name                       = "e2e-replicate-${each.key}"
@@ -114,6 +111,8 @@ module "replicate_vm" {
   target_vm_cpu_cores        = each.value.target_vm_cpu_cores
   target_vm_name             = each.value.target_vm_name
   target_vm_ram_mb           = each.value.target_vm_ram_mb
+
+  depends_on = [module.initialize]
 }
 
 # ========================================
@@ -196,8 +195,6 @@ module "check_status" {
   source   = "../../"
   for_each = var.vms
 
-  depends_on = [terraform_data.wait_for_replication]
-
   location          = var.location
   name              = "e2e-check-status-${each.key}"
   parent_id         = var.parent_id
@@ -206,6 +203,8 @@ module "check_status" {
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
   tags              = var.tags
+
+  depends_on = [terraform_data.wait_for_replication]
 }
 
 # ========================================
@@ -217,8 +216,6 @@ module "migrate_vm" {
   source   = "../../"
   for_each = var.vms
 
-  depends_on = [module.check_status]
-
   location           = var.location
   name               = "e2e-migrate-${each.key}"
   parent_id          = var.parent_id
@@ -227,4 +224,6 @@ module "migrate_vm" {
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm
   tags               = var.tags
+
+  depends_on = [module.check_status]
 }

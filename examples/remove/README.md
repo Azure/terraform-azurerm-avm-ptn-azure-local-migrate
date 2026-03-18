@@ -77,13 +77,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group where the replication vault exists. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -103,7 +97,15 @@ Description: Optional: The Azure region where resources will be deployed. If not
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group where the replication vault exists. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
@@ -119,7 +121,7 @@ Description: The protected item ARM ID for which replication needs to be disable
 
 Type: `string`
 
-Default: `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-migrate-project-rg/providers/Microsoft.DataReplication/replicationVaults/myprojectreplicationvault/protectedItems/my-vm-name"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50230032-a843-484c-a72b-28f60291b43e"`
 
 ## Outputs
 

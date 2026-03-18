@@ -76,13 +76,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -106,11 +100,19 @@ Default: `"VMwareToAzStackHCI"`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: centralus, westus2, northeurope, westeurope, etc.
+Description: The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: eastus, westus2, northeurope, westeurope, etc.
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -118,7 +120,7 @@ Description: The name of the new Azure Migrate project to create
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"saif-project-021826"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
