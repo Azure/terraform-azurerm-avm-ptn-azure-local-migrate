@@ -59,13 +59,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -85,7 +79,15 @@ Description: Optional: The Azure region where resources will be deployed. If not
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -93,7 +95,7 @@ Description: The name of the Azure Migrate project
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"saif-project-021826"`
 
 ### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
 
@@ -101,7 +103,7 @@ Description: The full resource ID of the protected item to retrieve
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault/protectedItems/100-69-177-104-36bf83bc-c03b-4c08-853c-187db9aa17e8_50232086-5a0d-7205-68e2-bc2391e7a0a7"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50230032-a843-484c-a72b-28f60291b43e"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

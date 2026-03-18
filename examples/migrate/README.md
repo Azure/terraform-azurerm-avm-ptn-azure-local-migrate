@@ -53,13 +53,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -79,7 +73,15 @@ Description: Optional: The Azure region where resources will be deployed. If not
 
 Type: `string`
 
-Default: `"westus2"`
+Default: `"eastus"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
 
@@ -87,7 +89,7 @@ Description: The full resource ID of the protected item (replicated VM) to migra
 
 Type: `string`
 
-Default: `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationVaults/my-vault/protectedItems/my-vm"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50236aa8-35fb-7f53-50a1-0da9f0930c4f"`
 
 ### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
 
@@ -116,10 +118,6 @@ Default:
 ## Outputs
 
 The following outputs are exported:
-
-### <a name="output_migration_job_id"></a> [migration\_job\_id](#output\_migration\_job\_id)
-
-Description: Async operation ID for tracking the migration job status
 
 ### <a name="output_migration_operation_details"></a> [migration\_operation\_details](#output\_migration\_operation\_details)
 

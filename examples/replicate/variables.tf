@@ -1,9 +1,3 @@
-variable "parent_id" {
-  type        = string
-  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
-  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
-}
-
 variable "custom_location_id" {
   type        = string
   default     = "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.ExtendedLocation/customLocations/s46r1405-cl-customLocation"
@@ -103,6 +97,12 @@ variable "os_disk_size_gb" {
   type        = number
   default     = 16
   description = "The OS disk size in GB for DEFAULT USER MODE. Used when disks_to_include is not provided."
+}
+
+variable "parent_id" {
+  type        = string
+  default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"
+  description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
 variable "policy_name" {

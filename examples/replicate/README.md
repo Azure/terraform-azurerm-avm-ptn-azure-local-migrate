@@ -160,13 +160,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -178,7 +172,7 @@ Description: The full resource ID of the Azure Stack HCI custom location
 
 Type: `string`
 
-Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.ExtendedLocation/customLocations/n25r1606-cl-customLocation"`
+Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.ExtendedLocation/customLocations/s46r1405-cl-customLocation"`
 
 ### <a name="input_disks_to_include"></a> [disks\_to\_include](#input\_disks\_to\_include)
 
@@ -203,21 +197,14 @@ Default:
 [
   {
     "disk_file_format": "VHDX",
-    "disk_id": "6000C29f-59f4-37d9-acdd-8f90d99d07e0",
-    "disk_size_gb": 40,
+    "disk_id": "6000C293-4981-c37f-b411-3791dbf4bfcc",
+    "disk_size_gb": 16,
     "is_dynamic": true,
     "is_os_disk": true
   },
   {
     "disk_file_format": "VHDX",
-    "disk_id": "6000C295-9144-b82d-a8fc-9c0e27fe3b41",
-    "disk_size_gb": 10,
-    "is_dynamic": true,
-    "is_os_disk": false
-  },
-  {
-    "disk_file_format": "VHDX",
-    "disk_id": "6000C29b-4a7e-0e87-e286-74b13f11055b",
+    "disk_id": "6000C291-1810-f030-4327-ad1d208f9ca7",
     "disk_size_gb": 10,
     "is_dynamic": true,
     "is_os_disk": false
@@ -231,7 +218,7 @@ Description: Hyper-V generation (1 or 2)
 
 Type: `string`
 
-Default: `"1"`
+Default: `"2"`
 
 ### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
 
@@ -263,7 +250,7 @@ Description: The full resource ID of the machine to replicate (OffAzure/VMwareSi
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.OffAzure/VMwareSites/src7681site/machines/100-69-177-104-36bf83bc-c03b-4c08-853c-187db9aa17e8_50232086-5a0d-7205-68e2-bc2391e7a0a7"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/machines/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50236aa8-35fb-7f53-50a1-0da9f0930c4f"`
 
 ### <a name="input_nic_id"></a> [nic\_id](#input\_nic\_id)
 
@@ -295,8 +282,8 @@ Default:
   {
     "nic_id": "4000",
     "selection_type": "SelectedByUser",
-    "target_network_id": "/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/logicalnetworks/lnet-n25r1606-cl",
-    "test_network_id": "/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/logicalnetworks/lnet-n25r1606-cl"
+    "target_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-lnet",
+    "test_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-tenant-lnet-201"
   }
 ]
 ```
@@ -307,7 +294,7 @@ Description: The OS disk ID of the source VM. Used for DEFAULT USER MODE when di
 
 Type: `string`
 
-Default: `"6000C29f-59f4-37d9-acdd-8f90d99d07e0"`
+Default: `"6000C293-4981-c37f-b411-3791dbf4bfcc"`
 
 ### <a name="input_os_disk_size_gb"></a> [os\_disk\_size\_gb](#input\_os\_disk\_size\_gb)
 
@@ -315,7 +302,15 @@ Description: The OS disk size in GB for DEFAULT USER MODE. Used when disks\_to\_
 
 Type: `number`
 
-Default: `40`
+Default: `16`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name)
 
@@ -323,7 +318,7 @@ Description: The name of the replication policy
 
 Type: `string`
 
-Default: `"saif-project-01424replicationvaultVMwareToAzStackHCIpolicy"`
+Default: `"saif-project-08648replicationvaultVMwareToAzStackHCIpolicy"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -331,7 +326,7 @@ Description: The name of the Azure Migrate project
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"saif-project-021826"`
 
 ### <a name="input_replication_extension_name"></a> [replication\_extension\_name](#input\_replication\_extension\_name)
 
@@ -339,7 +334,7 @@ Description: The name of the replication extension
 
 Type: `string`
 
-Default: `"srcc048replicationfabric-tgt7945replicationfabric-MigReplicationExtn"`
+Default: `"src27987replicationfabric-tgt28c21replicationfabric-MigReplicationExtn"`
 
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
@@ -347,7 +342,7 @@ Description: The full resource ID of the replication vault
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault"`
 
 ### <a name="input_run_as_account_id"></a> [run\_as\_account\_id](#input\_run\_as\_account\_id)
 
@@ -355,7 +350,7 @@ Description: The full resource ID of the run as account (from vCenter)
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.OffAzure/VMwareSites/src7681site/runasaccounts/58093f44-117a-561b-be13-d751e1b22ca9"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/runasaccounts/58093f44-117a-561b-be13-d751e1b22ca9"`
 
 ### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
 
@@ -363,7 +358,7 @@ Description: The name prefix for the source appliance
 
 Type: `string`
 
-Default: `"src"`
+Default: `"src2"`
 
 ### <a name="input_source_fabric_agent_name"></a> [source\_fabric\_agent\_name](#input\_source\_fabric\_agent\_name)
 
@@ -371,7 +366,7 @@ Description: The name of the source fabric DRA
 
 Type: `string`
 
-Default: `"srcc048dra"`
+Default: `"src27987dra"`
 
 ### <a name="input_source_vm_cpu_cores"></a> [source\_vm\_cpu\_cores](#input\_source\_vm\_cpu\_cores)
 
@@ -411,7 +406,7 @@ Description: The name prefix for the target appliance (from initialize variables
 
 Type: `string`
 
-Default: `"tgt"`
+Default: `"tgt2"`
 
 ### <a name="input_target_fabric_agent_name"></a> [target\_fabric\_agent\_name](#input\_target\_fabric\_agent\_name)
 
@@ -419,7 +414,7 @@ Description: The name of the target fabric DRA
 
 Type: `string`
 
-Default: `"tgt7945dra"`
+Default: `"tgt28c21dra"`
 
 ### <a name="input_target_hci_cluster_id"></a> [target\_hci\_cluster\_id](#input\_target\_hci\_cluster\_id)
 
@@ -427,7 +422,7 @@ Description: The full resource ID of the target Azure Stack HCI cluster
 
 Type: `string`
 
-Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/clusters/n25r1606-cl"`
+Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.AzureStackHCI/clusters/s46r1405-cl"`
 
 ### <a name="input_target_resource_group_id"></a> [target\_resource\_group\_id](#input\_target\_resource\_group\_id)
 
@@ -435,7 +430,7 @@ Description: The full resource ID of the target resource group
 
 Type: `string`
 
-Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/saif-project-012726-rg"`
+Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO"`
 
 ### <a name="input_target_storage_path_id"></a> [target\_storage\_path\_id](#input\_target\_storage\_path\_id)
 
@@ -443,7 +438,7 @@ Description: The full resource ID of the target storage path
 
 Type: `string`
 
-Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/storageContainers/UserStorage1-bd705ded518141ff99bbefb30642e19f"`
+Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.AzureStackHCI/storagecontainers/UserStorage1-358c690cfced472fae974ef257f1e531"`
 
 ### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
 
@@ -451,7 +446,7 @@ Description: The full resource ID of the target virtual switch/network
 
 Type: `string`
 
-Default: `"/subscriptions/0daa57b3-f823-4921-a09a-33c048e64022/resourceGroups/EDGECI-REGISTRATION-rr1n25r1606-i3dfqVNA/providers/Microsoft.AzureStackHCI/logicalnetworks/lnet-n25r1606-cl"`
+Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-lnet"`
 
 ### <a name="input_target_vm_cpu_cores"></a> [target\_vm\_cpu\_cores](#input\_target\_vm\_cpu\_cores)
 
@@ -467,7 +462,7 @@ Description: The name for the migrated VM on Azure Stack HCI
 
 Type: `string`
 
-Default: `"test-vm9-Migrated"`
+Default: `"test-vm5-RHEL8-migrated"`
 
 ### <a name="input_target_vm_ram_mb"></a> [target\_vm\_ram\_mb](#input\_target\_vm\_ram\_mb)
 
