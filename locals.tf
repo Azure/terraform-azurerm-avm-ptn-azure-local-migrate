@@ -1,6 +1,25 @@
 # Local values for Azure Stack HCI Migration module
 
 locals {
+  # Storage Blob Data Contributor role GUID
+  _blob_contributor_role_guid = "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+  # Contributor role GUID
+  _contributor_role_guid = "b24988ac-6180-42a0-ab88-20f7382dd24c"
+  # ========================================
+  # BROWNFIELD DETECTION
+  # ========================================
+  # Detect existing role assignments on the cache storage account.
+  # When cache_storage_account_id is provided (brownfield), query Azure for existing assignments
+  # and skip creation if an assignment for the same principal+role already exists.
+  # In greenfield (cache_storage_account_id is null), these are always false → create everything.
+  _existing_role_assignment_keys = var.cache_storage_account_id != null && length(data.azapi_resource_list.cache_storage_role_assignments) > 0 ? toset([
+    for ra in try(data.azapi_resource_list.cache_storage_role_assignments[0].output.value, []) :
+    "${lower(try(ra.properties.principalId, ""))}-${lower(basename(try(ra.properties.roleDefinitionId, "")))}"
+  ]) : toset([])
+  # Detect existing replication extension (brownfield)
+  _expected_extension_name = local.has_fabric_inputs && local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ? "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" : ""
+  # Vault principal ID from existing vault data source (brownfield)
+  _vault_principal_id = local.vault_exists_in_solution ? try(data.azapi_resource.replication_vault[0].output.identity.principalId, null) : null
   # ========================================
   # PROJECT
   # ========================================
@@ -100,6 +119,8 @@ locals {
   # The resource group ID is simply parent_id
   resource_group_id                  = var.parent_id
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
+  source_dra_blob_exists             = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._blob_contributor_role_guid}")
+  source_dra_contributor_exists      = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._contributor_role_guid}")
   # ========================================
   # DRA (FABRIC AGENT) IDENTITIES
   # ========================================

@@ -48,6 +48,38 @@ data "azapi_resource" "replication_vault" {
   response_export_values = ["identity"]
 }
 
+# ========================================
+# BROWNFIELD DETECTION DATA SOURCES
+# ========================================
+
+# List existing role assignments on cache storage account (brownfield support)
+# Only queried when using an existing storage account (cache_storage_account_id provided)
+data "azapi_resource_list" "cache_storage_role_assignments" {
+  count = local.is_initialize_mode && var.cache_storage_account_id != null ? 1 : 0
+
+  parent_id              = var.cache_storage_account_id
+  type                   = "Microsoft.Authorization/roleAssignments@2022-04-01"
+  response_export_values = ["value"]
+}
+
+# List existing replication policies in the vault (brownfield support)
+data "azapi_resource_list" "existing_policies" {
+  count = local.is_initialize_mode && local.vault_exists_in_solution ? 1 : 0
+
+  parent_id              = data.azapi_resource.replication_vault[0].id
+  type                   = "Microsoft.DataReplication/replicationVaults/replicationPolicies@2024-09-01"
+  response_export_values = ["value"]
+}
+
+# List existing replication extensions in the vault (brownfield support)
+data "azapi_resource_list" "existing_extensions" {
+  count = local.is_initialize_mode && local.vault_exists_in_solution && local.has_fabric_inputs ? 1 : 0
+
+  parent_id              = data.azapi_resource.replication_vault[0].id
+  type                   = "Microsoft.DataReplication/replicationVaults/replicationExtensions@2024-09-01"
+  response_export_values = ["value"]
+}
+
 # Query replication fabrics
 # depends_on is intentional: when a new vault is being created in this plan,
 # we want the fabric list read deferred until apply so that the discovered_*

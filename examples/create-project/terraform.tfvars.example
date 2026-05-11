@@ -8,6 +8,7 @@ parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/
 project_name  = "my-new-migrate-project"
 location      = "centralus" # Use a supported region: centralus, westus2, northeurope, westeurope, etc.
 instance_type = "VMwareToAzStackHCI"
+connectivity_method = "Public-endpoint" # Options: "Public-endpoint" (default) or "Private-endpoint"
 
 tags = {
   Environment = "Production"

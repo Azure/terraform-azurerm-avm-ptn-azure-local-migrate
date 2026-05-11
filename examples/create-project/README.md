@@ -42,7 +42,27 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
+No required inputs.
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_connectivity_method"></a> [connectivity\_method](#input\_connectivity\_method)
+
+Description: The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'.
+
+Type: `string`
+
+Default: `"Public-endpoint"`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: eastus, westus2, northeurope, westeurope, etc.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
@@ -50,17 +70,7 @@ Description: The resource ID of the resource group where the Migrate project wil
 
 Type: `string`
 
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: centralus, westus2, northeurope, westeurope, etc.
-
-Type: `string`
-
-Default: `"westus2"`
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
