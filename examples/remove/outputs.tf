@@ -1,6 +1,6 @@
-output "protected_item_info" {
+output "protected_item_details" {
   description = "Information about the protected item before removal"
-  value       = module.remove_replication.protected_item_info
+  value       = module.remove_replication.protected_item_details
 }
 
 output "removal_operation_headers" {

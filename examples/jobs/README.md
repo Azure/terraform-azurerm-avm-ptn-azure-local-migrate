@@ -4,41 +4,6 @@
 
 This example demonstrates how to retrieve replication job information using the `jobs` operation mode.
 
-```hcl
-# Example: Get Replication Jobs
-# This example demonstrates how to retrieve replication job status
-#
-
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.4"
-    }
-  }
-}
-
-provider "azapi" {}
-
-# Get replication jobs
-module "replication_jobs" {
-  source = "../../"
-
-  location       = var.location
-  name           = "replication-jobs"
-  parent_id      = var.parent_id
-  instance_type  = var.instance_type
-  operation_mode = "jobs"
-  project_name   = var.project_name
-  # Use explicit vault ID
-  replication_vault_id = var.replication_vault_id
-  tags                 = var.tags
-}
-
-```
-
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -67,14 +32,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
@@ -89,7 +46,7 @@ Description: The name of the Azure Migrate project
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"<migrate-project-name>"`
 
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
@@ -97,7 +54,7 @@ Description: The full resource ID of the replication vault (optional, derived fr
 
 Type: `string`
 
-Default: `"/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault"`
+Default: `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<rg>/providers/Microsoft.DataReplication/replicationVaults/<vault>"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -22,7 +22,6 @@ module "list_protected_items" {
   location       = var.location
   name           = "list-protected-items"
   parent_id      = var.parent_id
-  instance_type  = var.instance_type
   operation_mode = "list"
   # List by project name (vault auto-discovered)
   project_name = var.project_name

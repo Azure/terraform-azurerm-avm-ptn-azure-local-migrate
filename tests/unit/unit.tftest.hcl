@@ -234,11 +234,11 @@ run "valid_hyperv_generation_1" {
 
   variables {
     operation_mode    = "discover"
-    hyperv_generation = "1"
+    target_vm_compute = { hyperv_generation = "1" }
   }
 
   assert {
-    condition     = var.hyperv_generation == "1"
+    condition     = var.target_vm_compute.hyperv_generation == "1"
     error_message = "HyperV generation should be '1'"
   }
 }
@@ -248,11 +248,11 @@ run "valid_hyperv_generation_2" {
 
   variables {
     operation_mode    = "discover"
-    hyperv_generation = "2"
+    target_vm_compute = { hyperv_generation = "2" }
   }
 
   assert {
-    condition     = var.hyperv_generation == "2"
+    condition     = var.target_vm_compute.hyperv_generation == "2"
     error_message = "HyperV generation should be '2'"
   }
 }
@@ -261,18 +261,18 @@ run "valid_instance_type_vmware" {
   command = plan
 
   variables {
-    operation_mode = "discover"
-    instance_type  = "VMwareToAzStackHCI"
+    operation_mode      = "discover"
+    source_machine_type = "VMware"
   }
 
   assert {
-    condition     = var.instance_type == "VMwareToAzStackHCI"
-    error_message = "Instance type should be 'VMwareToAzStackHCI'"
+    condition     = local.effective_instance_type == "VMwareToAzStackHCI"
+    error_message = "effective_instance_type should be 'VMwareToAzStackHCI' when source_machine_type is 'VMware'"
   }
 
   assert {
     condition     = local.source_fabric_instance_type == "VMwareMigrate"
-    error_message = "source_fabric_instance_type should be 'VMwareMigrate' for VMwareToAzStackHCI"
+    error_message = "source_fabric_instance_type should be 'VMwareMigrate' for VMware source"
   }
 }
 
@@ -280,18 +280,18 @@ run "valid_instance_type_hyperv" {
   command = plan
 
   variables {
-    operation_mode = "discover"
-    instance_type  = "HyperVToAzStackHCI"
+    operation_mode      = "discover"
+    source_machine_type = "HyperV"
   }
 
   assert {
-    condition     = var.instance_type == "HyperVToAzStackHCI"
-    error_message = "Instance type should be 'HyperVToAzStackHCI'"
+    condition     = local.effective_instance_type == "HyperVToAzStackHCI"
+    error_message = "effective_instance_type should be 'HyperVToAzStackHCI' when source_machine_type is 'HyperV'"
   }
 
   assert {
     condition     = local.source_fabric_instance_type == "HyperVMigrate"
-    error_message = "source_fabric_instance_type should be 'HyperVMigrate' for HyperVToAzStackHCI"
+    error_message = "source_fabric_instance_type should be 'HyperVMigrate' for HyperV source"
   }
 }
 
@@ -335,13 +335,13 @@ run "default_values_check" {
   }
 
   assert {
-    condition     = var.hyperv_generation == "1"
-    error_message = "hyperv_generation should default to '1'"
+    condition     = var.target_vm_compute.hyperv_generation == "1"
+    error_message = "target_vm_compute.hyperv_generation should default to '1'"
   }
 
   assert {
-    condition     = var.instance_type == "VMwareToAzStackHCI"
-    error_message = "instance_type should default to 'VMwareToAzStackHCI'"
+    condition     = local.effective_instance_type == "VMwareToAzStackHCI"
+    error_message = "effective_instance_type should default to 'VMwareToAzStackHCI' when source_machine_type defaults to 'VMware'"
   }
 
   assert {
@@ -360,8 +360,8 @@ run "default_values_check" {
   }
 
   assert {
-    condition     = var.is_dynamic_memory_enabled == false
-    error_message = "is_dynamic_memory_enabled should default to false"
+    condition     = var.target_vm_compute.is_dynamic_memory_enabled == false
+    error_message = "target_vm_compute.is_dynamic_memory_enabled should default to false"
   }
 
   assert {
@@ -378,18 +378,18 @@ run "default_replication_policy_values" {
   }
 
   assert {
-    condition     = var.recovery_point_history_minutes == 4320
-    error_message = "recovery_point_history_minutes should default to 4320 (72 hours)"
+    condition     = var.replication_policy.recovery_point_history_minutes == 4320
+    error_message = "replication_policy.recovery_point_history_minutes should default to 4320 (72 hours)"
   }
 
   assert {
-    condition     = var.crash_consistent_frequency_minutes == 60
-    error_message = "crash_consistent_frequency_minutes should default to 60 (1 hour)"
+    condition     = var.replication_policy.crash_consistent_frequency_minutes == 60
+    error_message = "replication_policy.crash_consistent_frequency_minutes should default to 60 (1 hour)"
   }
 
   assert {
-    condition     = var.app_consistent_frequency_minutes == 240
-    error_message = "app_consistent_frequency_minutes should default to 240 (4 hours)"
+    condition     = var.replication_policy.app_consistent_frequency_minutes == 240
+    error_message = "replication_policy.app_consistent_frequency_minutes should default to 240 (4 hours)"
   }
 }
 
@@ -401,18 +401,13 @@ run "default_vm_values" {
   }
 
   assert {
-    condition     = var.source_vm_cpu_cores == 2
-    error_message = "source_vm_cpu_cores should default to 2"
+    condition     = var.target_vm_compute.cpu_cores == 2
+    error_message = "target_vm_compute.cpu_cores should default to 2"
   }
 
   assert {
-    condition     = var.source_vm_ram_mb == 4096
-    error_message = "source_vm_ram_mb should default to 4096"
-  }
-
-  assert {
-    condition     = var.os_disk_size_gb == 60
-    error_message = "os_disk_size_gb should default to 60"
+    condition     = var.target_vm_compute.ram_mb == 4096
+    error_message = "target_vm_compute.ram_mb should default to 4096"
   }
 }
 
@@ -424,8 +419,8 @@ run "target_fabric_instance_type_always_azstackhci" {
   command = plan
 
   variables {
-    operation_mode = "discover"
-    instance_type  = "VMwareToAzStackHCI"
+    operation_mode      = "discover"
+    source_machine_type = "VMware"
   }
 
   assert {
@@ -438,8 +433,8 @@ run "target_fabric_instance_type_hyperv_also_azstackhci" {
   command = plan
 
   variables {
-    operation_mode = "discover"
-    instance_type  = "HyperVToAzStackHCI"
+    operation_mode      = "discover"
+    source_machine_type = "HyperV"
   }
 
   assert {
@@ -467,21 +462,10 @@ run "invalid_hyperv_generation" {
 
   variables {
     operation_mode    = "discover"
-    hyperv_generation = "3"
+    target_vm_compute = { hyperv_generation = "3" }
   }
 
-  expect_failures = [var.hyperv_generation]
-}
-
-run "invalid_instance_type" {
-  command = plan
-
-  variables {
-    operation_mode = "discover"
-    instance_type  = "InvalidType"
-  }
-
-  expect_failures = [var.instance_type]
+  expect_failures = [var.target_vm_compute]
 }
 
 run "invalid_source_machine_type" {
@@ -528,4 +512,212 @@ run "invalid_lock_kind" {
   }
 
   expect_failures = [var.lock]
+}
+
+# ========================================
+# CACHE STORAGE ACCOUNT RESOLUTION TESTS
+# Verifies fix for duplicate storage-account creation when the migrate project's
+# Server Migration solution already has a replicationStorageAccountId recorded.
+# ========================================
+
+# Case 1: caller passes an explicit cache_storage_account_id.
+# Module must NOT create a new storage account and resolved id must equal the input.
+run "cache_storage_account_explicit_var_wins" {
+  command = plan
+
+  variables {
+    operation_mode           = "initialize"
+    location                 = "eastus"
+    project_name             = "test-project"
+    source_appliance_name    = "src-appl"
+    target_appliance_name    = "tgt-appl"
+    cache_storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/usersa"
+  }
+
+  assert {
+    condition     = local.resolved_cache_storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/usersa"
+    error_message = "resolved_cache_storage_account_id should equal var.cache_storage_account_id when supplied"
+  }
+
+  assert {
+    condition     = length(azapi_resource.cache_storage_account) == 0
+    error_message = "cache_storage_account must NOT be planned when caller supplies cache_storage_account_id"
+  }
+}
+
+# Case 2: no caller id, no existing storage account in solution.
+# Module MUST create a new storage account (count = 1).
+run "cache_storage_account_created_when_none_exists" {
+  command = plan
+
+  variables {
+    operation_mode        = "initialize"
+    location              = "eastus"
+    project_name          = "test-project"
+    source_appliance_name = "src-appl"
+    target_appliance_name = "tgt-appl"
+  }
+
+  assert {
+    condition     = local.has_existing_replication_storage_account == false
+    error_message = "Default mock should not expose an existing replicationStorageAccountId"
+  }
+
+  assert {
+    condition     = length(azapi_resource.cache_storage_account) == 1
+    error_message = "cache_storage_account must be planned when neither caller id nor solution-recorded id exists"
+  }
+}
+
+# Case 3: solution already records a replicationStorageAccountId.
+# Module MUST reuse it and NOT plan a duplicate (fixes the reported regression).
+run "cache_storage_account_reused_from_solution" {
+  command = plan
+
+  # Override the replication_solution data so its extendedDetails carry an
+  # existing replicationStorageAccountId. We intentionally omit vaultId here
+  # to keep vault_exists_in_solution false and avoid pulling in unrelated
+  # vault-lookup paths that aren't exercised by this scenario.
+  override_data {
+    target = data.azapi_resource.replication_solution[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateprojects/test-project/solutions/Servers-Migration-ServerMigration_DataReplication"
+      output = {
+        properties = {
+          details = {
+            extendedDetails = {
+              replicationStorageAccountId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/existingmigratersa"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode        = "initialize"
+    location              = "eastus"
+    project_name          = "test-project"
+    source_appliance_name = "src-appl"
+    target_appliance_name = "tgt-appl"
+  }
+
+  assert {
+    condition     = local.has_existing_replication_storage_account == true
+    error_message = "has_existing_replication_storage_account should be true when solution.extendedDetails has replicationStorageAccountId"
+  }
+
+  assert {
+    condition     = local.resolved_cache_storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/existingmigratersa"
+    error_message = "resolved_cache_storage_account_id should reuse the existing replicationStorageAccountId from the solution"
+  }
+
+  assert {
+    condition     = length(azapi_resource.cache_storage_account) == 0
+    error_message = "cache_storage_account must NOT be planned when the solution already records a replicationStorageAccountId (fix for duplicate-creation bug)"
+  }
+}
+
+# ========================================
+# AVM INTERFACE WIRING TESTS
+# ========================================
+
+# tags should propagate to the migrate project when create-project mode creates one.
+run "tags_propagate_to_migrate_project" {
+  command = plan
+
+  variables {
+    operation_mode         = "create-project"
+    location               = "eastus"
+    project_name           = "test-project"
+    create_migrate_project = true
+    tags = {
+      env   = "test"
+      owner = "avm"
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.migrate_project[0].tags["env"] == "test" && azapi_resource.migrate_project[0].tags["owner"] == "avm"
+    error_message = "var.tags must propagate to the migrate project"
+  }
+}
+
+# tags should propagate to the replication vault and cache storage account in initialize mode.
+run "tags_propagate_to_vault_and_storage" {
+  command = plan
+
+  variables {
+    operation_mode        = "initialize"
+    location              = "eastus"
+    project_name          = "test-project"
+    source_appliance_name = "src-appl"
+    target_appliance_name = "tgt-appl"
+    tags = {
+      env   = "test"
+      owner = "avm"
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.replication_vault[0].tags["env"] == "test"
+    error_message = "var.tags must propagate to the replication vault"
+  }
+
+  assert {
+    condition     = azapi_resource.cache_storage_account[0].tags["owner"] == "avm"
+    error_message = "var.tags must propagate to the cache storage account"
+  }
+}
+
+# diagnostic_settings should create one azapi diagnosticSettings resource per map entry,
+# scoped to the replication vault.
+run "diagnostic_settings_create_one_per_entry" {
+  command = plan
+
+  variables {
+    operation_mode        = "initialize"
+    location              = "eastus"
+    project_name          = "test-project"
+    source_appliance_name = "src-appl"
+    target_appliance_name = "tgt-appl"
+    diagnostic_settings = {
+      to_law = {
+        name                  = "send-to-law"
+        workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(azapi_resource.diagnostic_setting) == 1
+    error_message = "diagnostic_settings must produce one azapi_resource.diagnostic_setting per map entry"
+  }
+
+  assert {
+    condition     = azapi_resource.diagnostic_setting["to_law"].name == "send-to-law"
+    error_message = "diagnostic_setting name must come from each.value.name when supplied"
+  }
+
+  assert {
+    condition     = azapi_resource.diagnostic_setting["to_law"].type == "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+    error_message = "diagnostic_setting must use the Microsoft.Insights/diagnosticSettings type"
+  }
+}
+
+# Requesting diagnostic_settings without a resolvable vault (e.g. discover mode with no
+# replication_vault_id) must fail the precondition rather than silently succeeding.
+run "diagnostic_settings_require_vault" {
+  command = plan
+
+  variables {
+    operation_mode = "discover"
+    diagnostic_settings = {
+      to_law = {
+        workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      }
+    }
+  }
+
+  expect_failures = [azapi_resource.diagnostic_setting]
 }

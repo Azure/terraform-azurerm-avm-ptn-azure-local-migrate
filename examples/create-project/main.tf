@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -23,7 +23,6 @@ module "create_migrate_project" {
   name                   = "create-project"
   parent_id              = var.parent_id
   create_migrate_project = true # Set to true to create new project
-  instance_type          = var.instance_type
   operation_mode         = "create-project"
   project_name           = var.project_name
   tags                   = var.tags

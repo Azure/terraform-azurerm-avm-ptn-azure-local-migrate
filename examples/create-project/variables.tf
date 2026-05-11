@@ -3,12 +3,6 @@ variable "parent_id" {
   description = "The resource ID of the resource group where the Migrate project will be created. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
-variable "instance_type" {
-  type        = string
-  default     = "VMwareToAzStackHCI"
-  description = "The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)"
-}
-
 variable "location" {
   type        = string
   default     = "westus2"
@@ -17,7 +11,7 @@ variable "location" {
 
 variable "project_name" {
   type        = string
-  default     = "saif-project-012726"
+  default     = "<migrate-project-name>"
   description = "The name of the new Azure Migrate project to create"
 }
 

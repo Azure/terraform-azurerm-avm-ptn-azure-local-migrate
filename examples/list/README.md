@@ -4,40 +4,6 @@
 
 This example demonstrates listing all protected items (replicated VMs) in a vault.
 
-```hcl
-# Example: List Protected Items
-# This example demonstrates how to list all protected (replicating) VMs in a vault
-#
-
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.4"
-    }
-  }
-}
-
-provider "azapi" {}
-
-# List all protected items in the vault
-module "list_protected_items" {
-  source = "../../"
-
-  location       = var.location
-  name           = "list-protected-items"
-  parent_id      = var.parent_id
-  instance_type  = var.instance_type
-  operation_mode = "list"
-  # List by project name (vault auto-discovered)
-  project_name = var.project_name
-  tags         = var.tags
-}
-
-```
-
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -66,14 +32,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
@@ -88,7 +46,7 @@ Description: The name of the Azure Migrate project (used to auto-discover vault)
 
 Type: `string`
 
-Default: `"saif-project-012726"`
+Default: `"<migrate-project-name>"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

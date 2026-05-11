@@ -3,12 +3,6 @@ variable "parent_id" {
   description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
-variable "instance_type" {
-  type        = string
-  default     = "VMwareToAzStackHCI"
-  description = "The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)"
-}
-
 variable "location" {
   type        = string
   default     = "westus2"

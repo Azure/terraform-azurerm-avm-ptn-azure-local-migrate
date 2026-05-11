@@ -4,39 +4,6 @@
 
 This example demonstrates how to perform a planned failover (migration) of a replicated VM to Azure Stack HCI using the `migrate` operation mode.
 
-```hcl
-# Example: Migrate (Planned Failover) a Protected VM
-# This example demonstrates how to perform a planned failover (migration) of a replicated VM to Azure Stack HCI
-#
-
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.4"
-    }
-  }
-}
-
-provider "azapi" {}
-
-# Perform planned failover (migration) of a protected VM
-module "migrate_vm" {
-  source = "../../"
-
-  location           = var.location
-  name               = "vm-migration"
-  parent_id          = var.parent_id
-  instance_type      = var.instance_type
-  operation_mode     = "migrate"
-  protected_item_id  = var.protected_item_id
-  shutdown_source_vm = var.shutdown_source_vm
-  tags               = var.tags
-}
-```
-
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -64,14 +31,6 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -116,10 +75,6 @@ Default:
 ## Outputs
 
 The following outputs are exported:
-
-### <a name="output_migration_job_id"></a> [migration\_job\_id](#output\_migration\_job\_id)
-
-Description: Async operation ID for tracking the migration job status
 
 ### <a name="output_migration_operation_details"></a> [migration\_operation\_details](#output\_migration\_operation\_details)
 

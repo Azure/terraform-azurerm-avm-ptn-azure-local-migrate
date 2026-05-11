@@ -28,12 +28,6 @@ variable "parent_id" {
   }
 }
 
-variable "app_consistent_frequency_minutes" {
-  type        = number
-  default     = 240 # 4 hours
-  description = "Application consistent snapshot frequency in minutes"
-}
-
 variable "appliance_name" {
   type        = string
   default     = null
@@ -43,13 +37,7 @@ variable "appliance_name" {
 variable "cache_storage_account_id" {
   type        = string
   default     = null
-  description = "Storage Account ARM ID for cache/private endpoint scenario"
-}
-
-variable "crash_consistent_frequency_minutes" {
-  type        = number
-  default     = 60 # 1 hour
-  description = "Crash consistent snapshot frequency in minutes"
+  description = "Storage Account ARM ID for cache/private endpoint scenario. When null, the module reuses the `replicationStorageAccountId` already recorded on the migrate project's Server Migration solution (if any). Only when neither is present is a new cache storage account created."
 }
 
 variable "create_migrate_project" {
@@ -65,8 +53,6 @@ variable "custom_location_id" {
 }
 
 # required AVM interfaces
-# remove only if not supported by the resource
-# tflint-ignore: terraform_unused_declarations
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
@@ -82,7 +68,7 @@ variable "diagnostic_settings" {
   }))
   default     = {}
   description = <<DESCRIPTION
-A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+A map of diagnostic settings to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -93,7 +79,7 @@ A map of diagnostic settings to create on the Key Vault. The map key is delibera
 - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
 - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
-- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
+- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
 DESCRIPTION
   nullable    = false
 
@@ -149,34 +135,6 @@ variable "force_remove" {
   description = "Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state."
 }
 
-variable "hyperv_generation" {
-  type        = string
-  default     = "1"
-  description = "Hyper-V generation (1 or 2)"
-
-  validation {
-    condition     = contains(["1", "2"], var.hyperv_generation)
-    error_message = "hyperv_generation must be either 1 or 2."
-  }
-}
-
-variable "instance_type" {
-  type        = string
-  default     = "VMwareToAzStackHCI"
-  description = "Migration instance type"
-
-  validation {
-    condition     = contains(["HyperVToAzStackHCI", "VMwareToAzStackHCI"], var.instance_type)
-    error_message = "instance_type must be either HyperVToAzStackHCI or VMwareToAzStackHCI."
-  }
-}
-
-variable "is_dynamic_memory_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether RAM is dynamic"
-}
-
 # COMMAND 4: GET REPLICATION JOBS Variables
 variable "job_name" {
   type        = string
@@ -199,7 +157,7 @@ DESCRIPTION
 
   validation {
     condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+    error_message = "The lock level must be one of: 'CanNotDelete' or 'ReadOnly'."
   }
 }
 
@@ -230,12 +188,6 @@ Controls the Managed Identity configuration on this resource. The following prop
 - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
 DESCRIPTION
   nullable    = false
-}
-
-variable "nic_id" {
-  type        = string
-  default     = null
-  description = "NIC ID for the source server (default user mode). Used when nics_to_include is not provided but target_virtual_switch_id is specified."
 }
 
 variable "nics_to_include" {
@@ -271,24 +223,7 @@ variable "operation_mode" {
 variable "os_disk_id" {
   type        = string
   default     = null
-  description = "Operating system disk ID for the source server (default user mode)"
-}
-
-variable "os_disk_size_gb" {
-  type        = number
-  default     = 60
-  description = "OS disk size in GB for default user mode. Used when disks_to_include is not provided."
-
-  validation {
-    condition     = var.os_disk_size_gb == null || var.os_disk_size_gb >= 1
-    error_message = "os_disk_size_gb must be at least 1 GB."
-  }
-}
-
-variable "policy_name" {
-  type        = string
-  default     = null
-  description = "Replication policy name"
+  description = "OS disk ID of the source VM (simple replication mode). When set without `disks_to_include`, the module creates a single OS disk entry matching the discovered disk size. Pair with `target_virtual_switch_id` for the simple replication path."
 }
 
 # COMMAND 1: DISCOVER SERVERS Variables
@@ -319,22 +254,29 @@ variable "protected_item_name" {
   description = "The name of the protected item to retrieve. Required for 'get' operation mode when retrieving by name (requires project_name or replication_vault_id)."
 }
 
-variable "recovery_point_history_minutes" {
-  type        = number
-  default     = 4320 # 72 hours
-  description = "Recovery point retention in minutes"
-}
+variable "replication_policy" {
+  type = object({
+    name                               = optional(string)
+    app_consistent_frequency_minutes   = optional(number, 240)
+    crash_consistent_frequency_minutes = optional(number, 60)
+    recovery_point_history_minutes     = optional(number, 4320)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Advanced overrides for the replication policy created in `initialize` mode. All fields are optional and default to the same values used by `Initialize-AzMigrateLocalReplicationInfrastructure`.
 
-variable "replication_extension_name" {
-  type        = string
-  default     = null
-  description = "Replication extension name (for replicate mode)"
+- `name` - (Optional) Override the auto-generated policy name. Defaults to `<vault-name><instance-type>policy`.
+- `app_consistent_frequency_minutes` - (Optional) Application-consistent snapshot frequency in minutes. Defaults to `240` (4 hours).
+- `crash_consistent_frequency_minutes` - (Optional) Crash-consistent snapshot frequency in minutes. Defaults to `60` (1 hour).
+- `recovery_point_history_minutes` - (Optional) Recovery point retention in minutes. Defaults to `4320` (72 hours).
+DESCRIPTION
+  nullable    = false
 }
 
 variable "replication_vault_id" {
   type        = string
   default     = null
-  description = "Replication vault ARM ID (for replicate mode)"
+  description = "Replication vault ARM ID. Optional for `replicate`, `jobs`, `list`, `get` modes — when omitted the module auto-resolves the vault from the migrate project's Server Migration solution. Required only when no project context is available."
 }
 
 variable "role_assignments" {
@@ -386,22 +328,10 @@ variable "source_appliance_name" {
   description = "Source appliance name for AzLocal scenario"
 }
 
-variable "source_fabric_agent_name" {
-  type        = string
-  default     = null
-  description = "Source fabric agent (DRA) name"
-}
-
-variable "source_fabric_id" {
-  type        = string
-  default     = null
-  description = "Source replication fabric ARM ID"
-}
-
 variable "source_machine_type" {
   type        = string
   default     = "VMware"
-  description = "Source machine type (VMware or HyperV)"
+  description = "Source machine type. Determines the replication `instanceType` (VMware → VMwareToAzStackHCI, HyperV → HyperVToAzStackHCI)."
 
   validation {
     condition     = contains(["VMware", "HyperV"], var.source_machine_type)
@@ -409,19 +339,6 @@ variable "source_machine_type" {
   }
 }
 
-variable "source_vm_cpu_cores" {
-  type        = number
-  default     = 2
-  description = "Number of CPU cores from source VM"
-}
-
-variable "source_vm_ram_mb" {
-  type        = number
-  default     = 4096
-  description = "Source RAM size in MB"
-}
-
-# tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)
   default     = null
@@ -432,18 +349,6 @@ variable "target_appliance_name" {
   type        = string
   default     = null
   description = "Target appliance name for AzLocal scenario"
-}
-
-variable "target_fabric_agent_name" {
-  type        = string
-  default     = null
-  description = "Target fabric agent (DRA) name"
-}
-
-variable "target_fabric_id" {
-  type        = string
-  default     = null
-  description = "Target replication fabric ARM ID"
 }
 
 variable "target_hci_cluster_id" {
@@ -488,17 +393,35 @@ variable "target_test_virtual_switch_id" {
 variable "target_virtual_switch_id" {
   type        = string
   default     = null
-  description = "Logical network ARM ID for VMs (default user mode)"
+  description = "Logical network ARM ID for VMs (simple replication mode). Pair with `os_disk_id` for the simple path. Ignored when `nics_to_include` is provided."
 }
 
-variable "target_vm_cpu_cores" {
-  type        = number
-  default     = null
-  description = "Number of CPU cores for target VM"
+variable "target_vm_compute" {
+  type = object({
+    cpu_cores                 = optional(number, 2)
+    ram_mb                    = optional(number, 4096)
+    is_dynamic_memory_enabled = optional(bool, false)
+    hyperv_generation         = optional(string, "1")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Advanced overrides for target VM compute settings (replicate mode). All fields are optional and default to the same values used by `New-AzMigrateLocalServerReplication`.
+
+- `cpu_cores` - (Optional) Number of vCPUs assigned to the migrated VM. Defaults to `2`.
+- `ram_mb` - (Optional) Memory (MB) assigned to the migrated VM. Defaults to `4096`.
+- `is_dynamic_memory_enabled` - (Optional) Whether dynamic memory is enabled. Defaults to `false`.
+- `hyperv_generation` - (Optional) Hyper-V generation (`1` or `2`). Defaults to `1`.
+DESCRIPTION
+  nullable    = false
 
   validation {
-    condition     = var.target_vm_cpu_cores == null || (var.target_vm_cpu_cores >= 1 && var.target_vm_cpu_cores <= 240)
-    error_message = "target_vm_cpu_cores must be between 1 and 240."
+    condition     = contains(["1", "2"], var.target_vm_compute.hyperv_generation)
+    error_message = "target_vm_compute.hyperv_generation must be either '1' or '2'."
+  }
+
+  validation {
+    condition     = var.target_vm_compute.cpu_cores >= 1 && var.target_vm_compute.cpu_cores <= 240
+    error_message = "target_vm_compute.cpu_cores must be between 1 and 240."
   }
 }
 
@@ -511,10 +434,4 @@ variable "target_vm_name" {
     condition     = var.target_vm_name == null || (length(var.target_vm_name) >= 1 && length(var.target_vm_name) <= 64 && can(regex("^[^_\\W][a-zA-Z0-9\\-]{0,63}$", var.target_vm_name)))
     error_message = "target_vm_name must be 1-64 characters, start with letter/number, contain only letters/numbers/hyphens."
   }
-}
-
-variable "target_vm_ram_mb" {
-  type        = number
-  default     = null
-  description = "Target RAM size in MB"
 }

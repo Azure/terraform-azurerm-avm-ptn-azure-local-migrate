@@ -8,9 +8,10 @@ locals {
   create_new_project = var.create_migrate_project && var.project_name != null
   # Only create new vault if in initialize mode and vault doesn't exist
   create_new_vault = local.is_initialize_mode && !local.vault_exists_in_solution
-  # Auto-discover source fabric from appliance name
-  # Finds fabric where: name starts with/contains appliance_name AND instanceType matches AND provisioningState is Succeeded
-  discovered_source_fabric = local.is_initialize_mode && var.source_appliance_name != null && var.source_fabric_id == null && length(data.azapi_resource_list.replication_fabrics) > 0 ? try(
+  # Auto-discover source fabric from appliance name (initialize or replicate mode).
+  # Finds fabric where: name starts with/contains appliance_name AND instanceType matches AND provisioningState is Succeeded.
+  # Matches the PowerShell `Initialize-AzMigrateLocalReplicationInfrastructure` behaviour — the caller never supplies a fabric ID.
+  discovered_source_fabric = local.needs_fabric_discovery && var.source_appliance_name != null && length(data.azapi_resource_list.replication_fabrics) > 0 ? try(
     [for fabric in data.azapi_resource_list.replication_fabrics[0].output.value :
       fabric if(
         try(fabric.properties.provisioningState, "") == "Succeeded" &&
@@ -25,7 +26,7 @@ locals {
     null
   ) : null
   # Auto-discover target fabric from appliance name
-  discovered_target_fabric = local.is_initialize_mode && var.target_appliance_name != null && var.target_fabric_id == null && length(data.azapi_resource_list.replication_fabrics) > 0 ? try(
+  discovered_target_fabric = local.needs_fabric_discovery && var.target_appliance_name != null && length(data.azapi_resource_list.replication_fabrics) > 0 ? try(
     [for fabric in data.azapi_resource_list.replication_fabrics[0].output.value :
       fabric if(
         try(fabric.properties.provisioningState, "") == "Succeeded" &&
@@ -39,9 +40,14 @@ locals {
     ][0],
     null
   ) : null
-  # Determine if we have fabric configuration inputs (used for count - must be known at plan time)
-  # These check if the user provided either explicit IDs or appliance names for discovery
-  has_fabric_inputs = (var.source_fabric_id != null || var.source_appliance_name != null) && (var.target_fabric_id != null || var.target_appliance_name != null)
+  # Determine if we have fabric configuration inputs (used for count — must be known at plan time).
+  # Fabrics are resolved internally from appliance names (parity with Az.Migrate PowerShell),
+  # so the predicate only needs the two appliance-name variables.
+  has_fabric_inputs = var.source_appliance_name != null && var.target_appliance_name != null
+  # Modes that need to discover fabrics/agents from the project (initialize creates them, replicate consumes them).
+  needs_fabric_discovery = local.is_initialize_mode || local.is_replicate_mode
+  # 1:1 mapping from source_machine_type to the protected-item instanceType the API expects.
+  effective_instance_type = var.source_machine_type == "HyperV" ? "HyperVToAzStackHCI" : "VMwareToAzStackHCI"
   # ========================================
   # OPERATION MODE FLAGS
   # ========================================
@@ -87,13 +93,10 @@ locals {
   # ========================================
   # Parse subscription_id from parent_id (the resource group ID)
   parsed_parent_id = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.parent_id)
-  # Resolve fabric IDs: priority order is explicit ID > auto-discovered from appliance name
-  resolved_source_fabric_id = var.source_fabric_id != null ? var.source_fabric_id : (
-    local.discovered_source_fabric != null ? try(local.discovered_source_fabric.id, null) : null
-  )
-  resolved_target_fabric_id = var.target_fabric_id != null ? var.target_fabric_id : (
-    local.discovered_target_fabric != null ? try(local.discovered_target_fabric.id, null) : null
-  )
+  # Resolve fabric IDs purely from the auto-discovered fabrics. The PowerShell cmdlet
+  # does not expose fabric IDs to the user, so neither do we.
+  resolved_source_fabric_id = try(local.discovered_source_fabric.id, null)
+  resolved_target_fabric_id = try(local.discovered_target_fabric.id, null)
   # The resource group ID is simply parent_id
   resource_group_id                  = var.parent_id
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
@@ -101,9 +104,22 @@ locals {
   # DRA (FABRIC AGENT) IDENTITIES
   # ========================================
   # Extract DRA (Fabric Agent) identity object IDs for role assignments
-  source_dra_object_id = local.is_initialize_mode && length(data.azapi_resource_list.source_fabric_agents) > 0 ? try(
+  source_dra_object_id = local.needs_fabric_discovery && length(data.azapi_resource_list.source_fabric_agents) > 0 ? try(
     [for agent in data.azapi_resource_list.source_fabric_agents[0].output.value :
       agent.properties.resourceAccessIdentity.objectId if(
+        try(agent.properties.machineName, "") == var.source_appliance_name &&
+        try(agent.properties.customProperties.instanceType, "") == local.source_fabric_instance_type &&
+        try(agent.properties.isResponsive, false) == true
+      )
+    ][0],
+    null
+  ) : null
+  # Auto-resolve the DRA names that Az.Migrate normally looks up itself. Picks the
+  # first responsive agent whose machineName matches the appliance and whose
+  # instanceType matches the migration direction.
+  effective_source_fabric_agent_name = local.needs_fabric_discovery && length(data.azapi_resource_list.source_fabric_agents) > 0 ? try(
+    [for agent in data.azapi_resource_list.source_fabric_agents[0].output.value :
+      try(agent.name, null) if(
         try(agent.properties.machineName, "") == var.source_appliance_name &&
         try(agent.properties.customProperties.instanceType, "") == local.source_fabric_instance_type &&
         try(agent.properties.isResponsive, false) == true
@@ -115,7 +131,7 @@ locals {
   # FABRIC DISCOVERY
   # ========================================
   # Fabric instance types for matching
-  source_fabric_instance_type = var.instance_type == "VMwareToAzStackHCI" ? "VMwareMigrate" : "HyperVMigrate"
+  source_fabric_instance_type = local.effective_instance_type == "VMwareToAzStackHCI" ? "VMwareMigrate" : "HyperVMigrate"
   storage_account_name        = local.is_initialize_mode && var.source_appliance_name != null ? "migratersa${local.storage_account_suffix}" : ""
   # ========================================
   # STORAGE ACCOUNT
@@ -123,10 +139,34 @@ locals {
   # Storage account name generation (similar to Python generate_hash_for_artifact)
   # Only calculate if we're in initialize mode to avoid null value errors
   storage_account_suffix = local.is_initialize_mode && var.source_appliance_name != null ? substr(md5("${var.source_appliance_name}${var.project_name}"), 0, 14) : ""
-  subscription_id        = local.parsed_parent_id.subscription_id
-  target_dra_object_id = local.is_initialize_mode && length(data.azapi_resource_list.target_fabric_agents) > 0 ? try(
+  # Detect storage account already associated with the migrate project's replication solution.
+  # When the solution's extendedDetails already contains a replicationStorageAccountId we
+  # reuse that account instead of provisioning a duplicate (parity with Az CLI / Az PowerShell).
+  existing_replication_storage_account_id  = local.is_initialize_mode && length(data.azapi_resource.replication_solution) > 0 ? try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.replicationStorageAccountId, null) : null
+  has_existing_replication_storage_account = local.existing_replication_storage_account_id != null && local.existing_replication_storage_account_id != ""
+  # Resolved cache storage account ID with precedence:
+  #   1. Caller-supplied var.cache_storage_account_id (explicit override)
+  #   2. Existing replicationStorageAccountId already recorded on the solution
+  #   3. Newly created cache storage account managed by this module
+  resolved_cache_storage_account_id = var.cache_storage_account_id != null ? var.cache_storage_account_id : (
+    local.has_existing_replication_storage_account ? local.existing_replication_storage_account_id : (
+      length(azapi_resource.cache_storage_account) > 0 ? azapi_resource.cache_storage_account[0].id : null
+    )
+  )
+  subscription_id = local.parsed_parent_id.subscription_id
+  target_dra_object_id = local.needs_fabric_discovery && length(data.azapi_resource_list.target_fabric_agents) > 0 ? try(
     [for agent in data.azapi_resource_list.target_fabric_agents[0].output.value :
       agent.properties.resourceAccessIdentity.objectId if(
+        try(agent.properties.machineName, "") == var.target_appliance_name &&
+        try(agent.properties.customProperties.instanceType, "") == local.target_fabric_instance_type &&
+        try(agent.properties.isResponsive, false) == true
+      )
+    ][0],
+    null
+  ) : null
+  effective_target_fabric_agent_name = local.needs_fabric_discovery && length(data.azapi_resource_list.target_fabric_agents) > 0 ? try(
+    [for agent in data.azapi_resource_list.target_fabric_agents[0].output.value :
+      try(agent.name, null) if(
         try(agent.properties.machineName, "") == var.target_appliance_name &&
         try(agent.properties.customProperties.instanceType, "") == local.target_fabric_instance_type &&
         try(agent.properties.isResponsive, false) == true
@@ -138,6 +178,31 @@ locals {
   # ========================================
   # REPLICATION VAULT
   # ========================================
-  # Check if vault exists in solution (handles both missing solution and missing vaultId)
-  vault_exists_in_solution = local.is_initialize_mode && length(data.azapi_resource.replication_solution) > 0 && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "") != ""
+  # Check if vault exists in solution (handles both missing solution and missing vaultId).
+  # Extended to replicate/list/get/jobs modes too — these read the solution and want the vault.
+  vault_exists_in_solution = (local.is_initialize_mode || local.is_replicate_mode || local.is_list_mode || local.is_get_mode || local.is_jobs_mode) && length(data.azapi_resource.replication_solution) > 0 && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, null) != null && try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "") != ""
+  # Resolved vault ID for downstream consumers. Order:
+  #   1. Created vault (initialize mode)
+  #   2. Vault discovered on the project's Server Migration solution
+  #   3. Explicit var.replication_vault_id (legacy/override)
+  resolved_vault_id = (
+    local.create_new_vault ? azapi_resource.replication_vault[0].id :
+    local.vault_exists_in_solution ? data.azapi_resource.replication_vault[0].id :
+    var.replication_vault_id
+  )
+  # Auto-resolve the policy name to the deterministic Az.Migrate naming pattern
+  # `<vault-name><instance-type>policy` when the caller did not supply one.
+  effective_policy_name = coalesce(
+    var.replication_policy.name,
+    local.resolved_vault_id != null ? "${basename(local.resolved_vault_id)}${local.effective_instance_type}policy" : null,
+    "unknown-policy"
+  )
+  # Auto-resolve the replication extension name to the deterministic Az.Migrate
+  # naming pattern `<source-fabric>-<target-fabric>-MigReplicationExtn` when both
+  # fabrics can be resolved.
+  effective_replication_extension_name = (
+    local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ?
+    "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" :
+    null
+  )
 }

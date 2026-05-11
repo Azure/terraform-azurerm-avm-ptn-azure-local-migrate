@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -22,7 +22,6 @@ module "get_protected_item" {
   location          = var.location
   name              = "get-protected-item"
   parent_id         = var.parent_id
-  instance_type     = var.instance_type
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = var.protected_item_id

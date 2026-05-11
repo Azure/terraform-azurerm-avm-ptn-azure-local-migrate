@@ -3,12 +3,6 @@ variable "parent_id" {
   description = "The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}"
 }
 
-variable "instance_type" {
-  type        = string
-  default     = "VMwareToAzStackHCI"
-  description = "The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)"
-}
-
 variable "location" {
   type        = string
   default     = "westus2"
@@ -17,13 +11,13 @@ variable "location" {
 
 variable "project_name" {
   type        = string
-  default     = "saif-project-012726"
+  default     = "<migrate-project-name>"
   description = "The name of the Azure Migrate project"
 }
 
 variable "replication_vault_id" {
   type        = string
-  default     = "/subscriptions/f6f66a94-f184-45da-ac12-ffbfd8a6eb29/resourceGroups/saif-project-012726-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-01424replicationvault"
+  default     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<rg>/providers/Microsoft.DataReplication/replicationVaults/<vault>"
   description = "The full resource ID of the replication vault (optional, derived from project if not provided)"
 }
 

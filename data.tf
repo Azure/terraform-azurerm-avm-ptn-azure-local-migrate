@@ -43,13 +43,18 @@ data "azapi_resource_list" "discovered_servers" {
 data "azapi_resource" "replication_vault" {
   count = local.vault_exists_in_solution ? 1 : 0
 
-  resource_id = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "")
-  type        = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  resource_id            = try(data.azapi_resource.replication_solution[0].output.properties.details.extendedDetails.vaultId, "")
+  type                   = "Microsoft.DataReplication/replicationVaults@2024-09-01"
+  response_export_values = ["identity"]
 }
 
 # Query replication fabrics
+# depends_on is intentional: when a new vault is being created in this plan,
+# we want the fabric list read deferred until apply so that the discovered_*
+# locals (and the resolved_source/target_fabric_id values derived from them)
+# resolve against a stable fabric set instead of an empty plan-time read.
 data "azapi_resource_list" "replication_fabrics" {
-  count = local.is_initialize_mode ? 1 : 0
+  count = local.needs_fabric_discovery ? 1 : 0
 
   parent_id = local.resource_group_id
   type      = "Microsoft.DataReplication/replicationFabrics@2024-09-01"
@@ -57,10 +62,10 @@ data "azapi_resource_list" "replication_fabrics" {
   depends_on = [azapi_resource.replication_vault]
 }
 
-# Query source fabric agents (DRAs) for role assignments
-# Note: Uses has_fabric_inputs since resolved_fabric_id is computed at apply time
+# Query source fabric agents (DRAs) for role assignments and name lookup.
+# Fires in both initialize (to grant RBAC) and replicate (to look up agent names).
 data "azapi_resource_list" "source_fabric_agents" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.needs_fabric_discovery && local.has_fabric_inputs ? 1 : 0
 
   parent_id              = local.resolved_source_fabric_id
   type                   = "Microsoft.DataReplication/replicationFabrics/fabricAgents@2024-09-01"
@@ -69,9 +74,9 @@ data "azapi_resource_list" "source_fabric_agents" {
   depends_on = [data.azapi_resource_list.replication_fabrics]
 }
 
-# Query target fabric agents (DRAs) for role assignments
+# Query target fabric agents (DRAs) for role assignments and name lookup
 data "azapi_resource_list" "target_fabric_agents" {
-  count = local.is_initialize_mode && local.has_fabric_inputs ? 1 : 0
+  count = local.needs_fabric_discovery && local.has_fabric_inputs ? 1 : 0
 
   parent_id              = local.resolved_target_fabric_id
   type                   = "Microsoft.DataReplication/replicationFabrics/fabricAgents@2024-09-01"
