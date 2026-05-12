@@ -40,6 +40,17 @@ variable "cache_storage_account_id" {
   description = "Storage Account ARM ID for cache/private endpoint scenario. When null, the module reuses the `replicationStorageAccountId` already recorded on the migrate project's Server Migration solution (if any). Only when neither is present is a new cache storage account created."
 }
 
+variable "connectivity_method" {
+  type        = string
+  default     = "Public-endpoint"
+  description = "Connectivity method for the Azure Migrate project. `Public-endpoint` enables `publicNetworkAccess`; any other value (e.g. `Private-endpoint`) disables it."
+
+  validation {
+    condition     = contains(["Public-endpoint", "Private-endpoint"], var.connectivity_method)
+    error_message = "connectivity_method must be either \"Public-endpoint\" or \"Private-endpoint\"."
+  }
+}
+
 variable "create_migrate_project" {
   type        = bool
   default     = false

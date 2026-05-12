@@ -16,8 +16,6 @@ locals {
     for ra in try(data.azapi_resource_list.cache_storage_role_assignments[0].output.value, []) :
     "${lower(try(ra.properties.principalId, ""))}-${lower(basename(try(ra.properties.roleDefinitionId, "")))}"
   ]) : toset([])
-  # Detect existing replication extension (brownfield)
-  _expected_extension_name = local.has_fabric_inputs && local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ? "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" : ""
   # Vault principal ID from existing vault data source (brownfield)
   _vault_principal_id = local.vault_exists_in_solution ? try(data.azapi_resource.replication_vault[0].output.identity.principalId, null) : null
   # ========================================
@@ -119,8 +117,8 @@ locals {
   # The resource group ID is simply parent_id
   resource_group_id                  = var.parent_id
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
-  source_dra_blob_exists             = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._blob_contributor_role_guid}")
-  source_dra_contributor_exists      = local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(local.source_dra_object_id)}-${local._contributor_role_guid}")
+  source_dra_blob_exists             = length(local._existing_role_assignment_keys) == 0 ? false : (local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(coalesce(local.source_dra_object_id, "00000000-0000-0000-0000-000000000000"))}-${local._blob_contributor_role_guid}"))
+  source_dra_contributor_exists      = length(local._existing_role_assignment_keys) == 0 ? false : (local.source_dra_object_id != null && contains(local._existing_role_assignment_keys, "${lower(coalesce(local.source_dra_object_id, "00000000-0000-0000-0000-000000000000"))}-${local._contributor_role_guid}"))
   # ========================================
   # DRA (FABRIC AGENT) IDENTITIES
   # ========================================
@@ -225,5 +223,61 @@ locals {
     local.resolved_source_fabric_id != null && local.resolved_target_fabric_id != null ?
     "${basename(local.resolved_source_fabric_id)}-${basename(local.resolved_target_fabric_id)}-MigReplicationExtn" :
     null
+  )
+  # ========================================
+  # BROWNFIELD IDEMPOTENCY GUARDS
+  # ========================================
+  # `*_exists` predicates consumed by `count` on resources that must skip
+  # creation when the target object is already on the vault / storage account.
+  # All default to `false` in greenfield, so the resource is created.
+  #
+  # Short-circuit on `vault_exists_in_solution`: if the vault is being created
+  # this plan, no child policies/extensions can pre-exist, and short-circuiting
+  # keeps these locals plan-time-known (the alternative path threads
+  # apply-time-unknown values from `azapi_resource.replication_vault[0]`).
+  replication_policy_exists = local.vault_exists_in_solution && local.effective_policy_name != null && contains(
+    [for p in try(data.azapi_resource_list.existing_policies[0].output.value, []) : try(p.name, "")],
+    local.effective_policy_name
+  )
+  replication_extension_exists = local.vault_exists_in_solution && local.effective_replication_extension_name != null && contains(
+    [for e in try(data.azapi_resource_list.existing_extensions[0].output.value, []) : try(e.name, "")],
+    local.effective_replication_extension_name
+  )
+  # ARM IDs / names of existing brownfield objects, used by outputs that need to
+  # return the actual resource even when the module skipped creation.
+  existing_policy_id = local.replication_policy_exists ? try(
+    [for p in data.azapi_resource_list.existing_policies[0].output.value : try(p.id, null) if try(p.name, "") == local.effective_policy_name][0],
+    null
+  ) : null
+  existing_extension_id = local.replication_extension_exists ? try(
+    [for e in data.azapi_resource_list.existing_extensions[0].output.value : try(e.id, null) if try(e.name, "") == local.effective_replication_extension_name][0],
+    null
+  ) : null
+  existing_extension_name = local.replication_extension_exists ? local.effective_replication_extension_name : null
+  # Vault identity role assignments on the cache storage account
+  vault_contributor_exists = length(local._existing_role_assignment_keys) == 0 ? false : (
+    local._vault_principal_id != null && contains(
+      local._existing_role_assignment_keys,
+      "${lower(coalesce(local._vault_principal_id, "00000000-0000-0000-0000-000000000000"))}-${local._contributor_role_guid}"
+    )
+  )
+  vault_blob_contributor_exists = length(local._existing_role_assignment_keys) == 0 ? false : (
+    local._vault_principal_id != null && contains(
+      local._existing_role_assignment_keys,
+      "${lower(coalesce(local._vault_principal_id, "00000000-0000-0000-0000-000000000000"))}-${local._blob_contributor_role_guid}"
+    )
+  )
+  # Target DRA role assignments on the cache storage account
+  target_dra_contributor_exists = length(local._existing_role_assignment_keys) == 0 ? false : (
+    local.target_dra_object_id != null && contains(
+      local._existing_role_assignment_keys,
+      "${lower(coalesce(local.target_dra_object_id, "00000000-0000-0000-0000-000000000000"))}-${local._contributor_role_guid}"
+    )
+  )
+  target_dra_blob_exists = length(local._existing_role_assignment_keys) == 0 ? false : (
+    local.target_dra_object_id != null && contains(
+      local._existing_role_assignment_keys,
+      "${lower(coalesce(local.target_dra_object_id, "00000000-0000-0000-0000-000000000000"))}-${local._blob_contributor_role_guid}"
+    )
   )
 }

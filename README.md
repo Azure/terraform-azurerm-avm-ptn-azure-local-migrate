@@ -115,6 +115,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_connectivity_method"></a> [connectivity\_method](#input\_connectivity\_method)
+
+Description: Connectivity method for the Azure Migrate project. `Public-endpoint` enables `publicNetworkAccess`; any other value (e.g. `Private-endpoint`) disables it.
+
+Type: `string`
+
+Default: `"Public-endpoint"`
+
 ### <a name="input_create_migrate_project"></a> [create\_migrate\_project](#input\_create\_migrate\_project)
 
 Description: Whether to create a new Azure Migrate project. If false, an existing project is queried.
