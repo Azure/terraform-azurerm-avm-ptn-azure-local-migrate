@@ -19,7 +19,6 @@ provider "azapi" {}
 module "get_protected_item" {
   source = "../../"
 
-  location          = var.location
   name              = "get-protected-item"
   parent_id         = var.parent_id
   operation_mode    = "get"

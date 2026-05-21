@@ -721,3 +721,72 @@ run "diagnostic_settings_require_vault" {
 
   expect_failures = [azapi_resource.diagnostic_setting]
 }
+
+# ========================================
+# LOCATION AUTO-DISCOVERY TESTS
+# ========================================
+
+# Caller-supplied `var.location` always wins, even when the existing project
+# advertises a different region. This preserves the explicit-override contract.
+run "location_explicit_var_wins_over_project" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.migrate_project_existing[0]
+    values = {
+      id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateprojects/test-project"
+      location = "westeurope"
+    }
+  }
+
+  variables {
+    operation_mode = "discover"
+    location       = "eastus"
+    project_name   = "test-project"
+  }
+
+  assert {
+    condition     = local.effective_location == "eastus"
+    error_message = "Caller-supplied var.location must take precedence over the discovered project location"
+  }
+}
+
+# When `var.location` is omitted, the module reads the region from the existing
+# migrate project (PowerShell-equivalent behaviour).
+run "location_auto_discovered_from_project" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.migrate_project_existing[0]
+    values = {
+      id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateprojects/test-project"
+      location = "westeurope"
+    }
+  }
+
+  variables {
+    operation_mode = "discover"
+    location       = null
+    project_name   = "test-project"
+  }
+
+  assert {
+    condition     = local.effective_location == "westeurope"
+    error_message = "effective_location must auto-discover from the migrate project when var.location is null"
+  }
+}
+
+# Creating a new migrate project has no existing project to discover from,
+# so the precondition must fail when var.location is omitted.
+run "location_required_when_creating_project" {
+  command = plan
+
+  variables {
+    operation_mode         = "create-project"
+    location               = null
+    project_name           = "new-project"
+    create_migrate_project = true
+  }
+
+  expect_failures = [azapi_resource.migrate_project]
+}

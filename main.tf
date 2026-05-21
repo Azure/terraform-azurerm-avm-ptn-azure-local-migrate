@@ -9,7 +9,7 @@
 resource "azapi_resource" "migrate_project" {
   count = local.create_new_project ? 1 : 0
 
-  location  = var.location
+  location  = local.effective_location
   name      = var.project_name
   parent_id = local.resource_group_id
   type      = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
@@ -27,6 +27,13 @@ resource "azapi_resource" "migrate_project" {
 
   identity {
     type = "SystemAssigned"
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.location != null
+      error_message = "`var.location` is required when `create_migrate_project = true`. There is no existing project to discover the region from — supply the target Azure region explicitly."
+    }
   }
 }
 
@@ -158,7 +165,7 @@ resource "azapi_resource" "migrate_project_role_assignment" {
 resource "azapi_resource" "replication_vault" {
   count = local.create_new_vault ? 1 : 0
 
-  location  = var.location
+  location  = local.effective_location
   name      = "${replace(var.project_name, "-", "")}replicationvault"
   parent_id = local.resource_group_id
   type      = "Microsoft.DataReplication/replicationVaults@2024-09-01"
@@ -208,7 +215,7 @@ resource "azapi_resource" "replication_policy" {
 resource "azapi_resource" "cache_storage_account" {
   count = local.is_initialize_mode && var.cache_storage_account_id == null && !local.has_existing_replication_storage_account ? 1 : 0
 
-  location  = var.location
+  location  = local.effective_location
   name      = local.storage_account_name
   parent_id = local.resource_group_id
   type      = "Microsoft.Storage/storageAccounts@2023-01-01"
@@ -489,7 +496,7 @@ resource "azapi_resource" "protected_item" {
       customProperties = {
         instanceType                     = local.effective_instance_type
         targetArcClusterCustomLocationId = coalesce(var.custom_location_id, "")
-        customLocationRegion             = var.location
+        customLocationRegion             = local.effective_location
         fabricDiscoveryMachineId         = var.machine_id != null ? var.machine_id : "${local.migrate_project_id}/machines/${var.machine_name}"
         # Power user mode: explicit disks_to_include.
         # Simple mode: single OS disk entry built from os_disk_id; size is

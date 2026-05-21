@@ -77,12 +77,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region where resources should be deployed. Required when create\_migrate\_project is true.
-
-Type: `string`
-
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: The name of the migration resource.
@@ -218,6 +212,14 @@ Default: `false`
 ### <a name="input_job_name"></a> [job\_name](#input\_job\_name)
 
 Description: Specific job name to retrieve. If not provided, all jobs will be listed.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet).
 
 Type: `string`
 

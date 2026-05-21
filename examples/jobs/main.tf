@@ -19,7 +19,6 @@ provider "azapi" {}
 module "replication_jobs" {
   source = "../../"
 
-  location       = var.location
   name           = "replication-jobs"
   parent_id      = var.parent_id
   operation_mode = "jobs"

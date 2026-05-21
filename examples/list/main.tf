@@ -19,7 +19,6 @@ provider "azapi" {}
 module "list_protected_items" {
   source = "../../"
 
-  location       = var.location
   name           = "list-protected-items"
   parent_id      = var.parent_id
   operation_mode = "list"

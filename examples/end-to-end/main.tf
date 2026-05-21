@@ -36,37 +36,27 @@ module "initialize" {
   source = "../../"
   count  = var.skip_initialize ? 0 : 1
 
-  location                           = var.location
-  name                               = "e2e-initialize"
-  parent_id                          = var.parent_id
-  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
-  cache_storage_account_id           = var.cache_storage_account_id
-  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
-  instance_type                      = var.instance_type
-  operation_mode                     = "initialize"
-  project_name                       = var.project_name
-  recovery_point_history_minutes     = var.recovery_point_history_minutes
-  source_appliance_name              = var.source_appliance_name
-  source_fabric_id                   = var.source_fabric_id
-  tags                               = var.tags
-  target_appliance_name              = var.target_appliance_name
-  target_fabric_id                   = var.target_fabric_id
+  name                  = "e2e-initialize"
+  operation_mode        = "initialize"
+  parent_id             = var.parent_id
+  project_name          = var.project_name
+  source_appliance_name = var.source_appliance_name
+  target_appliance_name = var.target_appliance_name
+  tags                  = var.tags
 }
 
 # The protected item ID follows a predictable pattern based on the machine_id
 # and replication vault. We construct it from known inputs so it's available at
 # plan time (avoiding "count depends on unknown value" errors).
 #
-# When initialize runs, we derive vault/policy/extension from its outputs.
-# When skipped, we use the explicit variable values.
+# When initialize runs, we derive the vault from its output.
+# When skipped, we use the explicit replication_vault_id variable.
 locals {
-  policy_name = var.skip_initialize ? var.policy_name : basename(module.initialize[0].replication_policy_id)
   # Build a protected_item_id for each VM
   protected_item_ids = {
     for key, vm in var.vms : key => "${local.replication_vault_id}/protectedItems/${basename(vm.machine_id)}"
   }
-  replication_extension_name = var.skip_initialize ? var.replication_extension_name : module.initialize[0].replication_extension_name
-  replication_vault_id       = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
+  replication_vault_id = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
 }
 
 # ========================================
@@ -78,39 +68,24 @@ module "replicate_vm" {
   source   = "../../"
   for_each = var.vms
 
-  location                   = var.location
-  name                       = "e2e-replicate-${each.key}"
-  parent_id                  = var.parent_id
-  custom_location_id         = var.custom_location_id
-  disks_to_include           = each.value.disks_to_include
-  hyperv_generation          = each.value.hyperv_generation
-  instance_type              = var.instance_type
-  is_dynamic_memory_enabled  = each.value.is_dynamic_memory_enabled
-  machine_id                 = each.value.machine_id
-  nic_id                     = each.value.nic_id
-  nics_to_include            = each.value.nics_to_include
-  operation_mode             = "replicate"
-  os_disk_id                 = each.value.os_disk_id
-  os_disk_size_gb            = each.value.os_disk_size_gb
-  policy_name                = local.policy_name
-  project_name               = var.project_name
-  replication_extension_name = local.replication_extension_name
-  replication_vault_id       = local.replication_vault_id
-  run_as_account_id          = var.run_as_account_id
-  source_appliance_name      = var.source_appliance_name
-  source_fabric_agent_name   = var.source_fabric_agent_name
-  source_vm_cpu_cores        = each.value.source_vm_cpu_cores
-  source_vm_ram_mb           = each.value.source_vm_ram_mb
-  tags                       = var.tags
-  target_appliance_name      = var.target_appliance_name
-  target_fabric_agent_name   = var.target_fabric_agent_name
-  target_hci_cluster_id      = var.target_hci_cluster_id
-  target_resource_group_id   = var.target_resource_group_id
-  target_storage_path_id     = var.target_storage_path_id
-  target_virtual_switch_id   = var.target_virtual_switch_id
-  target_vm_cpu_cores        = each.value.target_vm_cpu_cores
-  target_vm_name             = each.value.target_vm_name
-  target_vm_ram_mb           = each.value.target_vm_ram_mb
+  name                     = "e2e-replicate-${each.key}"
+  operation_mode           = "replicate"
+  parent_id                = var.parent_id
+  custom_location_id       = var.custom_location_id
+  disks_to_include         = each.value.disks_to_include
+  machine_id               = each.value.machine_id
+  nics_to_include          = each.value.nics_to_include
+  os_disk_id               = each.value.os_disk_id
+  project_name             = var.project_name
+  run_as_account_id        = var.run_as_account_id
+  source_appliance_name    = var.source_appliance_name
+  tags                     = var.tags
+  target_appliance_name    = var.target_appliance_name
+  target_hci_cluster_id    = var.target_hci_cluster_id
+  target_resource_group_id = var.target_resource_group_id
+  target_storage_path_id   = var.target_storage_path_id
+  target_virtual_switch_id = var.target_virtual_switch_id
+  target_vm_name           = each.value.target_vm_name
 
   depends_on = [module.initialize]
 }
@@ -195,11 +170,9 @@ module "check_status" {
   source   = "../../"
   for_each = var.vms
 
-  location          = var.location
   name              = "e2e-check-status-${each.key}"
-  parent_id         = var.parent_id
-  instance_type     = var.instance_type
   operation_mode    = "get"
+  parent_id         = var.parent_id
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
   tags              = var.tags
@@ -216,11 +189,9 @@ module "migrate_vm" {
   source   = "../../"
   for_each = var.vms
 
-  location           = var.location
   name               = "e2e-migrate-${each.key}"
-  parent_id          = var.parent_id
-  instance_type      = var.instance_type
   operation_mode     = "migrate"
+  parent_id          = var.parent_id
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm
   tags               = var.tags

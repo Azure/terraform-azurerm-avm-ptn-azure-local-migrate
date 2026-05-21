@@ -65,6 +65,20 @@ locals {
   needs_fabric_discovery = local.is_initialize_mode || local.is_replicate_mode
   # 1:1 mapping from source_machine_type to the protected-item instanceType the API expects.
   effective_instance_type = var.source_machine_type == "HyperV" ? "HyperVToAzStackHCI" : "VMwareToAzStackHCI"
+  # Resolved Azure region for managed resources.
+  # Order of resolution:
+  #   1. Caller-supplied `var.location` (explicit override; required when
+  #      creating a new migrate project because no project exists to read from).
+  #   2. The existing migrate project's `location` (auto-discovery for all
+  #      non-create modes). Matches `Az.Migrate` PowerShell behaviour, which
+  #      derives the region from the project rather than asking the user.
+  # Stays `null` if neither path resolves; resources that need a region carry
+  # a lifecycle precondition to surface a friendly error in that case.
+  effective_location = (
+    var.location != null ? var.location :
+    length(data.azapi_resource.migrate_project_existing) > 0 ? try(data.azapi_resource.migrate_project_existing[0].location, null) :
+    null
+  )
   # ========================================
   # OPERATION MODE FLAGS
   # ========================================

@@ -59,14 +59,6 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
-
-Type: `string`
-
-Default: `"eastus"`
-
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
 Description: The resource ID of the resource group where the replication vault exists. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}

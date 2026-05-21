@@ -8,6 +8,16 @@ starting at `v0.x`; breaking changes are expected until `v1.0`.
 
 ### Breaking changes
 
+- **`var.location` is now optional and auto-discovered.** In every mode
+  except `create-project`, the module reads the Azure region from the
+  existing migrate project rather than requiring the caller to repeat it.
+  This matches the `Az.Migrate` PowerShell behaviour, which never asks for a
+  region when the project already exists. Callers that previously passed
+  `location` can drop it (or leave it in — an explicit value still wins).
+  When `create_migrate_project = true` and no project exists yet, the
+  module surfaces a precondition error asking for `var.location`
+  explicitly.
+
 - **Variable surface reduced to match the `Az.Migrate` PowerShell cmdlet shape.**
   Sixteen flat variables were removed and replaced by two grouped optional
   objects plus internal auto-resolution. Consumers pinned to the previous
@@ -38,6 +48,19 @@ starting at `v0.x`; breaking changes are expected until `v1.0`.
     hyperv_generation })` — all fields optional with sensible defaults.
 
 ### Added
+
+- **Location auto-discovery.** New internal local `effective_location`
+  resolves the deployment region in the following order:
+  1. caller-supplied `var.location` (explicit override; required when
+     creating a new migrate project),
+  2. the existing migrate project's `location` (read via
+     `data.azapi_resource.migrate_project_existing`),
+  Resources that need a real region (`azapi_resource.migrate_project`,
+  `replication_vault`, `cache_storage_account`, and `protected_item`'s
+  `customLocationRegion`) reference `local.effective_location` instead of
+  `var.location`. A lifecycle precondition on
+  `azapi_resource.migrate_project` enforces an explicit value when the
+  module is asked to create a new project.
 
 - Fabric discovery is now active in `replicate` mode as well as `initialize`
   mode. Fabrics are resolved purely from `source_appliance_name` /

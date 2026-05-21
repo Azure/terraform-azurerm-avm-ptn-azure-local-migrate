@@ -1,4 +1,3 @@
-location              = "eastus"
 parent_id             = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<rg>"
 project_name          = "<migrate-project-name>"
 source_appliance_name = "<src-appliance>"

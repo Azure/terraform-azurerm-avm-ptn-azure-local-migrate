@@ -38,16 +38,6 @@ output "protected_item_ids" {
   value       = local.protected_item_ids
 }
 
-output "replication_extension_name" {
-  description = "Name of the replication extension (from initialize or variable)"
-  value       = local.replication_extension_name
-}
-
-output "replication_policy_name" {
-  description = "Name of the replication policy (from initialize or variable)"
-  value       = local.policy_name
-}
-
 output "replication_status" {
   description = "Current replication status per VM - wait for 'Protected' before migrating"
   value = {

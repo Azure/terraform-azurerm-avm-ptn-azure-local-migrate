@@ -32,14 +32,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
-
-Type: `string`
-
-Default: `"eastus"`
-
 ### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
 
 Description: The full resource ID of the protected item (replicated VM) to migrate

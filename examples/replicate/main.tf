@@ -14,7 +14,6 @@ provider "azapi" {}
 module "replicate_vm" {
   source = "../../"
 
-  location       = var.location
   name           = "vm-replication"
   operation_mode = "replicate"
   parent_id      = var.parent_id

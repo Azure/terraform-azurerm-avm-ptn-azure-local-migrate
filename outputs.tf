@@ -41,7 +41,7 @@ output "discovered_servers_raw" {
 
 output "location_output" {
   description = "Azure region where resources are deployed"
-  value       = var.location
+  value       = local.effective_location
 }
 
 output "machine_id" {

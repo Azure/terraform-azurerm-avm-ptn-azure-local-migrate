@@ -8,9 +8,10 @@
 data "azapi_resource" "migrate_project_existing" {
   count = !local.create_new_project && var.project_name != null ? 1 : 0
 
-  name      = var.project_name
-  parent_id = local.resource_group_id
-  type      = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
+  name                   = var.project_name
+  parent_id              = local.resource_group_id
+  type                   = "Microsoft.Migrate/migrateprojects@2020-06-01-preview"
+  response_export_values = ["location"]
 }
 
 # Get Data Replication Solution

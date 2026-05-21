@@ -14,7 +14,6 @@ provider "azapi" {}
 module "initialize_replication" {
   source = "../../"
 
-  location              = var.location
   name                  = "local-migration-init"
   operation_mode        = "initialize"
   parent_id             = var.parent_id

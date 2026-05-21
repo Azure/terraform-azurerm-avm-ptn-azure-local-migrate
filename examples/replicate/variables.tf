@@ -3,11 +3,6 @@ variable "custom_location_id" {
   description = "Arc custom location ARM ID for the Azure Local cluster."
 }
 
-variable "location" {
-  type        = string
-  description = "Azure region for managed resources."
-}
-
 variable "machine_id" {
   type        = string
   description = "Discovered machine ID (matches `-MachineId` in PowerShell)."

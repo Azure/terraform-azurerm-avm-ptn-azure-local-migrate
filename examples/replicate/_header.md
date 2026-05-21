@@ -12,7 +12,6 @@ Mirrors `New-AzMigrateLocalServerReplication` (Option 1, "ByIdDefaultUser"). Thi
 module "replicate_vm" {
   source = "Azure/avm-ptn-azure-local-migrate/azurerm"
 
-  location       = "eastus"
   name           = "vm-replication"
   operation_mode = "replicate"
   parent_id      = "/subscriptions/<sub>/resourceGroups/<rg>"
@@ -39,6 +38,7 @@ only when you need to deviate from defaults.
 
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
+| `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable |
 | `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled`, `-HyperVGeneration` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false, hyperv_generation = "1" }` | Right-size the target VM |
 | `run_as_account_id` | `-RunAsAccountID` | `null` | Appliance needs an explicit run-as account |
 | `target_test_virtual_switch_id` | `-TestNetworkID` (per nic) | Falls back to `target_virtual_switch_id` | Use a separate switch for test failover |

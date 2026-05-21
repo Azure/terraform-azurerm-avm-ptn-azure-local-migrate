@@ -13,7 +13,6 @@ solution.
 module "initialize_replication" {
   source = "Azure/avm-ptn-azure-local-migrate/azurerm"
 
-  location              = "eastus"
   name                  = "local-migration-init"
   operation_mode        = "initialize"
   parent_id             = "/subscriptions/<sub>/resourceGroups/<rg>"
@@ -30,6 +29,7 @@ only when you need to deviate from defaults.
 
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
+| `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable (e.g. when creating a new project) |
 | `cache_storage_account_id` | `-CacheStorageAccountId` | Module reuses the solution-recorded storage account or creates one | Bring your own storage account |
 | `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |
 | `replication_policy` | `-RecoveryPointHistoryInMinutes`, `-CrashConsistentFrequencyInMinutes`, `-AppConsistentFrequencyInMinutes` | `{ recovery_point_history_minutes = 4320, crash_consistent_frequency_minutes = 60, app_consistent_frequency_minutes = 240 }` | Tune RPO / retention |
@@ -55,12 +55,6 @@ No resources.
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region for managed resources.
-
-Type: `string`
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 

@@ -1,8 +1,3 @@
-variable "location" {
-  type        = string
-  description = "Azure region for managed resources."
-}
-
 variable "parent_id" {
   type        = string
   description = "Resource group ID containing the Azure Migrate project. Format: /subscriptions/{sub}/resourceGroups/{rg}"

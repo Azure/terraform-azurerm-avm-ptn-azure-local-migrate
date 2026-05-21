@@ -19,7 +19,6 @@ provider "azapi" {}
 module "migrate_vm" {
   source = "../../"
 
-  location           = var.location
   name               = "vm-migration"
   parent_id          = var.parent_id
   operation_mode     = "migrate"
