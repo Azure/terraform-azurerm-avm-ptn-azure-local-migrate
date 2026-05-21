@@ -122,6 +122,12 @@ starting at `v0.x`; breaking changes are expected until `v1.0`.
 - `azapi_resource.protected_item.targetArcClusterCustomLocationId` no
   longer fails `coalesce()` with a null `custom_location_id`; the
   expression now uses an explicit null-check.
+- `examples/jobs/variables.tf` — `replication_vault_id` now defaults to
+  `null` instead of a placeholder ARM ID. Without this fix, running the
+  example without overriding the variable sent the placeholder string
+  (`/subscriptions/00000000-.../replicationVaults/<vault>`) straight to
+  ARM and produced a `SubscriptionNotFound` 404 instead of triggering the
+  module's auto-discovery path.
 
 ### Documentation
 

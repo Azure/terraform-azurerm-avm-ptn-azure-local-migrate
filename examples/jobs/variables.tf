@@ -11,7 +11,7 @@ variable "project_name" {
 
 variable "replication_vault_id" {
   type        = string
-  default     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<rg>/providers/Microsoft.DataReplication/replicationVaults/<vault>"
+  default     = null
   description = "The full resource ID of the replication vault (optional, derived from project if not provided)"
 }
 
