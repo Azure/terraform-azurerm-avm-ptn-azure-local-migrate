@@ -4,6 +4,34 @@
 
 This example demonstrates how to discover machines in an Azure Migrate project using the `discover` operation mode.
 
+```hcl
+terraform {
+  required_version = ">= 1.9"
+
+  required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.4"
+    }
+  }
+}
+
+provider "azapi" {}
+
+# Test Discovery
+module "discover_vms" {
+  source = "../.."
+
+  name           = "migrate-discover"
+  parent_id      = var.parent_id
+  operation_mode = "discover"
+  project_name   = var.project_name
+  tags           = var.tags
+}
+
+
+```
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 

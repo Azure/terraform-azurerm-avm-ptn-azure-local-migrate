@@ -495,8 +495,8 @@ resource "azapi_resource" "protected_item" {
       replicationExtensionName = local.effective_replication_extension_name
       customProperties = {
         instanceType                     = local.effective_instance_type
-        targetArcClusterCustomLocationId = coalesce(var.custom_location_id, "")
-        customLocationRegion             = local.effective_location
+        targetArcClusterCustomLocationId = var.custom_location_id != null ? var.custom_location_id : ""
+        customLocationRegion             = local.effective_custom_location_region
         fabricDiscoveryMachineId         = var.machine_id != null ? var.machine_id : "${local.migrate_project_id}/machines/${var.machine_name}"
         # Power user mode: explicit disks_to_include.
         # Simple mode: single OS disk entry built from os_disk_id; size is
@@ -552,7 +552,7 @@ resource "azapi_resource" "protected_item" {
         }
         sourceFabricAgentName = local.effective_source_fabric_agent_name
         targetFabricAgentName = local.effective_target_fabric_agent_name
-        runAsAccountId        = var.run_as_account_id
+        runAsAccountId        = local.effective_run_as_account_id
         targetHCIClusterId    = var.target_hci_cluster_id
       }
     }
@@ -609,6 +609,18 @@ resource "azapi_resource_action" "planned_failover_hyperv" {
   depends_on = [
     data.azapi_resource.protected_item_to_migrate
   ]
+
+  # CLI parity: refuse to call /plannedFailover unless the protected item is
+  # currently eligible. Mirrors helpers/migration/start/_validate.py which
+  # requires `PlannedFailover` or `Restart` in `allowedJobs` before issuing
+  # the POST. Without this we'd surface an opaque 400 from the ARC bridge
+  # several minutes into the apply.
+  lifecycle {
+    precondition {
+      condition     = local.protected_item_is_migratable
+      error_message = "The replicating server cannot be migrated right now. Current protection state is '${local.protected_item_state_description}'. Allowed jobs: [${join(", ", local.protected_item_allowed_jobs)}]."
+    }
+  }
 }
 
 # Execute planned failover (migration) operation - VMware
@@ -637,6 +649,15 @@ resource "azapi_resource_action" "planned_failover_vmware" {
   depends_on = [
     data.azapi_resource.protected_item_to_migrate
   ]
+
+  # CLI parity: refuse to call /plannedFailover unless the protected item is
+  # currently eligible. See planned_failover_hyperv for the rationale.
+  lifecycle {
+    precondition {
+      condition     = local.protected_item_is_migratable
+      error_message = "The replicating server cannot be migrated right now. Current protection state is '${local.protected_item_state_description}'. Allowed jobs: [${join(", ", local.protected_item_allowed_jobs)}]."
+    }
+  }
 }
 
 # ========================================

@@ -9,10 +9,11 @@ locals {
   # BROWNFIELD DETECTION
   # ========================================
   # Detect existing role assignments on the cache storage account.
-  # When cache_storage_account_id is provided (brownfield), query Azure for existing assignments
-  # and skip creation if an assignment for the same principal+role already exists.
-  # In greenfield (cache_storage_account_id is null), these are always false → create everything.
-  _existing_role_assignment_keys = var.cache_storage_account_id != null && length(data.azapi_resource_list.cache_storage_role_assignments) > 0 ? toset([
+  # The data source's `count` already gates the query to brownfield cases (explicit
+  # var.cache_storage_account_id OR an auto-discovered replicationStorageAccountId on
+  # the migrate solution), so we just check `length(...) > 0` here. In greenfield, this
+  # is an empty set → all `*_exists` predicates short-circuit to false → create everything.
+  _existing_role_assignment_keys = length(data.azapi_resource_list.cache_storage_role_assignments) > 0 ? toset([
     for ra in try(data.azapi_resource_list.cache_storage_role_assignments[0].output.value, []) :
     "${lower(try(ra.properties.principalId, ""))}-${lower(basename(try(ra.properties.roleDefinitionId, "")))}"
   ]) : toset([])
@@ -79,6 +80,60 @@ locals {
     length(data.azapi_resource.migrate_project_existing) > 0 ? try(data.azapi_resource.migrate_project_existing[0].location, null) :
     null
   )
+  # ========================================
+  # RUN-AS ACCOUNT AUTO-DISCOVERY
+  # ========================================
+  # The PowerShell/CLI cmdlets derive `runAsAccountId` automatically from the
+  # source machine's parent (vCenter for VMware, host/cluster for Hyper-V).
+  # Mirrors Az CLI `azext_migrate.helpers.replication.new._process_inputs`:
+  #   * machine.properties.vCenterId  -> GET vCenter  -> properties.runAsAccountId   (VMware)
+  #   * machine.properties.hostId     -> GET host     -> properties.runAsAccountId   (Hyper-V standalone)
+  #   * machine.properties.clusterId  -> GET cluster  -> properties.runAsAccountId   (Hyper-V clustered)
+  # Caller can still override by passing var.run_as_account_id explicitly.
+  _machine_vcenter_id = local.is_replicate_mode && var.run_as_account_id == null && var.machine_id != null && length(data.azapi_resource.replicate_machine) > 0 ? try(data.azapi_resource.replicate_machine[0].output.properties.vCenterId, null) : null
+  _machine_host_id    = local.is_replicate_mode && var.run_as_account_id == null && var.machine_id != null && length(data.azapi_resource.replicate_machine) > 0 ? try(data.azapi_resource.replicate_machine[0].output.properties.hostId, null) : null
+  _machine_cluster_id = local.is_replicate_mode && var.run_as_account_id == null && var.machine_id != null && length(data.azapi_resource.replicate_machine) > 0 ? try(data.azapi_resource.replicate_machine[0].output.properties.clusterId, null) : null
+  # Pick whichever parent is non-null. Stays `null` when the discovery data
+  # source hasn't returned yet (greenfield/plan-time) so the parent data source
+  # gates correctly via `count`.
+  machine_parent_id = (
+    local._machine_vcenter_id != null ? local._machine_vcenter_id :
+    local._machine_host_id != null ? local._machine_host_id :
+    local._machine_cluster_id != null ? local._machine_cluster_id :
+    null
+  )
+  machine_parent_type = (
+    local._machine_vcenter_id != null ? "Microsoft.OffAzure/VMwareSites/vCenters@2023-06-06" :
+    local._machine_host_id != null ? "Microsoft.OffAzure/HyperVSites/hosts@2023-06-06" :
+    local._machine_cluster_id != null ? "Microsoft.OffAzure/HyperVSites/clusters@2023-06-06" :
+    "Microsoft.OffAzure/VMwareSites/vCenters@2023-06-06" # fallback never reached (count=0 in this branch)
+  )
+  effective_run_as_account_id = (
+    var.run_as_account_id != null ? var.run_as_account_id :
+    length(data.azapi_resource.machine_parent_for_run_as) > 0 ? try(data.azapi_resource.machine_parent_for_run_as[0].output.properties.runAsAccountId, null) :
+    null
+  )
+  # ========================================
+  # CUSTOM LOCATION REGION AUTO-DISCOVERY
+  # ========================================
+  # The HCI virtualHardDisks RP must be available in this region (resolved at
+  # apply by inspecting the customLocation resource itself). Falls back to the
+  # migrate project's location to preserve current behaviour when no custom
+  # location is supplied (greenfield discover/initialize/list/etc.).
+  effective_custom_location_region = (
+    length(data.azapi_resource.custom_location) > 0 ? try(data.azapi_resource.custom_location[0].output.location, local.effective_location) :
+    local.effective_location
+  )
+  # ========================================
+  # MIGRATE-MODE ELIGIBILITY (CLI parity)
+  # ========================================
+  # Mirrors the Az CLI `validate_protected_item_for_migration` (helpers/
+  # migration/start/_validate.py): require `PlannedFailover` or `Restart` in
+  # `allowedJobs` before calling /plannedFailover. Locals stay safe in non-
+  # migrate modes (the data source has count=0 there).
+  protected_item_allowed_jobs      = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, [])
+  protected_item_state_description = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.protectionStateDescription, try(data.azapi_resource.protected_item_to_migrate[0].output.properties.protectionState, "Unknown"))
+  protected_item_is_migratable     = !local.is_migrate_mode || contains(local.protected_item_allowed_jobs, "PlannedFailover") || contains(local.protected_item_allowed_jobs, "Restart")
   # ========================================
   # OPERATION MODE FLAGS
   # ========================================

@@ -323,7 +323,18 @@ DESCRIPTION
 variable "run_as_account_id" {
   type        = string
   default     = null
-  description = "Run-as account ARM ID"
+  description = <<-DESCRIPTION
+Run-as account ARM ID used by the replication agent to access the source machine.
+
+Optional — when omitted, the module auto-discovers it from the source machine's
+parent in the OffAzure site (matches Az CLI / Az.Migrate PowerShell behaviour):
+
+  * VMware  -> machine.properties.vCenterId  -> vCenter.properties.runAsAccountId
+  * Hyper-V -> machine.properties.hostId or clusterId -> host|cluster.properties.runAsAccountId
+
+Set this explicitly only when you need to override the parent's default
+run-as account (for example, to point at a different credential set).
+DESCRIPTION
 }
 
 # COMMAND 8: MIGRATE (PLANNED FAILOVER) Variables

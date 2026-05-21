@@ -196,6 +196,23 @@ run "valid_operation_mode_migrate" {
     protected_item_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault/protectedItems/test-item"
   }
 
+  # Override the protected_item_to_migrate data source so the CLI-parity
+  # precondition (`PlannedFailover` in `allowedJobs`) is satisfied at plan time.
+  # Mirrors the Az CLI behaviour in
+  # `azext_migrate/helpers/migration/start/_validate.py`.
+  override_data {
+    target = data.azapi_resource.protected_item_to_migrate[0]
+    values = {
+      output = {
+        properties = {
+          allowedJobs                = ["PlannedFailover"]
+          protectionState            = "Protected"
+          protectionStateDescription = "Protected"
+        }
+      }
+    }
+  }
+
   assert {
     condition     = var.operation_mode == "migrate"
     error_message = "Operation mode should be 'migrate'"
@@ -790,3 +807,292 @@ run "location_required_when_creating_project" {
 
   expect_failures = [azapi_resource.migrate_project]
 }
+
+# ========================================
+# BROWNFIELD ROLE-ASSIGNMENT DEDUP
+# ========================================
+# When the cache storage account is auto-discovered from the migrate project's
+# replication solution (not supplied via var.cache_storage_account_id), the
+# module must still inspect the existing role assignments and dedup against
+# them. Without this, re-running `initialize` against an already-initialized
+# project produces six RoleAssignmentExists 409s.
+run "brownfield_role_assignment_lookup_when_storage_auto_discovered" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.replication_solution[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateprojects/test-project/solutions/Servers-Migration-ServerMigration_DataReplication"
+      output = {
+        properties = {
+          details = {
+            extendedDetails = {
+              replicationStorageAccountId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/autosa"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode        = "initialize"
+    location              = "eastus"
+    project_name          = "test-project"
+    source_appliance_name = "src-appl"
+    target_appliance_name = "tgt-appl"
+  }
+
+  assert {
+    condition     = length(data.azapi_resource_list.cache_storage_role_assignments) == 1
+    error_message = "cache_storage_role_assignments lookup must fire when storage account is auto-discovered from the solution (not just when var.cache_storage_account_id is set)"
+  }
+
+  assert {
+    condition     = data.azapi_resource_list.cache_storage_role_assignments[0].parent_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/autosa"
+    error_message = "cache_storage_role_assignments parent_id must point at the auto-discovered storage account"
+  }
+}
+
+# ========================================
+# RUN-AS ACCOUNT AUTO-DISCOVERY
+# ========================================
+# Caller-supplied `var.run_as_account_id` always wins (explicit override).
+run "run_as_account_id_explicit_var_wins" {
+  command = plan
+
+  variables {
+    operation_mode       = "replicate"
+    location             = "eastus"
+    project_name         = "test-project"
+    replication_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault"
+    source_machine_type  = "VMware"
+    machine_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/machines/vm-1"
+    run_as_account_id    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/runasaccounts/explicit-uuid"
+  }
+
+  assert {
+    condition     = local.effective_run_as_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/runasaccounts/explicit-uuid"
+    error_message = "var.run_as_account_id must take precedence over auto-discovery"
+  }
+}
+
+# VMware path: machine.properties.vCenterId -> GET vCenter -> properties.runAsAccountId.
+# Mirrors Az CLI `_process_inputs.py`.
+run "run_as_account_id_auto_discovered_from_vcenter" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.replicate_machine[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/machines/vm-1"
+      output = {
+        properties = {
+          vCenterId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/vCenters/vcenter-1"
+        }
+      }
+    }
+  }
+
+  override_data {
+    target = data.azapi_resource.machine_parent_for_run_as[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/vCenters/vcenter-1"
+      output = {
+        properties = {
+          runAsAccountId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/runasaccounts/discovered-vmware-uuid"
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode       = "replicate"
+    location             = "eastus"
+    project_name         = "test-project"
+    replication_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault"
+    source_machine_type  = "VMware"
+    machine_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/machines/vm-1"
+  }
+
+  assert {
+    condition     = local.machine_parent_type == "Microsoft.OffAzure/VMwareSites/vCenters@2023-06-06"
+    error_message = "machine_parent_type must select the VMware vCenter ARM type when machine.properties.vCenterId is populated"
+  }
+
+  assert {
+    condition     = local.effective_run_as_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/runasaccounts/discovered-vmware-uuid"
+    error_message = "effective_run_as_account_id must equal the vCenter's runAsAccountId when var.run_as_account_id is unset"
+  }
+}
+
+# Hyper-V standalone path: machine.properties.hostId -> GET host -> properties.runAsAccountId.
+run "run_as_account_id_auto_discovered_from_hyperv_host" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.replicate_machine[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/machines/vm-1"
+      output = {
+        properties = {
+          hostId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/hosts/host-1"
+        }
+      }
+    }
+  }
+
+  override_data {
+    target = data.azapi_resource.machine_parent_for_run_as[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/hosts/host-1"
+      output = {
+        properties = {
+          runAsAccountId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/runasaccounts/discovered-hyperv-uuid"
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode       = "replicate"
+    location             = "eastus"
+    project_name         = "test-project"
+    replication_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault"
+    source_machine_type  = "HyperV"
+    machine_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/machines/vm-1"
+  }
+
+  assert {
+    condition     = local.machine_parent_type == "Microsoft.OffAzure/HyperVSites/hosts@2023-06-06"
+    error_message = "machine_parent_type must select the Hyper-V host ARM type when machine.properties.hostId is populated"
+  }
+
+  assert {
+    condition     = local.effective_run_as_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/HyperVSites/src-appl/runasaccounts/discovered-hyperv-uuid"
+    error_message = "effective_run_as_account_id must equal the host's runAsAccountId when var.run_as_account_id is unset"
+  }
+}
+
+# ========================================
+# CUSTOM LOCATION REGION AUTO-DISCOVERY
+# ========================================
+# The protected item's `customLocationRegion` must be the customLocation
+# resource's actual region (where the HCI cluster lives), NOT the migrate
+# project's region. Mirrors Az CLI
+# `helpers/replication/new/_execute_new.get_ARC_resource_bridge_info`.
+run "custom_location_region_auto_discovered" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.custom_location[0]
+    values = {
+      id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cluster-rg/providers/Microsoft.ExtendedLocation/customLocations/cl-1"
+      location = "eastus"
+      output = {
+        location = "eastus"
+      }
+    }
+  }
+
+  variables {
+    operation_mode       = "replicate"
+    location             = "centralus"
+    project_name         = "test-project"
+    replication_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault"
+    source_machine_type  = "VMware"
+    machine_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/machines/vm-1"
+    custom_location_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/cluster-rg/providers/Microsoft.ExtendedLocation/customLocations/cl-1"
+  }
+
+  assert {
+    condition     = local.effective_custom_location_region == "eastus"
+    error_message = "effective_custom_location_region must resolve to the customLocation resource's location, not the migrate project's location (would otherwise cause LocationNotAvailableForResourceType on Microsoft.AzureStackHCI/virtualHardDisks)"
+  }
+
+  assert {
+    condition     = local.effective_location == "centralus"
+    error_message = "effective_location should still reflect the migrate project's region (used for other resources)"
+  }
+}
+
+# Fallback: when no custom_location_id is supplied, customLocationRegion
+# preserves prior behaviour and falls back to the migrate project's region.
+run "custom_location_region_falls_back_to_project_region" {
+  command = plan
+
+  variables {
+    operation_mode       = "replicate"
+    location             = "eastus"
+    project_name         = "test-project"
+    replication_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault"
+    source_machine_type  = "VMware"
+    machine_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OffAzure/VMwareSites/src-appl/machines/vm-1"
+  }
+
+  assert {
+    condition     = local.effective_custom_location_region == "eastus"
+    error_message = "effective_custom_location_region must fall back to effective_location when no custom_location_id is supplied"
+  }
+}
+
+# ========================================
+# MIGRATE-MODE STATE VALIDATION (CLI parity)
+# ========================================
+# The CLI's `validate_protected_item_for_migration` refuses to call /plannedFailover
+# unless `PlannedFailover` or `Restart` is in `allowedJobs`. The module mirrors
+# this via a lifecycle.precondition on the planned_failover resources.
+run "migrate_precondition_rejects_already_failed_over_item" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.protected_item_to_migrate[0]
+    values = {
+      output = {
+        properties = {
+          allowedJobs                = ["CommitFailover", "DisableProtection"]
+          protectionState            = "PlannedFailoverCompleted"
+          protectionStateDescription = "Planned failover completed"
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode    = "migrate"
+    protected_item_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault/protectedItems/test-item"
+  }
+
+  expect_failures = [azapi_resource_action.planned_failover_vmware]
+}
+
+# Allowed jobs containing `Restart` (the CLI also accepts this) must satisfy
+# the precondition.
+run "migrate_precondition_accepts_restart_state" {
+  command = plan
+
+  override_data {
+    target = data.azapi_resource.protected_item_to_migrate[0]
+    values = {
+      output = {
+        properties = {
+          allowedJobs                = ["Restart"]
+          protectionState            = "PlannedFailoverFailed"
+          protectionStateDescription = "Planned failover failed (retryable)"
+        }
+      }
+    }
+  }
+
+  variables {
+    operation_mode      = "migrate"
+    source_machine_type = "VMware"
+    protected_item_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.DataReplication/replicationVaults/test-vault/protectedItems/test-item"
+  }
+
+  assert {
+    condition     = local.protected_item_is_migratable == true
+    error_message = "protected_item_is_migratable must be true when allowedJobs contains 'Restart' (CLI parity)"
+  }
+}
+
