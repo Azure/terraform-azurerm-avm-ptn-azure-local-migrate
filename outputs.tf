@@ -4,12 +4,12 @@
 
 output "cache_storage_account_id" {
   description = "ID of the cache storage account"
-  value       = local.is_initialize_mode ? (var.cache_storage_account_id != null ? var.cache_storage_account_id : (length(azapi_resource.cache_storage_account) > 0 ? azapi_resource.cache_storage_account[0].id : null)) : null
+  value       = local.is_initialize_mode ? local.resolved_cache_storage_account_id : null
 }
 
 output "cache_storage_account_name" {
   description = "Name of the cache storage account"
-  value       = local.is_initialize_mode && length(azapi_resource.cache_storage_account) > 0 ? azapi_resource.cache_storage_account[0].name : null
+  value       = local.is_initialize_mode && local.resolved_cache_storage_account_id != null ? basename(local.resolved_cache_storage_account_id) : null
 }
 
 output "discovered_servers" {
@@ -18,7 +18,7 @@ output "discovered_servers" {
     for idx, server in try(data.azapi_resource_list.discovered_servers[0].output.value, []) : {
       index            = idx + 1
       machine_name     = try(server.properties.discoveryData[0].machineName, server.properties.discoveryData[0].fqdn, server.name, "N/A")
-      ip_addresses     = try(length(server.properties.discoveryData[0].ipAddresses) > 0 ? join(", ", server.properties.discoveryData[0].ipAddresses) : "None", "N/A")
+      ip_addresses     = try(server.properties.discoveryData[0].ipAddresses, [])
       operating_system = try(server.properties.discoveryData[0].osName, "N/A")
       boot_type        = try(server.properties.discoveryData[0].extendedInfo.bootType, "N/A")
       os_disk_id       = try(jsondecode(server.properties.discoveryData[0].extendedInfo.diskDetails)[0].InstanceId, "N/A")
@@ -41,7 +41,7 @@ output "discovered_servers_raw" {
 
 output "location_output" {
   description = "Azure region where resources are deployed"
-  value       = var.location
+  value       = local.effective_location
 }
 
 output "machine_id" {
@@ -75,7 +75,7 @@ output "migration_protected_item_details" {
     allowed_jobs             = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, [])
     can_perform_migration    = try(contains(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, "PlannedFailover") || contains(data.azapi_resource.protected_item_to_migrate[0].output.properties.allowedJobs, "Restart"), false)
     instance_type            = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.instanceType, "N/A")
-    source_machine_name      = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, "N/A")
+    source_machine_name      = try(coalesce(try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceVmName, null), try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, null)), "N/A")
     target_vm_name           = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetVmName, "N/A")
     target_resource_group_id = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetResourceGroupId, "N/A")
     target_hci_cluster_id    = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetHCIClusterId, "N/A")
@@ -90,7 +90,7 @@ output "migration_status" {
     operation_status    = "Initiated"
     message             = "Migration (planned failover) has been successfully initiated for '${var.protected_item_id}'"
     vm_name             = try(data.azapi_resource.protected_item_to_migrate[0].output.name, "N/A")
-    source_machine_name = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, "N/A")
+    source_machine_name = try(coalesce(try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceVmName, null), try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.sourceMachineName, null)), "N/A")
     target_vm_name      = try(data.azapi_resource.protected_item_to_migrate[0].output.properties.customProperties.targetVmName, "N/A")
   } : null
 }
@@ -265,7 +265,7 @@ output "protected_items_summary" {
       protection_state             = try(item.properties.protectionState, "Unknown")
       protection_state_description = try(item.properties.protectionStateDescription, "N/A")
       replication_health           = try(item.properties.replicationHealth, "Unknown")
-      source_machine_name          = try(item.properties.customProperties.sourceMachineName, "N/A")
+      source_machine_name          = try(coalesce(try(item.properties.customProperties.sourceVmName, null), try(item.properties.customProperties.sourceMachineName, null)), "N/A")
       target_vm_name               = try(item.properties.customProperties.targetVmName, "N/A")
       target_resource_group_id     = try(item.properties.customProperties.targetResourceGroupId, "N/A")
       policy_name                  = try(item.properties.policyName, "N/A")
@@ -416,8 +416,8 @@ output "source_fabric_discovered" {
 }
 
 output "source_fabric_id" {
-  description = "Source fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
-  value       = local.is_initialize_mode ? local.resolved_source_fabric_id : var.source_fabric_id
+  description = "Source fabric ID used for replication (auto-discovered from `source_appliance_name`)"
+  value       = local.resolved_source_fabric_id
 }
 
 output "target_fabric_discovered" {
@@ -431,8 +431,8 @@ output "target_fabric_discovered" {
 }
 
 output "target_fabric_id" {
-  description = "Target fabric ID used for replication (auto-discovered from appliance name or explicitly provided)"
-  value       = local.is_initialize_mode ? local.resolved_target_fabric_id : var.target_fabric_id
+  description = "Target fabric ID used for replication (auto-discovered from `target_appliance_name`)"
+  value       = local.resolved_target_fabric_id
 }
 
 output "target_vm_name_output" {

@@ -1,70 +1,68 @@
 # Replicate Example
 
-This example demonstrates how to configure VM replication using the `replicate` operation mode.
+Mirrors `New-AzMigrateLocalServerReplication` (Option 1, "ByIdDefaultUser"). This is the **happy-path, bare-bones** wiring: only the PowerShell-equivalent required inputs are passed. Replication policy, replication extension, fabric agents, instance type, and source/target fabric IDs are all auto-resolved by the module.
 
 ## Prerequisites
 
-Before running this example, you need to have:
-1. An existing Azure Migrate project with discovery completed
-2. Replication infrastructure initialized (see `initialize` example)
-3. Target Azure Stack HCI cluster configured
+1. An Azure Migrate project with discovery completed.
+2. Replication infrastructure initialized — see the [initialize example](../initialize/README.md).
+3. Target Azure Stack HCI cluster registered with Arc and a custom location configured.
 
-## Finding Required Values
+```hcl
+module "replicate_vm" {
+  source = "Azure/avm-ptn-azure-local-migrate/azurerm"
 
-### VMware Site Name and Run-As Account
+  name           = "vm-replication"
+  operation_mode = "replicate"
+  parent_id      = "/subscriptions/<sub>/resourceGroups/<rg>"
+  project_name   = "<migrate-project>"
 
-```bash
-# List VMware sites in your resource group
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.OffAzure/VMwareSites?api-version=2023-06-06" \
-  --query "value[].name" -o tsv
+  machine_id               = "/subscriptions/.../machines/<vm-id>"
+  os_disk_id               = "scsi0:0"
+  source_appliance_name    = "<src-appliance>"
+  target_appliance_name    = "<tgt-appliance>"
+  target_resource_group_id = "/subscriptions/.../resourceGroups/<target-rg>"
+  target_storage_path_id   = "/subscriptions/.../storagecontainers/<csv>"
+  target_virtual_switch_id = "/subscriptions/.../logicalnetworks/<switch>"
+  target_vm_name           = "migrated-vm-01"
 
-# List run-as accounts for a VMware site
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.OffAzure/VMwareSites/{site_name}/runasaccounts?api-version=2023-06-06" \
-  -o json
+  custom_location_id    = "/subscriptions/.../customLocations/<cl>"
+  target_hci_cluster_id = "/subscriptions/.../clusters/<hci>"
+}
 ```
 
-### Replication Vault, Policy, and Extension Names
+## Optional inputs (not shown in this example)
 
-These are created during the `initialize` operation. You can find them from the solution:
+These root-module variables are not required for the happy path. Set them
+only when you need to deviate from defaults.
 
-```bash
-# Get the replication solution details (contains vaultId)
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/migrateprojects/{project_name}/solutions/Servers-Migration-ServerMigration_DataReplication?api-version=2020-06-01-preview" \
-  -o json
+| Module variable | PowerShell equivalent | Default | When to set it |
+| --- | --- | --- | --- |
+| `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable |
+| `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled`, `-HyperVGeneration` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false, hyperv_generation = "1" }` | Right-size the target VM |
+| `run_as_account_id` | `-RunAsAccountID` | `null` | Appliance needs an explicit run-as account |
+| `target_test_virtual_switch_id` | `-TestNetworkID` (per nic) | Falls back to `target_virtual_switch_id` | Use a separate switch for test failover |
+| `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |
+| `disks_to_include` | `-DiskToInclude` (power-user mode) | `[]` | Replace simple `os_disk_id` mode with explicit multi-disk config |
+| `nics_to_include` | `-NicToInclude` (power-user mode) | `[]` | Replace simple `target_virtual_switch_id` mode with explicit multi-NIC config |
+| `replication_policy` | `-RecoveryPointHistoryInMinutes`, `-CrashConsistentFrequencyInMinutes`, `-AppConsistentFrequencyInMinutes` | `{ recovery_point_history_minutes = 4320, crash_consistent_frequency_minutes = 60, app_consistent_frequency_minutes = 240 }` | Tune RPO / retention |
+| `tags` | n/a | `{}` | Apply tags to managed resources |
+| `enable_telemetry` | n/a | `true` | Disable AVM telemetry |
 
-# List replication policies in the vault
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.DataReplication/replicationVaults/{vault_name}/replicationPolicies?api-version=2024-09-01" \
-  -o json
-
-# List replication extensions in the vault
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.DataReplication/replicationVaults/{vault_name}/replicationExtensions?api-version=2024-09-01" \
-  -o json
-```
-
-### Fabric Agent (DRA) Names
+## Finding required values
 
 ```bash
-# List replication fabrics
+# Discovered machines for the source appliance
 az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.DataReplication/replicationFabrics?api-version=2024-09-01" \
-  -o json
+  --uri "https://management.azure.com/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OffAzure/VMwareSites/<site>/machines?api-version=2023-06-06"
 
-# List fabric agents for a specific fabric
+# Storage containers (target storage paths) on the HCI cluster
 az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.DataReplication/replicationFabrics/{fabric_name}/fabricAgents?api-version=2024-09-01" \
-  -o json
+  --uri "https://management.azure.com/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.AzureStackHCI/storagecontainers?api-version=2024-01-01"
+
+# Logical networks (target virtual switches)
+az rest --method GET \
+  --uri "https://management.azure.com/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.AzureStackHCI/logicalnetworks?api-version=2024-01-01"
 ```
 
-### Discovered Machines
-
-```bash
-# List discovered machines from VMware site
-az rest --method GET \
-  --uri "https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.OffAzure/VMwareSites/{site_name}/machines?api-version=2023-06-06" \
-  -o json
-```
+See the [user guide](../../docs/user-guide.md) for the full variable reference.

@@ -39,7 +39,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -51,7 +51,6 @@ provider "azapi" {}
 module "remove_replication" {
   source = "../../"
 
-  location         = var.location
   name             = "remove-replication"
   parent_id        = var.parent_id
   force_remove     = var.force_remove
@@ -91,14 +90,6 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
-
-Type: `string`
-
-Default: `"eastus"`
-
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
 Description: The resource ID of the resource group where the replication vault exists. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
@@ -127,7 +118,7 @@ Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/sa
 
 The following outputs are exported:
 
-### <a name="output_protected_item_info"></a> [protected\_item\_info](#output\_protected\_item\_info)
+### <a name="output_protected_item_details"></a> [protected\_item\_details](#output\_protected\_item\_details)
 
 Description: Information about the protected item before removal
 

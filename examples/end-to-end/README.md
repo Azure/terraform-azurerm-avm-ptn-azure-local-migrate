@@ -41,37 +41,27 @@ module "initialize" {
   source = "../../"
   count  = var.skip_initialize ? 0 : 1
 
-  location                           = var.location
-  name                               = "e2e-initialize"
-  parent_id                          = var.parent_id
-  app_consistent_frequency_minutes   = var.app_consistent_frequency_minutes
-  cache_storage_account_id           = var.cache_storage_account_id
-  crash_consistent_frequency_minutes = var.crash_consistent_frequency_minutes
-  instance_type                      = var.instance_type
-  operation_mode                     = "initialize"
-  project_name                       = var.project_name
-  recovery_point_history_minutes     = var.recovery_point_history_minutes
-  source_appliance_name              = var.source_appliance_name
-  source_fabric_id                   = var.source_fabric_id
-  tags                               = var.tags
-  target_appliance_name              = var.target_appliance_name
-  target_fabric_id                   = var.target_fabric_id
+  name                  = "e2e-initialize"
+  operation_mode        = "initialize"
+  parent_id             = var.parent_id
+  project_name          = var.project_name
+  source_appliance_name = var.source_appliance_name
+  target_appliance_name = var.target_appliance_name
+  tags                  = var.tags
 }
 
 # The protected item ID follows a predictable pattern based on the machine_id
 # and replication vault. We construct it from known inputs so it's available at
 # plan time (avoiding "count depends on unknown value" errors).
 #
-# When initialize runs, we derive vault/policy/extension from its outputs.
-# When skipped, we use the explicit variable values.
+# When initialize runs, we derive the vault from its output.
+# When skipped, we use the explicit replication_vault_id variable.
 locals {
-  policy_name = var.skip_initialize ? var.policy_name : basename(module.initialize[0].replication_policy_id)
   # Build a protected_item_id for each VM
   protected_item_ids = {
     for key, vm in var.vms : key => "${local.replication_vault_id}/protectedItems/${basename(vm.machine_id)}"
   }
-  replication_extension_name = var.skip_initialize ? var.replication_extension_name : module.initialize[0].replication_extension_name
-  replication_vault_id       = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
+  replication_vault_id = var.skip_initialize ? var.replication_vault_id : module.initialize[0].replication_vault_id
 }
 
 # ========================================
@@ -83,39 +73,24 @@ module "replicate_vm" {
   source   = "../../"
   for_each = var.vms
 
-  location                   = var.location
-  name                       = "e2e-replicate-${each.key}"
-  parent_id                  = var.parent_id
-  custom_location_id         = var.custom_location_id
-  disks_to_include           = each.value.disks_to_include
-  hyperv_generation          = each.value.hyperv_generation
-  instance_type              = var.instance_type
-  is_dynamic_memory_enabled  = each.value.is_dynamic_memory_enabled
-  machine_id                 = each.value.machine_id
-  nic_id                     = each.value.nic_id
-  nics_to_include            = each.value.nics_to_include
-  operation_mode             = "replicate"
-  os_disk_id                 = each.value.os_disk_id
-  os_disk_size_gb            = each.value.os_disk_size_gb
-  policy_name                = local.policy_name
-  project_name               = var.project_name
-  replication_extension_name = local.replication_extension_name
-  replication_vault_id       = local.replication_vault_id
-  run_as_account_id          = var.run_as_account_id
-  source_appliance_name      = var.source_appliance_name
-  source_fabric_agent_name   = var.source_fabric_agent_name
-  source_vm_cpu_cores        = each.value.source_vm_cpu_cores
-  source_vm_ram_mb           = each.value.source_vm_ram_mb
-  tags                       = var.tags
-  target_appliance_name      = var.target_appliance_name
-  target_fabric_agent_name   = var.target_fabric_agent_name
-  target_hci_cluster_id      = var.target_hci_cluster_id
-  target_resource_group_id   = var.target_resource_group_id
-  target_storage_path_id     = var.target_storage_path_id
-  target_virtual_switch_id   = var.target_virtual_switch_id
-  target_vm_cpu_cores        = each.value.target_vm_cpu_cores
-  target_vm_name             = each.value.target_vm_name
-  target_vm_ram_mb           = each.value.target_vm_ram_mb
+  name                     = "e2e-replicate-${each.key}"
+  operation_mode           = "replicate"
+  parent_id                = var.parent_id
+  custom_location_id       = var.custom_location_id
+  disks_to_include         = each.value.disks_to_include
+  machine_id               = each.value.machine_id
+  nics_to_include          = each.value.nics_to_include
+  os_disk_id               = each.value.os_disk_id
+  project_name             = var.project_name
+  run_as_account_id        = var.run_as_account_id
+  source_appliance_name    = var.source_appliance_name
+  tags                     = var.tags
+  target_appliance_name    = var.target_appliance_name
+  target_hci_cluster_id    = var.target_hci_cluster_id
+  target_resource_group_id = var.target_resource_group_id
+  target_storage_path_id   = var.target_storage_path_id
+  target_virtual_switch_id = var.target_virtual_switch_id
+  target_vm_name           = each.value.target_vm_name
 
   depends_on = [module.initialize]
 }
@@ -200,11 +175,9 @@ module "check_status" {
   source   = "../../"
   for_each = var.vms
 
-  location          = var.location
   name              = "e2e-check-status-${each.key}"
-  parent_id         = var.parent_id
-  instance_type     = var.instance_type
   operation_mode    = "get"
+  parent_id         = var.parent_id
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
   tags              = var.tags
@@ -221,11 +194,9 @@ module "migrate_vm" {
   source   = "../../"
   for_each = var.vms
 
-  location           = var.location
   name               = "e2e-migrate-${each.key}"
-  parent_id          = var.parent_id
-  instance_type      = var.instance_type
   operation_mode     = "migrate"
+  parent_id          = var.parent_id
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm
   tags               = var.tags
@@ -252,247 +223,79 @@ The following resources are used by this module:
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
-
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
-### <a name="input_app_consistent_frequency_minutes"></a> [app\_consistent\_frequency\_minutes](#input\_app\_consistent\_frequency\_minutes)
-
-Description: Application-consistent snapshot frequency in minutes
-
-Type: `number`
-
-Default: `240`
-
-### <a name="input_cache_storage_account_id"></a> [cache\_storage\_account\_id](#input\_cache\_storage\_account\_id)
-
-Description: Optional: Existing cache storage account ID. If provided, the module will use this account instead of creating a new one.
-
-Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.Storage/storageAccounts/migratersa2220948737"`
-
-### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
-
-Description: Crash-consistent snapshot frequency in minutes
-
-Type: `number`
-
-Default: `60`
+The following input variables are required:
 
 ### <a name="input_custom_location_id"></a> [custom\_location\_id](#input\_custom\_location\_id)
 
-Description: The full resource ID of the Azure Stack HCI custom location
+Description: Arc custom location ARM ID for the Azure Local cluster.
 
 Type: `string`
-
-Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.ExtendedLocation/customLocations/s46r1405-cl-customLocation"`
-
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: The Azure region (custom location region). Must be a region where Microsoft.AzureStackHCI resources are available.
-
-Type: `string`
-
-Default: `"eastus"`
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+Description: Resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{sub}/resourceGroups/{rg}
 
 Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
-
-### <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name)
-
-Description: The name of the replication policy. Required when skip\_initialize = true.
-
-Type: `string`
-
-Default: `"saif-project-08648replicationvaultVMwareToAzStackHCIpolicy"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
-Description: The name of the Azure Migrate project
+Description: The name of the Azure Migrate project.
 
 Type: `string`
-
-Default: `"saif-project-021826"`
-
-### <a name="input_recovery_point_history_minutes"></a> [recovery\_point\_history\_minutes](#input\_recovery\_point\_history\_minutes)
-
-Description: Recovery point history retention in minutes
-
-Type: `number`
-
-Default: `4320`
-
-### <a name="input_replication_extension_name"></a> [replication\_extension\_name](#input\_replication\_extension\_name)
-
-Description: The name of the replication extension. Required when skip\_initialize = true.
-
-Type: `string`
-
-Default: `"src27987replicationfabric-tgt28c21replicationfabric-MigReplicationExtn"`
-
-### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
-
-Description: The full resource ID of the replication vault. Required when skip\_initialize = true.
-
-Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault"`
 
 ### <a name="input_run_as_account_id"></a> [run\_as\_account\_id](#input\_run\_as\_account\_id)
 
-Description: The full resource ID of the run as account (from vCenter)
+Description: Run-as account ARM ID (from vCenter for VMware sources).
 
 Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/runasaccounts/58093f44-117a-561b-be13-d751e1b22ca9"`
-
-### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
-
-Description: Whether to shutdown the source VM before migration (recommended for production migrations)
-
-Type: `bool`
-
-Default: `true`
-
-### <a name="input_skip_initialize"></a> [skip\_initialize](#input\_skip\_initialize)
-
-Description: Set to true to skip initialization (when replication infrastructure already exists). When false, the module will create vault, policy, and extension.
-
-Type: `bool`
-
-Default: `true`
 
 ### <a name="input_source_appliance_name"></a> [source\_appliance\_name](#input\_source\_appliance\_name)
 
-Description: The name prefix for the source appliance
+Description: The name of the source appliance.
 
 Type: `string`
-
-Default: `"src2"`
-
-### <a name="input_source_fabric_agent_name"></a> [source\_fabric\_agent\_name](#input\_source\_fabric\_agent\_name)
-
-Description: The name of the source fabric DRA
-
-Type: `string`
-
-Default: `"src27987dra"`
-
-### <a name="input_source_fabric_id"></a> [source\_fabric\_id](#input\_source\_fabric\_id)
-
-Description: Optional: Explicit source fabric ID. If not provided, it will be auto-discovered from source\_appliance\_name.
-
-Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationFabrics/src27987replicationfabric"`
-
-### <a name="input_tags"></a> [tags](#input\_tags)
-
-Description: Tags to apply to all resources
-
-Type: `map(string)`
-
-Default:
-
-```json
-{
-  "Environment": "Production",
-  "Owner": "IT Team",
-  "Purpose": "HCI Migration End-to-End"
-}
-```
 
 ### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
 
-Description: The name prefix for the target appliance
+Description: The name of the target appliance.
 
 Type: `string`
-
-Default: `"tgt2"`
-
-### <a name="input_target_fabric_agent_name"></a> [target\_fabric\_agent\_name](#input\_target\_fabric\_agent\_name)
-
-Description: The name of the target fabric DRA
-
-Type: `string`
-
-Default: `"tgt28c21dra"`
-
-### <a name="input_target_fabric_id"></a> [target\_fabric\_id](#input\_target\_fabric\_id)
-
-Description: Optional: Explicit target fabric ID. If not provided, it will be auto-discovered from target\_appliance\_name.
-
-Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationFabrics/tgt28c21replicationfabric"`
 
 ### <a name="input_target_hci_cluster_id"></a> [target\_hci\_cluster\_id](#input\_target\_hci\_cluster\_id)
 
-Description: The full resource ID of the target Azure Stack HCI cluster
+Description: Target Azure Stack HCI / Azure Local cluster ARM ID.
 
 Type: `string`
-
-Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.AzureStackHCI/clusters/s46r1405-cl"`
 
 ### <a name="input_target_resource_group_id"></a> [target\_resource\_group\_id](#input\_target\_resource\_group\_id)
 
-Description: The full resource ID of the target resource group
+Description: Target resource group ARM ID where migrated VMs will be created.
 
 Type: `string`
-
-Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO"`
 
 ### <a name="input_target_storage_path_id"></a> [target\_storage\_path\_id](#input\_target\_storage\_path\_id)
 
-Description: The full resource ID of the target storage path
+Description: Target storage container ARM ID for VHDX placement.
 
 Type: `string`
-
-Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/Microsoft.AzureStackHCI/storagecontainers/UserStorage1-358c690cfced472fae974ef257f1e531"`
 
 ### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
 
-Description: The full resource ID of the target virtual switch/network
+Description: Target logical network / virtual switch ARM ID.
 
 Type: `string`
 
-Default: `"/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-lnet"`
-
 ### <a name="input_vms"></a> [vms](#input\_vms)
 
-Description: Map of VMs to replicate. Each key is a friendly name, and the value contains all per-VM configuration.
+Description: Map of VMs to replicate. Each key is a friendly name used in module addressing.
 
 Type:
 
 ```hcl
 map(object({
-    machine_id                = string
-    target_vm_name            = string
-    os_disk_id                = string
-    os_disk_size_gb           = optional(number, 40)
-    hyperv_generation         = optional(string, "2")
-    source_vm_cpu_cores       = optional(number, 4)
-    source_vm_ram_mb          = optional(number, 4096)
-    target_vm_cpu_cores       = optional(number, 4)
-    target_vm_ram_mb          = optional(number, 4096)
-    is_dynamic_memory_enabled = optional(bool, false)
-    nic_id                    = optional(string, null)
+    machine_id     = string
+    target_vm_name = string
+    os_disk_id     = string
     disks_to_include = list(object({
       disk_id                   = string
       disk_size_gb              = number
@@ -510,82 +313,41 @@ map(object({
   }))
 ```
 
-Default:
+## Optional Inputs
 
-```json
-{
-  "test-vm4-ubuntuvm64efi-pnu": {
-    "disks_to_include": [
-      {
-        "disk_file_format": "VHDX",
-        "disk_id": "6000C290-a4d0-e5ea-bad5-4e993df22e3b",
-        "disk_size_gb": 40,
-        "is_dynamic": true,
-        "is_os_disk": true
-      },
-      {
-        "disk_file_format": "VHDX",
-        "disk_id": "6000C29a-bcb7-a62b-7ed0-0c78f3dc1f80",
-        "disk_size_gb": 16,
-        "is_dynamic": true,
-        "is_os_disk": false
-      },
-      {
-        "disk_file_format": "VHDX",
-        "disk_id": "6000C290-d280-fcaa-b6a9-f65964e61f10",
-        "disk_size_gb": 10,
-        "is_dynamic": true,
-        "is_os_disk": false
-      }
-    ],
-    "hyperv_generation": "2",
-    "machine_id": "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/machines/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_5023ed01-02d7-153f-6955-f6367f2667e1",
-    "nics_to_include": [
-      {
-        "nic_id": "4000",
-        "selection_type": "SelectedByUser",
-        "target_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-lnet",
-        "test_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-tenant-lnet-201"
-      }
-    ],
-    "os_disk_id": "6000C290-a4d0-e5ea-bad5-4e993df22e3b",
-    "os_disk_size_gb": 40,
-    "source_vm_cpu_cores": 4,
-    "source_vm_ram_mb": 4096,
-    "target_vm_cpu_cores": 4,
-    "target_vm_name": "test-vm4-ubuntuvm64efi-pnu-migrated",
-    "target_vm_ram_mb": 4096
-  },
-  "test-vm5-win2008r2-ccy": {
-    "disks_to_include": [
-      {
-        "disk_file_format": "VHDX",
-        "disk_id": "6000C29a-d7c9-dfb7-e74b-c4c104c9075c",
-        "disk_size_gb": 39,
-        "is_dynamic": true,
-        "is_os_disk": true
-      }
-    ],
-    "hyperv_generation": "1",
-    "machine_id": "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.OffAzure/VMwareSites/src28251site/machines/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_502305a2-c0ed-80f5-6802-9829dd78ddc2",
-    "nics_to_include": [
-      {
-        "nic_id": "4000",
-        "selection_type": "SelectedByUser",
-        "target_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-lnet",
-        "test_network_id": "/subscriptions/d41eb627-825d-4419-a14d-c6ad485f4110/resourceGroups/EDGECI-REGISTRATION-s46r1405-t8g6NRVO/providers/microsoft.azurestackhci/logicalnetworks/s46r1405-tenant-lnet-201"
-      }
-    ],
-    "os_disk_id": "6000C29a-d7c9-dfb7-e74b-c4c104c9075c",
-    "os_disk_size_gb": 39,
-    "source_vm_cpu_cores": 2,
-    "source_vm_ram_mb": 4096,
-    "target_vm_cpu_cores": 2,
-    "target_vm_name": "test-vm5-win2008r2-ccy-migrated",
-    "target_vm_ram_mb": 4096
-  }
-}
-```
+The following input variables are optional (have default values):
+
+### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
+
+Description: Replication vault ID. Required when `skip_initialize = true`. When omitted, it is auto-discovered from the migrate project.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
+
+Description: Whether to shut the source VM down before planned failover.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_skip_initialize"></a> [skip\_initialize](#input\_skip\_initialize)
+
+Description: Skip the initialize step when the replication vault/policy/extension already exist.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Tags to apply to managed resources.
+
+Type: `map(string)`
+
+Default: `null`
 
 ## Outputs
 
@@ -606,14 +368,6 @@ Description: Protected item details at time of migration per VM
 ### <a name="output_protected_item_ids"></a> [protected\_item\_ids](#output\_protected\_item\_ids)
 
 Description: Map of VM name to protected item ID (replicated VM)
-
-### <a name="output_replication_extension_name"></a> [replication\_extension\_name](#output\_replication\_extension\_name)
-
-Description: Name of the replication extension (from initialize or variable)
-
-### <a name="output_replication_policy_name"></a> [replication\_policy\_name](#output\_replication\_policy\_name)
-
-Description: Name of the replication policy (from initialize or variable)
 
 ### <a name="output_replication_status"></a> [replication\_status](#output\_replication\_status)
 

@@ -36,7 +36,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -53,7 +53,6 @@ module "create_migrate_project" {
   parent_id              = var.parent_id
   connectivity_method    = var.connectivity_method
   create_migrate_project = true # Set to true to create new project
-  instance_type          = var.instance_type
   operation_mode         = "create-project"
   project_name           = var.project_name
   tags                   = var.tags
@@ -90,14 +89,6 @@ Type: `string`
 
 Default: `"Public-endpoint"`
 
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: The Azure region where the Migrate project will be created. Note: Not all regions support Azure Migrate projects. Supported regions include: eastus, westus2, northeurope, westeurope, etc.
@@ -120,7 +111,7 @@ Description: The name of the new Azure Migrate project to create
 
 Type: `string`
 
-Default: `"saif-project-021826"`
+Default: `"<migrate-project-name>"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

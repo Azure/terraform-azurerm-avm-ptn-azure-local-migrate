@@ -24,6 +24,7 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.cache_storage_account](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.diagnostic_setting](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.management_lock](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.migrate_project](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.migrate_project_role_assignment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -49,11 +50,14 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.custom_location](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.machine_parent_for_run_as](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.migrate_project_existing](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_id](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_by_name](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_to_migrate](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.protected_item_to_remove](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.replicate_machine](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_job](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_solution](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.replication_vault](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -76,12 +80,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region where resources should be deployed. Required when create\_migrate\_project is true.
-
-Type: `string`
-
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: The name of the migration resource.
@@ -98,14 +96,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_app_consistent_frequency_minutes"></a> [app\_consistent\_frequency\_minutes](#input\_app\_consistent\_frequency\_minutes)
-
-Description: Application consistent snapshot frequency in minutes
-
-Type: `number`
-
-Default: `240`
-
 ### <a name="input_appliance_name"></a> [appliance\_name](#input\_appliance\_name)
 
 Description: Appliance name (maps to site name)
@@ -116,7 +106,7 @@ Default: `null`
 
 ### <a name="input_cache_storage_account_id"></a> [cache\_storage\_account\_id](#input\_cache\_storage\_account\_id)
 
-Description: Storage Account ARM ID for cache/private endpoint scenario
+Description: Storage Account ARM ID for cache/private endpoint scenario. When null, the module reuses the `replicationStorageAccountId` already recorded on the migrate project's Server Migration solution (if any). Only when neither is present is a new cache storage account created.
 
 Type: `string`
 
@@ -124,19 +114,11 @@ Default: `null`
 
 ### <a name="input_connectivity_method"></a> [connectivity\_method](#input\_connectivity\_method)
 
-Description: The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' (default) or 'Private-endpoint'.
+Description: Connectivity method for the Azure Migrate project. `Public-endpoint` enables `publicNetworkAccess`; any other value (e.g. `Private-endpoint`) disables it.
 
 Type: `string`
 
 Default: `"Public-endpoint"`
-
-### <a name="input_crash_consistent_frequency_minutes"></a> [crash\_consistent\_frequency\_minutes](#input\_crash\_consistent\_frequency\_minutes)
-
-Description: Crash consistent snapshot frequency in minutes
-
-Type: `number`
-
-Default: `60`
 
 ### <a name="input_create_migrate_project"></a> [create\_migrate\_project](#input\_create\_migrate\_project)
 
@@ -156,7 +138,7 @@ Default: `null`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description: A map of diagnostic settings to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -167,7 +149,7 @@ Description: A map of diagnostic settings to create on the Key Vault. The map ke
 - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
 - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
-- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
+- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
 
 Type:
 
@@ -230,33 +212,17 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_hyperv_generation"></a> [hyperv\_generation](#input\_hyperv\_generation)
-
-Description: Hyper-V generation (1 or 2)
-
-Type: `string`
-
-Default: `"1"`
-
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: Migration instance type
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
-### <a name="input_is_dynamic_memory_enabled"></a> [is\_dynamic\_memory\_enabled](#input\_is\_dynamic\_memory\_enabled)
-
-Description: Whether RAM is dynamic
-
-Type: `bool`
-
-Default: `false`
-
 ### <a name="input_job_name"></a> [job\_name](#input\_job\_name)
 
 Description: Specific job name to retrieve. If not provided, all jobs will be listed.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet).
 
 Type: `string`
 
@@ -314,14 +280,6 @@ object({
 
 Default: `{}`
 
-### <a name="input_nic_id"></a> [nic\_id](#input\_nic\_id)
-
-Description: NIC ID for the source server (default user mode). Used when nics\_to\_include is not provided but target\_virtual\_switch\_id is specified.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_nics_to_include"></a> [nics\_to\_include](#input\_nics\_to\_include)
 
 Description: A list of NICs to include for replication (power user mode). Each object in the list includes the following properties:
@@ -354,23 +312,7 @@ Default: `"discover"`
 
 ### <a name="input_os_disk_id"></a> [os\_disk\_id](#input\_os\_disk\_id)
 
-Description: Operating system disk ID for the source server (default user mode)
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_os_disk_size_gb"></a> [os\_disk\_size\_gb](#input\_os\_disk\_size\_gb)
-
-Description: OS disk size in GB for default user mode. Used when disks\_to\_include is not provided.
-
-Type: `number`
-
-Default: `60`
-
-### <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name)
-
-Description: Replication policy name
+Description: OS disk ID of the source VM (simple replication mode). When set without `disks_to_include`, the module creates a single OS disk entry matching the discovered disk size. Pair with `target_virtual_switch_id` for the simple replication path.
 
 Type: `string`
 
@@ -400,25 +342,31 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_recovery_point_history_minutes"></a> [recovery\_point\_history\_minutes](#input\_recovery\_point\_history\_minutes)
+### <a name="input_replication_policy"></a> [replication\_policy](#input\_replication\_policy)
 
-Description: Recovery point retention in minutes
+Description: Advanced overrides for the replication policy created in `initialize` mode. All fields are optional and default to the same values used by `Initialize-AzMigrateLocalReplicationInfrastructure`.
 
-Type: `number`
+- `name` - (Optional) Override the auto-generated policy name. Defaults to `<vault-name><instance-type>policy`.
+- `app_consistent_frequency_minutes` - (Optional) Application-consistent snapshot frequency in minutes. Defaults to `240` (4 hours).
+- `crash_consistent_frequency_minutes` - (Optional) Crash-consistent snapshot frequency in minutes. Defaults to `60` (1 hour).
+- `recovery_point_history_minutes` - (Optional) Recovery point retention in minutes. Defaults to `4320` (72 hours).
 
-Default: `4320`
+Type:
 
-### <a name="input_replication_extension_name"></a> [replication\_extension\_name](#input\_replication\_extension\_name)
+```hcl
+object({
+    name                               = optional(string)
+    app_consistent_frequency_minutes   = optional(number, 240)
+    crash_consistent_frequency_minutes = optional(number, 60)
+    recovery_point_history_minutes     = optional(number, 4320)
+  })
+```
 
-Description: Replication extension name (for replicate mode)
-
-Type: `string`
-
-Default: `null`
+Default: `{}`
 
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
-Description: Replication vault ARM ID (for replicate mode)
+Description: Replication vault ARM ID. Optional for `replicate`, `jobs`, `list`, `get` modes — when omitted the module auto-resolves the vault from the migrate project's Server Migration solution. Required only when no project context is available.
 
 Type: `string`
 
@@ -458,7 +406,16 @@ Default: `{}`
 
 ### <a name="input_run_as_account_id"></a> [run\_as\_account\_id](#input\_run\_as\_account\_id)
 
-Description: Run-as account ARM ID
+Description: Run-as account ARM ID used by the replication agent to access the source machine.
+
+Optional — when omitted, the module auto-discovers it from the source machine's  
+parent in the OffAzure site (matches Az CLI / Az.Migrate PowerShell behaviour):
+
+  * VMware  -> machine.properties.vCenterId  -> vCenter.properties.runAsAccountId
+  * Hyper-V -> machine.properties.hostId or clusterId -> host|cluster.properties.runAsAccountId
+
+Set this explicitly only when you need to override the parent's default  
+run-as account (for example, to point at a different credential set).
 
 Type: `string`
 
@@ -480,45 +437,13 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_source_fabric_agent_name"></a> [source\_fabric\_agent\_name](#input\_source\_fabric\_agent\_name)
-
-Description: Source fabric agent (DRA) name
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_source_fabric_id"></a> [source\_fabric\_id](#input\_source\_fabric\_id)
-
-Description: Source replication fabric ARM ID
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_source_machine_type"></a> [source\_machine\_type](#input\_source\_machine\_type)
 
-Description: Source machine type (VMware or HyperV)
+Description: Source machine type. Determines the replication `instanceType` (VMware → VMwareToAzStackHCI, HyperV → HyperVToAzStackHCI).
 
 Type: `string`
 
 Default: `"VMware"`
-
-### <a name="input_source_vm_cpu_cores"></a> [source\_vm\_cpu\_cores](#input\_source\_vm\_cpu\_cores)
-
-Description: Number of CPU cores from source VM
-
-Type: `number`
-
-Default: `2`
-
-### <a name="input_source_vm_ram_mb"></a> [source\_vm\_ram\_mb](#input\_source\_vm\_ram\_mb)
-
-Description: Source RAM size in MB
-
-Type: `number`
-
-Default: `4096`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
@@ -531,22 +456,6 @@ Default: `null`
 ### <a name="input_target_appliance_name"></a> [target\_appliance\_name](#input\_target\_appliance\_name)
 
 Description: Target appliance name for AzLocal scenario
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_target_fabric_agent_name"></a> [target\_fabric\_agent\_name](#input\_target\_fabric\_agent\_name)
-
-Description: Target fabric agent (DRA) name
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_target_fabric_id"></a> [target\_fabric\_id](#input\_target\_fabric\_id)
-
-Description: Target replication fabric ARM ID
 
 Type: `string`
 
@@ -594,33 +503,39 @@ Default: `null`
 
 ### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
 
-Description: Logical network ARM ID for VMs (default user mode)
+Description: Logical network ARM ID for VMs (simple replication mode). Pair with `os_disk_id` for the simple path. Ignored when `nics_to_include` is provided.
 
 Type: `string`
 
 Default: `null`
 
-### <a name="input_target_vm_cpu_cores"></a> [target\_vm\_cpu\_cores](#input\_target\_vm\_cpu\_cores)
+### <a name="input_target_vm_compute"></a> [target\_vm\_compute](#input\_target\_vm\_compute)
 
-Description: Number of CPU cores for target VM
+Description: Advanced overrides for target VM compute settings (replicate mode). All fields are optional and default to the same values used by `New-AzMigrateLocalServerReplication`.
 
-Type: `number`
+- `cpu_cores` - (Optional) Number of vCPUs assigned to the migrated VM. Defaults to `2`.
+- `ram_mb` - (Optional) Memory (MB) assigned to the migrated VM. Defaults to `4096`.
+- `is_dynamic_memory_enabled` - (Optional) Whether dynamic memory is enabled. Defaults to `false`.
+- `hyperv_generation` - (Optional) Hyper-V generation (`1` or `2`). Defaults to `1`.
 
-Default: `null`
+Type:
+
+```hcl
+object({
+    cpu_cores                 = optional(number, 2)
+    ram_mb                    = optional(number, 4096)
+    is_dynamic_memory_enabled = optional(bool, false)
+    hyperv_generation         = optional(string, "1")
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_target_vm_name"></a> [target\_vm\_name](#input\_target\_vm\_name)
 
 Description: Name of the VM to be created on target
 
 Type: `string`
-
-Default: `null`
-
-### <a name="input_target_vm_ram_mb"></a> [target\_vm\_ram\_mb](#input\_target\_vm\_ram\_mb)
-
-Description: Target RAM size in MB
-
-Type: `number`
 
 Default: `null`
 
@@ -798,7 +713,7 @@ Description: Details of the auto-discovered source fabric (when using appliance 
 
 ### <a name="output_source_fabric_id"></a> [source\_fabric\_id](#output\_source\_fabric\_id)
 
-Description: Source fabric ID used for replication (auto-discovered from appliance name or explicitly provided)
+Description: Source fabric ID used for replication (auto-discovered from `source_appliance_name`)
 
 ### <a name="output_target_fabric_discovered"></a> [target\_fabric\_discovered](#output\_target\_fabric\_discovered)
 
@@ -806,7 +721,7 @@ Description: Details of the auto-discovered target fabric (when using appliance 
 
 ### <a name="output_target_fabric_id"></a> [target\_fabric\_id](#output\_target\_fabric\_id)
 
-Description: Target fabric ID used for replication (auto-discovered from appliance name or explicitly provided)
+Description: Target fabric ID used for replication (auto-discovered from `target_appliance_name`)
 
 ### <a name="output_target_vm_name_output"></a> [target\_vm\_name\_output](#output\_target\_vm\_name\_output)
 

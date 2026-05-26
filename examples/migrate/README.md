@@ -14,7 +14,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -26,10 +26,8 @@ provider "azapi" {}
 module "migrate_vm" {
   source = "../../"
 
-  location           = var.location
   name               = "vm-migration"
   parent_id          = var.parent_id
-  instance_type      = var.instance_type
   operation_mode     = "migrate"
   protected_item_id  = var.protected_item_id
   shutdown_source_vm = var.shutdown_source_vm
@@ -53,27 +51,7 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-No required inputs.
-
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
-### <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type)
-
-Description: The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)
-
-Type: `string`
-
-Default: `"VMwareToAzStackHCI"`
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location.
-
-Type: `string`
-
-Default: `"eastus"`
+The following input variables are required:
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
@@ -81,7 +59,9 @@ Description: The resource ID of the resource group containing the Azure Migrate 
 
 Type: `string`
 
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"`
+## Optional Inputs
+
+The following input variables are optional (have default values):
 
 ### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
 

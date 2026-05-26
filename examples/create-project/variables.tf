@@ -4,12 +4,6 @@ variable "connectivity_method" {
   description = "The connectivity method for the Azure Migrate project. Possible values are 'Public-endpoint' or 'Private-endpoint'."
 }
 
-variable "instance_type" {
-  type        = string
-  default     = "VMwareToAzStackHCI"
-  description = "The migration instance type (VMwareToAzStackHCI or HyperVToAzStackHCI)"
-}
-
 variable "location" {
   type        = string
   default     = "eastus"
@@ -24,7 +18,7 @@ variable "parent_id" {
 
 variable "project_name" {
   type        = string
-  default     = "saif-project-021826"
+  default     = "<migrate-project-name>"
   description = "The name of the new Azure Migrate project to create"
 }
 

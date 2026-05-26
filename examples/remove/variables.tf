@@ -4,12 +4,6 @@ variable "force_remove" {
   description = "Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state."
 }
 
-variable "location" {
-  type        = string
-  default     = "eastus"
-  description = "Optional: The Azure region where resources will be deployed. If not specified, uses the resource group's location."
-}
-
 variable "parent_id" {
   type        = string
   default     = "/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg"

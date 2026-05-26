@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -19,13 +19,12 @@ provider "azapi" {}
 module "replication_jobs" {
   source = "../../"
 
-  location       = var.location
   name           = "replication-jobs"
   parent_id      = var.parent_id
-  instance_type  = var.instance_type
   operation_mode = "jobs"
   project_name   = var.project_name
-  # Use explicit vault ID
+  # Optional: pass an explicit vault ID. When omitted, the vault is
+  # auto-resolved from the migrate project's Server Migration solution.
   replication_vault_id = var.replication_vault_id
   tags                 = var.tags
 }

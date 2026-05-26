@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -19,10 +19,8 @@ provider "azapi" {}
 module "migrate_vm" {
   source = "../../"
 
-  location           = var.location
   name               = "vm-migration"
   parent_id          = var.parent_id
-  instance_type      = var.instance_type
   operation_mode     = "migrate"
   protected_item_id  = var.protected_item_id
   shutdown_source_vm = var.shutdown_source_vm

@@ -8,7 +8,6 @@
 parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
 
 project_name        = "saif-project-120126"
-location            = "australiaeast"
 
 # Migration instance type
 instance_type = "VMwareToAzStackHCI"

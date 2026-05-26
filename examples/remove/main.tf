@@ -7,7 +7,7 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source  = "Azure/azapi"
       version = "~> 2.4"
     }
   }
@@ -19,7 +19,6 @@ provider "azapi" {}
 module "remove_replication" {
   source = "../../"
 
-  location         = var.location
   name             = "remove-replication"
   parent_id        = var.parent_id
   force_remove     = var.force_remove
