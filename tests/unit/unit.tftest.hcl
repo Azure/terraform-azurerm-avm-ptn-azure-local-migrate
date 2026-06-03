@@ -385,6 +385,11 @@ run "default_values_check" {
     condition     = var.shutdown_source_vm == false
     error_message = "shutdown_source_vm should default to false"
   }
+
+  assert {
+    condition     = var.connectivity_method == "Public-endpoint"
+    error_message = "connectivity_method should default to 'Public-endpoint'"
+  }
 }
 
 run "default_replication_policy_values" {
@@ -1096,3 +1101,55 @@ run "migrate_precondition_accepts_restart_state" {
   }
 }
 
+# ========================================
+# CONNECTIVITY METHOD TESTS
+# Validates the connectivity_method variable introduced to control
+# publicNetworkAccess on the Azure Migrate project resource.
+# Root cause of CI failure: var.connectivity_method was referenced in
+# main.tf before the variable declaration was added to variables.tf.
+# ========================================
+
+run "invalid_connectivity_method" {
+  command = plan
+
+  variables {
+    operation_mode      = "discover"
+    connectivity_method = "InvalidMethod"
+  }
+
+  expect_failures = [var.connectivity_method]
+}
+
+run "connectivity_method_public_endpoint_sets_enabled" {
+  command = plan
+
+  variables {
+    operation_mode         = "create-project"
+    location               = "eastus"
+    project_name           = "test-project"
+    create_migrate_project = true
+    connectivity_method    = "Public-endpoint"
+  }
+
+  assert {
+    condition     = azapi_resource.migrate_project[0].body.properties.publicNetworkAccess == "Enabled"
+    error_message = "publicNetworkAccess must be 'Enabled' when connectivity_method is 'Public-endpoint'"
+  }
+}
+
+run "connectivity_method_private_endpoint_sets_disabled" {
+  command = plan
+
+  variables {
+    operation_mode         = "create-project"
+    location               = "eastus"
+    project_name           = "test-project"
+    create_migrate_project = true
+    connectivity_method    = "Private-endpoint"
+  }
+
+  assert {
+    condition     = azapi_resource.migrate_project[0].body.properties.publicNetworkAccess == "Disabled"
+    error_message = "publicNetworkAccess must be 'Disabled' when connectivity_method is 'Private-endpoint'"
+  }
+}
