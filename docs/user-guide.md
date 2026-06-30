@@ -537,13 +537,13 @@ module "migrate" {
   parent_id          = "/subscriptions/<sub-id>/resourceGroups/<rg-name>"
   operation_mode     = "migrate"
   instance_type      = "VMwareToAzStackHCI"
-  protected_item_id  = "/subscriptions/.../protectedItems/<item-name>"
+  target_object_id   = "/subscriptions/.../protectedItems/<item-name>"
   shutdown_source_vm = true  # Recommended for production
 }
 ```
 
 **Key inputs:**
-- `protected_item_id` — The protected item ARM ID (from replicate or list outputs)
+- `target_object_id` — The protected item ARM ID (from replicate or list outputs)
 - `shutdown_source_vm` — `true` to shut down source VM before failover (recommended for data consistency)
 
 **Key outputs:**
@@ -747,9 +747,9 @@ Set `instance_type` to match your source environment. This affects fabric discov
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `protected_item_id` | `string` | `null` | Protected item ARM ID (for get/migrate) |
+| `protected_item_id` | `string` | `null` | Protected item ARM ID (for get) |
 | `shutdown_source_vm` | `bool` | `false` | Shut down source before migration |
-| `target_object_id` | `string` | `null` | Protected item ARM ID (for remove) |
+| `target_object_id` | `string` | `null` | Protected item ARM ID (for migrate/remove) |
 | `force_remove` | `bool` | `false` | Force removal of replication |
 
 ---

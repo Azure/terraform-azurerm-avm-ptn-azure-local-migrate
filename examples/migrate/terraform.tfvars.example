@@ -8,7 +8,7 @@ parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/
 
 # Protected Item (replicated VM) to migrate - full resource ID
 # Get this from the 'list' or 'get' operation output
-protected_item_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationVaults/myprojectreplicationvault/protectedItems/my-vm-name"
+target_object_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group/providers/Microsoft.DataReplication/replicationVaults/myprojectreplicationvault/protectedItems/my-vm-name"
 
 # Migration instance type (must match the protected item)
 instance_type = "VMwareToAzStackHCI" # or "HyperVToAzStackHCI"
