@@ -12,7 +12,8 @@ terraform {
 provider "azapi" {}
 
 module "replicate_vm" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name           = "vm-replication"
   operation_mode = "replicate"

@@ -41,9 +41,8 @@ only when you need to deviate from defaults.
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
 | `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable |
-| `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled`, `-HyperVGeneration` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false, hyperv_generation = "1" }` | Right-size the target VM |
+| `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false }` | Right-size the target VM |
 | `run_as_account_id` | `-RunAsAccountID` | `null` | Appliance needs an explicit run-as account |
-| `target_test_virtual_switch_id` | `-TestNetworkID` (per nic) | Falls back to `target_virtual_switch_id` | Use a separate switch for test failover |
 | `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |
 | `disks_to_include` | `-DiskToInclude` (power-user mode) | `[]` | Replace simple `os_disk_id` mode with explicit multi-disk config |
 | `nics_to_include` | `-NicToInclude` (power-user mode) | `[]` | Replace simple `target_virtual_switch_id` mode with explicit multi-NIC config |
@@ -68,45 +67,6 @@ az rest --method GET \
 ```
 
 See the [user guide](../../docs/user-guide.md) for the full variable reference.
-
-```hcl
-terraform {
-  required_version = ">= 1.9"
-
-  required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 2.4"
-    }
-  }
-}
-
-provider "azapi" {}
-
-module "replicate_vm" {
-  source = "../../"
-
-  name           = "vm-replication"
-  operation_mode = "replicate"
-  parent_id      = var.parent_id
-  project_name   = var.project_name
-
-  # PowerShell-equivalent required parameters
-  # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
-  machine_id               = var.machine_id
-  os_disk_id               = var.os_disk_id
-  source_appliance_name    = var.source_appliance_name
-  target_appliance_name    = var.target_appliance_name
-  target_resource_group_id = var.target_resource_group_id
-  target_storage_path_id   = var.target_storage_path_id
-  target_virtual_switch_id = var.target_virtual_switch_id
-  target_vm_name           = var.target_vm_name
-
-  # Azure Local placement
-  custom_location_id    = var.custom_location_id
-  target_hci_cluster_id = var.target_hci_cluster_id
-}
-```
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
@@ -224,9 +184,9 @@ The following Modules are called:
 
 ### <a name="module_replicate_vm"></a> [replicate\_vm](#module\_replicate\_vm)
 
-Source: ../../
+Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version:
+Version: 0.1.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

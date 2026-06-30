@@ -13,7 +13,8 @@ provider "azapi" {}
 
 # Test Discovery
 module "discover_vms" {
-  source = "../.."
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name           = "migrate-discover"
   parent_id      = var.parent_id

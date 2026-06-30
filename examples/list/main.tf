@@ -17,7 +17,8 @@ provider "azapi" {}
 
 # List all protected items in the vault
 module "list_protected_items" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name           = "list-protected-items"
   parent_id      = var.parent_id

@@ -242,37 +242,41 @@ run "valid_operation_mode_create_project" {
   }
 }
 
+run "create_project_provisions_appliance_discovery_scaffold" {
+  command = plan
+
+  variables {
+    operation_mode         = "create-project"
+    create_migrate_project = true
+    project_name           = "test-project"
+    location               = "eastus"
+    connectivity_method    = "Public-endpoint"
+  }
+
+  assert {
+    condition     = length(azapi_resource.master_site) == 1
+    error_message = "create-project mode should provision a master site for appliance registration"
+  }
+
+  assert {
+    condition     = length(azapi_resource.discovery_server_site) == 1
+    error_message = "create-project mode should provision a server discovery site bound to the discovery solution"
+  }
+
+  assert {
+    condition     = azapi_resource.master_site[0].name == "test-project-mastersite"
+    error_message = "master site name should be '{project_name}-mastersite'"
+  }
+
+  assert {
+    condition     = azapi_resource.discovery_server_site[0].name == "test-project-serversite"
+    error_message = "server site name should be '{project_name}-serversite'"
+  }
+}
+
 # ========================================
 # VARIABLE VALIDATION TESTS
 # ========================================
-
-run "valid_hyperv_generation_1" {
-  command = plan
-
-  variables {
-    operation_mode    = "discover"
-    target_vm_compute = { hyperv_generation = "1" }
-  }
-
-  assert {
-    condition     = var.target_vm_compute.hyperv_generation == "1"
-    error_message = "HyperV generation should be '1'"
-  }
-}
-
-run "valid_hyperv_generation_2" {
-  command = plan
-
-  variables {
-    operation_mode    = "discover"
-    target_vm_compute = { hyperv_generation = "2" }
-  }
-
-  assert {
-    condition     = var.target_vm_compute.hyperv_generation == "2"
-    error_message = "HyperV generation should be '2'"
-  }
-}
 
 run "valid_instance_type_vmware" {
   command = plan
@@ -349,11 +353,6 @@ run "default_values_check" {
 
   variables {
     operation_mode = "discover"
-  }
-
-  assert {
-    condition     = var.target_vm_compute.hyperv_generation == "1"
-    error_message = "target_vm_compute.hyperv_generation should default to '1'"
   }
 
   assert {
@@ -472,17 +471,6 @@ run "invalid_operation_mode" {
   }
 
   expect_failures = [var.operation_mode]
-}
-
-run "invalid_hyperv_generation" {
-  command = plan
-
-  variables {
-    operation_mode    = "discover"
-    target_vm_compute = { hyperv_generation = "3" }
-  }
-
-  expect_failures = [var.target_vm_compute]
 }
 
 run "invalid_source_machine_type" {

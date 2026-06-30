@@ -102,7 +102,6 @@ variable "vms" {
     nics_to_include = optional(list(object({
       nic_id            = string
       target_network_id = string
-      test_network_id   = optional(string)
       selection_type    = optional(string, "SelectedByUser")
     })), null)
   }))

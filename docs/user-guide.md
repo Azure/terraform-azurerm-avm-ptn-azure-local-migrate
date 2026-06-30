@@ -361,7 +361,6 @@ module "replicate" {
   target_storage_path_id   = "/subscriptions/.../storagecontainers/my-storage"
   target_hci_cluster_id    = "/subscriptions/.../clusters/my-cluster"
   custom_location_id       = "/subscriptions/.../customLocations/my-cl"
-  hyperv_generation        = "2"
 
   # VM sizing
   source_vm_cpu_cores = 4
@@ -410,7 +409,6 @@ module "replicate" {
     {
       nic_id            = "4000"
       target_network_id = "/subscriptions/.../logicalnetworks/prod-lnet"
-      test_network_id   = "/subscriptions/.../logicalnetworks/test-lnet"
       selection_type    = "SelectedByUser"
     }
   ]
@@ -612,7 +610,6 @@ vms = {
     target_vm_name    = "web-server-migrated"
     os_disk_id        = "6000C290-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     os_disk_size_gb   = 40
-    hyperv_generation = "2"
     source_vm_cpu_cores = 4
     source_vm_ram_mb    = 8192
     target_vm_cpu_cores = 4
@@ -664,7 +661,7 @@ For VMs with multiple disks and/or multiple NICs. Provide lists:
 | Variable | Description |
 |---|---|
 | `disks_to_include` | List of disk objects with `disk_id`, `disk_size_gb`, `is_os_disk`, etc. |
-| `nics_to_include` | List of NIC objects with `nic_id`, `target_network_id`, `test_network_id`, etc. |
+| `nics_to_include` | List of NIC objects with `nic_id`, `target_network_id`, `selection_type`, etc. |
 
 Power user mode takes priority — if `disks_to_include` is non-empty, the `os_disk_id`/`os_disk_size_gb` variables are ignored. Similarly for NICs.
 
@@ -730,7 +727,6 @@ Set `instance_type` to match your source environment. This affects fabric discov
 | `machine_id` | `string` | `null` | Source VM ARM ID from discovery |
 | `machine_name` | `string` | `null` | Source machine internal name |
 | `target_vm_name` | `string` | `null` | Name for the migrated VM |
-| `hyperv_generation` | `string` | `"1"` | Hyper-V generation (`"1"` or `"2"`) |
 | `source_vm_cpu_cores` | `number` | `2` | Source VM CPU cores |
 | `source_vm_ram_mb` | `number` | `4096` | Source VM RAM in MB |
 | `target_vm_cpu_cores` | `number` | `null` | Target VM CPU cores |

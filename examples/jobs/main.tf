@@ -17,7 +17,8 @@ provider "azapi" {}
 
 # Get replication jobs
 module "replication_jobs" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name           = "replication-jobs"
   parent_id      = var.parent_id

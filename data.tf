@@ -123,19 +123,26 @@ data "azapi_resource_list" "target_fabric_agents" {
 }
 
 # ========================================
-# RUN-AS ACCOUNT AUTO-DISCOVERY (replicate)
+# DISCOVERED MACHINE LOOKUP (replicate)
 # ========================================
-# Mirrors Az CLI `azext_migrate.helpers.replication.new._process_inputs`:
-#   VMware: machine.properties.vCenterId  -> GET vCenter  -> properties.runAsAccountId
-#   Hyper-V (standalone): machine.properties.hostId    -> GET host    -> properties.runAsAccountId
-#   Hyper-V (clustered):  machine.properties.clusterId -> GET cluster -> properties.runAsAccountId
-# Caller can still override via var.run_as_account_id.
+# Single GET on the discovered source machine, reused for two purposes that both
+# mirror Az CLI `azext_migrate.helpers.replication.new`:
+#   1. Run-as account discovery (_process_inputs):
+#        VMware: machine.properties.vCenterId  -> GET vCenter  -> properties.runAsAccountId
+#        Hyper-V (standalone): machine.properties.hostId    -> GET host    -> properties.runAsAccountId
+#        Hyper-V (clustered):  machine.properties.clusterId -> GET cluster -> properties.runAsAccountId
+#      Caller can still override via var.run_as_account_id.
+#   2. NIC discovery (_execute_new.construct_disk_and_nic_mapping): the simple
+#      replication path needs machine.properties.networkAdapters[].nicId so each
+#      replicated NIC carries a real id (a null nicId yields a broken protected item).
+# Read whenever replicate mode has a machine_id so NICs resolve even when the
+# caller supplies run_as_account_id explicitly.
 data "azapi_resource" "replicate_machine" {
-  count = local.is_replicate_mode && var.run_as_account_id == null && var.machine_id != null ? 1 : 0
+  count = local.is_replicate_mode && var.machine_id != null ? 1 : 0
 
   resource_id            = var.machine_id
   type                   = local.effective_instance_type == "VMwareToAzStackHCI" ? "Microsoft.OffAzure/VMwareSites/machines@2023-06-06" : "Microsoft.OffAzure/HyperVSites/machines@2023-06-06"
-  response_export_values = ["properties.vCenterId", "properties.hostId", "properties.clusterId"]
+  response_export_values = ["properties.vCenterId", "properties.hostId", "properties.clusterId", "properties.networkAdapters", "properties.generation", "properties.firmware"]
 }
 
 data "azapi_resource" "machine_parent_for_run_as" {

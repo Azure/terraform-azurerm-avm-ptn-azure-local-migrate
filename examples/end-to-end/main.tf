@@ -33,8 +33,9 @@ provider "azapi" {}
 # Sets up the replication vault, policy, and extension.
 # Skip this step if infrastructure already exists by setting skip_initialize = true.
 module "initialize" {
-  source = "../../"
-  count  = var.skip_initialize ? 0 : 1
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
+  count   = var.skip_initialize ? 0 : 1
 
   name                  = "e2e-initialize"
   operation_mode        = "initialize"
@@ -65,7 +66,8 @@ locals {
 # Start replication of each source VM to Azure Stack HCI.
 # This creates a protected item in the replication vault per VM.
 module "replicate_vm" {
-  source   = "../../"
+  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version  = "0.1.2"
   for_each = var.vms
 
   name                     = "e2e-replicate-${each.key}"
@@ -167,7 +169,8 @@ resource "terraform_data" "wait_for_replication" {
 # ========================================
 # After replication is created, check the current status per VM.
 module "check_status" {
-  source   = "../../"
+  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version  = "0.1.2"
   for_each = var.vms
 
   name              = "e2e-check-status-${each.key}"
@@ -186,7 +189,8 @@ module "check_status" {
 # Automatically performs planned failover for each VM after replication
 # is confirmed complete.
 module "migrate_vm" {
-  source   = "../../"
+  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version  = "0.1.2"
   for_each = var.vms
 
   name               = "e2e-migrate-${each.key}"

@@ -206,7 +206,6 @@ variable "nics_to_include" {
   type = list(object({
     nic_id            = string
     target_network_id = string
-    test_network_id   = optional(string)
     selection_type    = optional(string, "SelectedByUser")
   }))
   default     = []
@@ -215,7 +214,6 @@ A list of NICs to include for replication (power user mode). Each object in the 
 
 - `nic_id` - (Required) The unique identifier of the network interface card to replicate.
 - `target_network_id` - (Required) The ARM resource ID of the target logical network for the NIC.
-- `test_network_id` - (Optional) The ARM resource ID of the test logical network for the NIC.
 - `selection_type` - (Optional) The selection type for the NIC. Defaults to `"SelectedByUser"`.
 DESCRIPTION
 }
@@ -407,12 +405,6 @@ variable "target_storage_path_id" {
   description = "Storage path ARM ID where VMs will be stored"
 }
 
-variable "target_test_virtual_switch_id" {
-  type        = string
-  default     = null
-  description = "Test logical network ARM ID for VMs"
-}
-
 variable "target_virtual_switch_id" {
   type        = string
   default     = null
@@ -424,7 +416,6 @@ variable "target_vm_compute" {
     cpu_cores                 = optional(number, 2)
     ram_mb                    = optional(number, 4096)
     is_dynamic_memory_enabled = optional(bool, false)
-    hyperv_generation         = optional(string, "1")
   })
   default     = {}
   description = <<DESCRIPTION
@@ -433,14 +424,8 @@ Advanced overrides for target VM compute settings (replicate mode). All fields a
 - `cpu_cores` - (Optional) Number of vCPUs assigned to the migrated VM. Defaults to `2`.
 - `ram_mb` - (Optional) Memory (MB) assigned to the migrated VM. Defaults to `4096`.
 - `is_dynamic_memory_enabled` - (Optional) Whether dynamic memory is enabled. Defaults to `false`.
-- `hyperv_generation` - (Optional) Hyper-V generation (`1` or `2`). Defaults to `1`.
 DESCRIPTION
   nullable    = false
-
-  validation {
-    condition     = contains(["1", "2"], var.target_vm_compute.hyperv_generation)
-    error_message = "target_vm_compute.hyperv_generation must be either '1' or '2'."
-  }
 
   validation {
     condition     = var.target_vm_compute.cpu_cores >= 1 && var.target_vm_compute.cpu_cores <= 240
