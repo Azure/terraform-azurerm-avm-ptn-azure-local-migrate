@@ -54,6 +54,16 @@ output "migrate_project_id" {
   value       = local.migrate_project_id
 }
 
+output "master_site_id" {
+  description = "ARM ID of the Azure Migrate master site that appliances register their per-appliance site under. Populated only when creating a new project (create-project mode)."
+  value       = local.create_new_project && length(azapi_resource.master_site) > 0 ? azapi_resource.master_site[0].id : null
+}
+
+output "discovery_server_site_id" {
+  description = "ARM ID of the server discovery site bound to the project's ServerDiscovery solution. Populated only when creating a new project (create-project mode)."
+  value       = local.create_new_project && length(azapi_resource.discovery_server_site) > 0 ? azapi_resource.discovery_server_site[0].id : null
+}
+
 output "migration_operation_details" {
   description = "Detailed response from the migration operation including async operation URL for job tracking"
   value = local.is_migrate_mode ? try(
@@ -123,23 +133,45 @@ output "project_name_output" {
 }
 
 output "protected_item" {
-  description = "Complete protected item details including replication status, health, and configuration"
-  value = local.is_get_mode ? (
-    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
-    data.azapi_resource.protected_item_by_id[0].output :
-    (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
-    data.azapi_resource.protected_item_by_name[0].output : null)
-  ) : null
+  description = "Curated protected item details (status, health, and key configuration). Mirrors the Az CLI projection and omits internal/test-failover fields."
+  value = local._get_protected_item == null ? null : {
+    id                           = try(local._get_protected_item.id, "N/A")
+    name                         = try(local._get_protected_item.name, "N/A")
+    type                         = try(local._get_protected_item.type, "N/A")
+    protection_state             = try(local._get_protected_item.properties.protectionState, "Unknown")
+    protection_state_description = try(local._get_protected_item.properties.protectionStateDescription, "N/A")
+    replication_health           = try(local._get_protected_item.properties.replicationHealth, "Unknown")
+    health_errors                = try(local._get_protected_item.properties.healthErrors, [])
+    allowed_jobs                 = try(local._get_protected_item.properties.allowedJobs, [])
+    correlation_id               = try(local._get_protected_item.properties.correlationId, "N/A")
+    policy_name                  = try(local._get_protected_item.properties.policyName, "N/A")
+    replication_extension_name   = try(local._get_protected_item.properties.replicationExtensionName, "N/A")
+    instance_type                = try(local._get_protected_item.properties.customProperties.instanceType, "N/A")
+    source_machine_name          = try(coalesce(try(local._get_protected_item.properties.customProperties.sourceVmName, null), try(local._get_protected_item.properties.customProperties.sourceMachineName, null)), "N/A")
+    target_vm_name               = try(local._get_protected_item.properties.customProperties.targetVmName, "N/A")
+    target_resource_group_id     = try(local._get_protected_item.properties.customProperties.targetResourceGroupId, "N/A")
+    custom_location_region       = try(local._get_protected_item.properties.customProperties.customLocationRegion, "N/A")
+  }
 }
 
 output "protected_item_custom_properties" {
-  description = "Custom properties including fabric-specific details, disk configuration, and network settings"
-  value = local.is_get_mode ? (
-    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ?
-    try(data.azapi_resource.protected_item_by_id[0].output.properties.customProperties, null) :
-    (var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ?
-    try(data.azapi_resource.protected_item_by_name[0].output.properties.customProperties, null) : null)
-  ) : null
+  description = "Curated replication custom properties (compute, storage, network, and fabric details). Internal/test-failover fields such as testMigrateDiskName are omitted."
+  value = local._get_protected_item == null ? null : {
+    instance_type               = try(local._get_protected_item.properties.customProperties.instanceType, null)
+    source_machine_name         = try(coalesce(try(local._get_protected_item.properties.customProperties.sourceVmName, null), try(local._get_protected_item.properties.customProperties.sourceMachineName, null)), null)
+    target_vm_name              = try(local._get_protected_item.properties.customProperties.targetVmName, null)
+    target_resource_group_id    = try(local._get_protected_item.properties.customProperties.targetResourceGroupId, null)
+    target_hci_cluster_id       = try(local._get_protected_item.properties.customProperties.targetHCIClusterId, null)
+    custom_location_region      = try(local._get_protected_item.properties.customProperties.customLocationRegion, null)
+    storage_container_id        = try(local._get_protected_item.properties.customProperties.storageContainerId, null)
+    hyperv_generation           = try(local._get_protected_item.properties.customProperties.hyperVGeneration, null)
+    source_cpu_cores            = try(local._get_protected_item.properties.customProperties.sourceCpuCores, null)
+    source_memory_in_mega_bytes = try(local._get_protected_item.properties.customProperties.sourceMemoryInMegaBytes, null)
+    target_cpu_cores            = try(local._get_protected_item.properties.customProperties.targetCpuCores, null)
+    target_memory_in_mega_bytes = try(local._get_protected_item.properties.customProperties.targetMemoryInMegaBytes, null)
+    fabric_discovery_machine_id = try(local._get_protected_item.properties.customProperties.fabricDiscoveryMachineId, null)
+    run_as_account_id           = try(local._get_protected_item.properties.customProperties.runAsAccountId, null)
+  }
 }
 
 output "protected_item_details" {
@@ -252,8 +284,27 @@ output "protected_items_count" {
 }
 
 output "protected_items_list" {
-  description = "Complete list of all protected items (replicated VMs) in the vault"
-  value       = try(data.azapi_resource_list.protected_items[0].output.value, [])
+  description = "Curated list of all protected items (replicated VMs) in the vault. Mirrors the Az CLI projection and omits internal/test-failover fields."
+  value = local.is_list_mode && length(data.azapi_resource_list.protected_items) > 0 ? [
+    for item in try(data.azapi_resource_list.protected_items[0].output.value, []) : {
+      id                           = try(item.id, "N/A")
+      name                         = try(item.name, "N/A")
+      type                         = try(item.type, "N/A")
+      protection_state             = try(item.properties.protectionState, "Unknown")
+      protection_state_description = try(item.properties.protectionStateDescription, "N/A")
+      replication_health           = try(item.properties.replicationHealth, "Unknown")
+      health_errors_count          = try(length(item.properties.healthErrors), 0)
+      allowed_jobs                 = try(item.properties.allowedJobs, [])
+      correlation_id               = try(item.properties.correlationId, "N/A")
+      policy_name                  = try(item.properties.policyName, "N/A")
+      replication_extension_name   = try(item.properties.replicationExtensionName, "N/A")
+      instance_type                = try(item.properties.customProperties.instanceType, "N/A")
+      source_machine_name          = try(coalesce(try(item.properties.customProperties.sourceVmName, null), try(item.properties.customProperties.sourceMachineName, null)), "N/A")
+      target_vm_name               = try(item.properties.customProperties.targetVmName, "N/A")
+      target_resource_group_id     = try(item.properties.customProperties.targetResourceGroupId, "N/A")
+      custom_location_region       = try(item.properties.customProperties.customLocationRegion, "N/A")
+    }
+  ] : []
 }
 
 output "protected_items_summary" {

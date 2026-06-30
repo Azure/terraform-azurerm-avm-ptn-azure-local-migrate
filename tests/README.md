@@ -74,7 +74,6 @@ Each operation mode is tested to ensure:
 Tests that verify variable validation rules work correctly:
 
 - `invalid_operation_mode` - Rejects invalid operation modes
-- `invalid_hyperv_generation` - Rejects invalid Hyper-V generations (must be "1" or "2")
 - `invalid_instance_type` - Rejects invalid instance types
 - `invalid_source_machine_type` - Rejects invalid source machine types
 - `invalid_subscription_id_format` - Rejects malformed subscription GUIDs

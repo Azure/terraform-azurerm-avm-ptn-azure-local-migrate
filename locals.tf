@@ -114,6 +114,70 @@ locals {
     null
   )
   # ========================================
+  # SOURCE MACHINE DISCOVERY (replicate)
+  # ========================================
+  # Shared view of the discovered machine's properties, used to derive both the
+  # NIC set and the VM generation. `try` returns {} when the discovery data source
+  # has count 0 (non-replicate modes / machine_name-only) — a plain ternary here
+  # is invalid because its branches would have inconsistent object types once the
+  # data source resolves to a concrete properties object.
+  _replicate_machine_props = try(data.azapi_resource.replicate_machine[0].output.properties, {})
+  # Network adapters discovered on the source machine. Mirrors Az CLI
+  # `construct_disk_and_nic_mapping`, which reads machine.properties.networkAdapters
+  # and emits one NIC per adapter carrying the real nicId.
+  discovered_machine_nics = try(local._replicate_machine_props.networkAdapters, [])
+  # hyperVGeneration reflects the source VM boot type, not a user choice. Mirrors
+  # Az CLI `_execute_new`:
+  #   * Hyper-V source: machine.properties.generation (default "1")
+  #   * VMware source:  "2" when machine.properties.firmware is UEFI, else "1"
+  # Firmware is compared case-insensitively — discovery reports it lowercased
+  # (e.g. "bios"/"efi"), so a literal "BIOS" check would mis-map BIOS VMs to gen 2.
+  # Falls back to "1" when discovery is unavailable (machine_name-only path).
+  effective_hyperv_generation = var.source_machine_type == "HyperV" ? try(local._replicate_machine_props.generation, "1") : (
+    lower(try(local._replicate_machine_props.firmware, "BIOS")) == "bios" ? "1" : "2"
+  )
+  # Final nicsToInclude payload for the protected item:
+  #   * Power-user mode: explicit var.nics_to_include from the caller.
+  #   * Simple mode: one NIC per discovered adapter, each carrying its real nicId
+  #     and the caller's target logical network (parity with the CLI).
+  #   * Fallback: if no adapters resolved (e.g. machine_name-only path), emit a
+  #     single best-effort NIC so existing behaviour is preserved.
+  # testNetworkId is not a user input — it always tracks the target network.
+  effective_nics_to_include = length(var.nics_to_include) > 0 ? [
+    for nic in var.nics_to_include : {
+      nicId                    = nic.nic_id
+      selectionTypeForFailover = nic.selection_type
+      targetNetworkId          = nic.target_network_id
+      testNetworkId            = nic.target_network_id
+    }
+    ] : var.target_virtual_switch_id == null ? [] : (
+    length(local.discovered_machine_nics) > 0 ? [
+      for nic in local.discovered_machine_nics : {
+        nicId                    = nic.nicId
+        selectionTypeForFailover = "SelectedByUser"
+        targetNetworkId          = var.target_virtual_switch_id
+        testNetworkId            = var.target_virtual_switch_id
+      }
+      ] : [{
+        nicId                    = null
+        selectionTypeForFailover = "SelectedByUser"
+        targetNetworkId          = var.target_virtual_switch_id
+        testNetworkId            = var.target_virtual_switch_id
+    }]
+  )
+  # ========================================
+  # GET-MODE PROTECTED ITEM (curated outputs helper)
+  # ========================================
+  # Active protected item for get mode, resolved from whichever lookup applies
+  # (by full id, else by name). Curated get-mode outputs project from this so we
+  # never surface the raw API object, which carries internal/test-failover fields
+  # (e.g. testMigrateDiskName). Mirrors the Az CLI `_format_protected_item`.
+  _get_protected_item = local.is_get_mode ? (
+    var.protected_item_id != null && length(data.azapi_resource.protected_item_by_id) > 0 ? try(data.azapi_resource.protected_item_by_id[0].output, null) :
+    var.protected_item_name != null && length(data.azapi_resource.protected_item_by_name) > 0 ? try(data.azapi_resource.protected_item_by_name[0].output, null) :
+    null
+  ) : null
+  # ========================================
   # CUSTOM LOCATION REGION AUTO-DISCOVERY
   # ========================================
   # The HCI virtualHardDisks RP must be available in this region (resolved at

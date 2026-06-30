@@ -39,9 +39,8 @@ only when you need to deviate from defaults.
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
 | `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable |
-| `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled`, `-HyperVGeneration` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false, hyperv_generation = "1" }` | Right-size the target VM |
+| `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false }` | Right-size the target VM |
 | `run_as_account_id` | `-RunAsAccountID` | `null` | Appliance needs an explicit run-as account |
-| `target_test_virtual_switch_id` | `-TestNetworkID` (per nic) | Falls back to `target_virtual_switch_id` | Use a separate switch for test failover |
 | `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |
 | `disks_to_include` | `-DiskToInclude` (power-user mode) | `[]` | Replace simple `os_disk_id` mode with explicit multi-disk config |
 | `nics_to_include` | `-NicToInclude` (power-user mode) | `[]` | Replace simple `target_virtual_switch_id` mode with explicit multi-NIC config |

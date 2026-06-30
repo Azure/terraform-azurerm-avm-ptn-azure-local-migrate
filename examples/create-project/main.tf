@@ -17,7 +17,8 @@ provider "azapi" {}
 
 # Create a new Azure Migrate project
 module "create_migrate_project" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   location               = var.location
   name                   = "create-project"

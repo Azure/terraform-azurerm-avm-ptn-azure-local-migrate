@@ -158,6 +158,72 @@ resource "azapi_resource" "migrate_project_role_assignment" {
 }
 
 # ========================================
+# DISCOVERY SITE SCAFFOLD (appliance registration)
+# ========================================
+# An Azure Migrate appliance registers a per-appliance VMware/HyperV site UNDER a
+# master site that is linked to the project's ServerDiscovery solution. The portal
+# creates this scaffold as part of "create project" (CreateProjectHelper
+# `_getScopeBoundTemplates`); without it the project is created successfully but
+# appliance registration fails later. We mirror the minimal portal subset here:
+# a server site bound to the discovery solution, contained by a master site.
+
+# Server (discovery) site bound to the project's ServerDiscovery solution.
+resource "azapi_resource" "discovery_server_site" {
+  count = local.create_new_project ? 1 : 0
+
+  location  = local.effective_location
+  name      = "${var.project_name}-serversite"
+  parent_id = local.resource_group_id
+  type      = "Microsoft.OffAzure/ServerSites@2024-12-01-preview"
+  body = {
+    properties = {
+      discoverySolutionId = azapi_resource.solution_discovery[0].id
+      arcScope = {
+        scopeType                      = "SubscriptionOrResourceGroupIds"
+        subscriptionOrResourceGroupIds = ["/subscriptions/${local.subscription_id}"]
+        syncType                       = "Manual"
+        tagSyncMode                    = "Disabled"
+      }
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  tags                      = var.tags
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.migrate_project_role_assignment]
+}
+
+# Master site — the container an appliance registers its per-appliance site under.
+# `allowMultipleSites` lets several appliances share the project; `publicNetworkAccess`
+# tracks the project's connectivity method so the appliance can reach it.
+resource "azapi_resource" "master_site" {
+  count = local.create_new_project ? 1 : 0
+
+  location  = local.effective_location
+  name      = "${var.project_name}-mastersite"
+  parent_id = local.resource_group_id
+  type      = "Microsoft.OffAzure/MasterSites@2024-12-01-preview"
+  body = {
+    properties = {
+      publicNetworkAccess = var.connectivity_method == "Public-endpoint" ? "Enabled" : "Disabled"
+      allowMultipleSites  = true
+      sites               = [azapi_resource.discovery_server_site[0].id]
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  tags                      = var.tags
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.discovery_server_site]
+}
+
+# ========================================
 # INITIALIZE REPLICATION INFRASTRUCTURE
 # ========================================
 
@@ -522,29 +588,17 @@ resource "azapi_resource" "protected_item" {
         targetVmName            = var.target_vm_name
         targetResourceGroupId   = var.target_resource_group_id
         storageContainerId      = var.target_storage_path_id
-        hyperVGeneration        = var.target_vm_compute.hyperv_generation
+        hyperVGeneration        = local.effective_hyperv_generation
         targetCpuCores          = var.target_vm_compute.cpu_cores
         sourceCpuCores          = var.target_vm_compute.cpu_cores
         isDynamicRam            = var.target_vm_compute.is_dynamic_memory_enabled
         sourceMemoryInMegaBytes = var.target_vm_compute.ram_mb
         targetMemoryInMegaBytes = floor(var.target_vm_compute.ram_mb)
-        # Power user mode: explicit nics_to_include.
-        # Simple mode: single NIC entry built from target_virtual_switch_id;
-        # nicId is left null so the API matches it against the discovered NIC
-        # set (mirrors `-TargetVirtualSwitch`).
-        nicsToInclude = length(var.nics_to_include) > 0 ? [
-          for nic in var.nics_to_include : {
-            nicId                    = nic.nic_id
-            selectionTypeForFailover = nic.selection_type
-            targetNetworkId          = nic.target_network_id
-            testNetworkId            = nic.test_network_id != null ? nic.test_network_id : nic.target_network_id
-          }
-          ] : var.target_virtual_switch_id != null ? [{
-            nicId                    = null
-            selectionTypeForFailover = "SelectedByUser"
-            targetNetworkId          = var.target_virtual_switch_id
-            testNetworkId            = var.target_test_virtual_switch_id != null ? var.target_test_virtual_switch_id : var.target_virtual_switch_id
-        }] : []
+        # Power-user mode: explicit nics_to_include.
+        # Simple mode: one NIC per discovered network adapter, each carrying the
+        # real nicId resolved from the discovered machine (mirrors Az CLI
+        # construct_disk_and_nic_mapping). See local.effective_nics_to_include.
+        nicsToInclude = local.effective_nics_to_include
         dynamicMemoryConfig = {
           maximumMemoryInMegaBytes     = 1048576
           minimumMemoryInMegaBytes     = 512

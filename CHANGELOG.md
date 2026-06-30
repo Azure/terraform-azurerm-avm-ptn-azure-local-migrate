@@ -34,20 +34,35 @@ starting at `v0.x`; breaking changes are expected until `v1.0`.
     (the cmdlet does not accept fabric IDs)
   - `app_consistent_frequency_minutes`, `crash_consistent_frequency_minutes`,
     `recovery_point_history_minutes` — moved into `replication_policy`
-  - `hyperv_generation`, `is_dynamic_memory_enabled`, `target_vm_cpu_cores`,
+  - `is_dynamic_memory_enabled`, `target_vm_cpu_cores`,
     `target_vm_ram_mb`, `source_vm_cpu_cores`, `source_vm_ram_mb` — moved into
     `target_vm_compute`
-  - `nic_id`, `os_disk_size_gb` — derived in simple-mode replication (NIC
-    matched by API, disk size derived from discovered disk)
+  - `hyperv_generation`, `target_test_virtual_switch_id`, and per-NIC
+    `test_network_id` — removed; `hyperv_generation` is derived from the source
+    VM boot type (VMware firmware UEFI → gen 2 / BIOS → gen 1, or the Hyper-V
+    generation) and the test failover network always tracks the target network,
+    both mirroring `New-AzMigrateLocalServerReplication`
+  - `nic_id`, `os_disk_size_gb` — derived in simple-mode replication (NIC id read
+    from the discovered machine, disk size derived from discovered disk)
 
   Added variables:
   - `replication_policy = object({ name, app_consistent_frequency_minutes,
     crash_consistent_frequency_minutes, recovery_point_history_minutes })`
     — all fields optional with sensible defaults.
-  - `target_vm_compute = object({ cpu_cores, ram_mb, is_dynamic_memory_enabled,
-    hyperv_generation })` — all fields optional with sensible defaults.
+  - `target_vm_compute = object({ cpu_cores, ram_mb, is_dynamic_memory_enabled })`
+    — all fields optional with sensible defaults.
 
 ### Added
+
+- **Appliance-registration discovery scaffold in `create-project` mode.** When
+  creating a new project the module now also provisions a server discovery site
+  (`Microsoft.OffAzure/ServerSites`, bound to the project's `ServerDiscovery`
+  solution) and a master site (`Microsoft.OffAzure/MasterSites`, `allowMultipleSites`)
+  in the project's resource group. An Azure Migrate appliance registers its
+  per-appliance VMware/HyperV site under the master site; without this scaffold the
+  project was created successfully but appliance registration failed later. Mirrors
+  the portal's create-project flow (`CreateProjectHelper._getScopeBoundTemplates`).
+  Adds outputs `master_site_id` and `discovery_server_site_id`.
 
 - **Location auto-discovery.** New internal local `effective_location`
   resolves the deployment region in the following order:

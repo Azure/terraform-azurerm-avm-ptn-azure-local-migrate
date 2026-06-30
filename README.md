@@ -25,7 +25,9 @@ The following resources are used by this module:
 
 - [azapi_resource.cache_storage_account](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.diagnostic_setting](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.discovery_server_site](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.management_lock](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.master_site](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.migrate_project](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.migrate_project_role_assignment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.protected_item](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -286,7 +288,6 @@ Description: A list of NICs to include for replication (power user mode). Each o
 
 - `nic_id` - (Required) The unique identifier of the network interface card to replicate.
 - `target_network_id` - (Required) The ARM resource ID of the target logical network for the NIC.
-- `test_network_id` - (Optional) The ARM resource ID of the test logical network for the NIC.
 - `selection_type` - (Optional) The selection type for the NIC. Defaults to `"SelectedByUser"`.
 
 Type:
@@ -295,7 +296,6 @@ Type:
 list(object({
     nic_id            = string
     target_network_id = string
-    test_network_id   = optional(string)
     selection_type    = optional(string, "SelectedByUser")
   }))
 ```
@@ -493,14 +493,6 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_target_test_virtual_switch_id"></a> [target\_test\_virtual\_switch\_id](#input\_target\_test\_virtual\_switch\_id)
-
-Description: Test logical network ARM ID for VMs
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_target_virtual_switch_id"></a> [target\_virtual\_switch\_id](#input\_target\_virtual\_switch\_id)
 
 Description: Logical network ARM ID for VMs (simple replication mode). Pair with `os_disk_id` for the simple path. Ignored when `nics_to_include` is provided.
@@ -516,7 +508,6 @@ Description: Advanced overrides for target VM compute settings (replicate mode).
 - `cpu_cores` - (Optional) Number of vCPUs assigned to the migrated VM. Defaults to `2`.
 - `ram_mb` - (Optional) Memory (MB) assigned to the migrated VM. Defaults to `4096`.
 - `is_dynamic_memory_enabled` - (Optional) Whether dynamic memory is enabled. Defaults to `false`.
-- `hyperv_generation` - (Optional) Hyper-V generation (`1` or `2`). Defaults to `1`.
 
 Type:
 
@@ -525,7 +516,6 @@ object({
     cpu_cores                 = optional(number, 2)
     ram_mb                    = optional(number, 4096)
     is_dynamic_memory_enabled = optional(bool, false)
-    hyperv_generation         = optional(string, "1")
   })
 ```
 
@@ -563,6 +553,10 @@ Description: Total number of discovered servers with discovery data
 
 Description: Raw API response for discovered servers (for debugging)
 
+### <a name="output_discovery_server_site_id"></a> [discovery\_server\_site\_id](#output\_discovery\_server\_site\_id)
+
+Description: ARM ID of the server discovery site bound to the project's ServerDiscovery solution. Populated only when creating a new project (create-project mode).
+
 ### <a name="output_location_output"></a> [location\_output](#output\_location\_output)
 
 Description: Azure region where resources are deployed
@@ -570,6 +564,10 @@ Description: Azure region where resources are deployed
 ### <a name="output_machine_id"></a> [machine\_id](#output\_machine\_id)
 
 Description: Machine ID being replicated
+
+### <a name="output_master_site_id"></a> [master\_site\_id](#output\_master\_site\_id)
+
+Description: ARM ID of the Azure Migrate master site that appliances register their per-appliance site under. Populated only when creating a new project (create-project mode).
 
 ### <a name="output_migrate_project_id"></a> [migrate\_project\_id](#output\_migrate\_project\_id)
 
@@ -601,11 +599,11 @@ Description: Azure Migrate project name
 
 ### <a name="output_protected_item"></a> [protected\_item](#output\_protected\_item)
 
-Description: Complete protected item details including replication status, health, and configuration
+Description: Curated protected item details (status, health, and key configuration). Mirrors the Az CLI projection and omits internal/test-failover fields.
 
 ### <a name="output_protected_item_custom_properties"></a> [protected\_item\_custom\_properties](#output\_protected\_item\_custom\_properties)
 
-Description: Custom properties including fabric-specific details, disk configuration, and network settings
+Description: Curated replication custom properties (compute, storage, network, and fabric details). Internal/test-failover fields such as testMigrateDiskName are omitted.
 
 ### <a name="output_protected_item_details"></a> [protected\_item\_details](#output\_protected\_item\_details)
 
@@ -641,7 +639,7 @@ Description: Total number of protected items found
 
 ### <a name="output_protected_items_list"></a> [protected\_items\_list](#output\_protected\_items\_list)
 
-Description: Complete list of all protected items (replicated VMs) in the vault
+Description: Curated list of all protected items (replicated VMs) in the vault. Mirrors the Az CLI projection and omits internal/test-failover fields.
 
 ### <a name="output_protected_items_summary"></a> [protected\_items\_summary](#output\_protected\_items\_summary)
 
