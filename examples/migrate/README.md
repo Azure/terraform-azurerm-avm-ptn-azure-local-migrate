@@ -29,7 +29,7 @@ module "migrate_vm" {
   name               = "vm-migration"
   parent_id          = var.parent_id
   operation_mode     = "migrate"
-  protected_item_id  = var.protected_item_id
+  protected_item_id  = var.target_object_id
   shutdown_source_vm = var.shutdown_source_vm
   tags               = var.tags
 }
@@ -63,9 +63,9 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_protected_item_id"></a> [protected\_item\_id](#input\_protected\_item\_id)
+### <a name="input_target_object_id"></a> [target\_object\_id](#input\_target\_object\_id)
 
-Description: The full resource ID of the protected item (replicated VM) to migrate
+Description: The full resource ID of the target object (replicated VM) to migrate
 
 Type: `string`
 

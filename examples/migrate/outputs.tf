@@ -11,5 +11,5 @@ output "migration_protected_item_details" {
 
 output "protected_item_id" {
   description = "ID of the protected item being migrated"
-  value       = var.protected_item_id
+  value       = var.target_object_id
 }
