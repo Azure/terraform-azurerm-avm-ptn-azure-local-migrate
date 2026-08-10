@@ -659,11 +659,6 @@ resource "azapi_resource_action" "planned_failover_hyperv" {
     update = "180m"
   }
 
-  # Ensure validation happens first
-  depends_on = [
-    data.azapi_resource.protected_item_to_migrate
-  ]
-
   # CLI parity: refuse to call /plannedFailover unless the protected item is
   # currently eligible. Mirrors helpers/migration/start/_validate.py which
   # requires `PlannedFailover` or `Restart` in `allowedJobs` before issuing
@@ -675,6 +670,10 @@ resource "azapi_resource_action" "planned_failover_hyperv" {
       error_message = "The replicating server cannot be migrated right now. Current protection state is '${local.protected_item_state_description}'. Allowed jobs: [${join(", ", local.protected_item_allowed_jobs)}]."
     }
   }
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_migrate
+  ]
 }
 
 # Execute planned failover (migration) operation - VMware
@@ -699,11 +698,6 @@ resource "azapi_resource_action" "planned_failover_vmware" {
     update = "180m"
   }
 
-  # Ensure validation happens first
-  depends_on = [
-    data.azapi_resource.protected_item_to_migrate
-  ]
-
   # CLI parity: refuse to call /plannedFailover unless the protected item is
   # currently eligible. See planned_failover_hyperv for the rationale.
   lifecycle {
@@ -712,6 +706,10 @@ resource "azapi_resource_action" "planned_failover_vmware" {
       error_message = "The replicating server cannot be migrated right now. Current protection state is '${local.protected_item_state_description}'. Allowed jobs: [${join(", ", local.protected_item_allowed_jobs)}]."
     }
   }
+  # Ensure validation happens first
+  depends_on = [
+    data.azapi_resource.protected_item_to_migrate
+  ]
 }
 
 # ========================================
