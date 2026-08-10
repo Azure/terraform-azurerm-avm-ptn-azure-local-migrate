@@ -156,49 +156,8 @@ Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
 Version: 0.1.2
 
-## Next Steps
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
 
-After creating the Migrate project:
-
-### 1. Discover VMs from Azure Portal
-
-**Important**: VM discovery should be performed from the Azure Portal, not through Terraform.
-
-1. Navigate to **Azure Migrate** in the Azure Portal
-2. Select your project: `saif-project-012626` (or your project name)
-3. Click on **Discover, assess and migrate**
-4. Follow the portal wizard to:
-   - Set up the appliance (VMware or Hyper-V)
-   - Configure discovery settings
-   - Start discovering VMs from your source environment
-
-### 2. Initialize Replication Infrastructure
-
-Once VMs are discovered, use the `initialize` example to set up replication:
-
-```bash
-cd ../initialize
-terraform init
-terraform apply
-```
-
-### 3. Set Up VM Replication
-
-After initialization, use the `replicate` example to start replicating VMs:
-
-```bash
-cd ../replicate
-terraform init
-terraform apply
-```
-
-## Clean Up
-
-To remove the created Migrate project and resource group:
-
-```bash
-terraform destroy
-```
-
-**Note**: This will delete the entire resource group and all resources within it.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 <!-- END_TF_DOCS -->
