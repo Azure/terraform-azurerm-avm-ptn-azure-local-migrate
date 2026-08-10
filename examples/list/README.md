@@ -24,7 +24,8 @@ provider "azapi" {}
 
 # List all protected items in the vault
 module "list_protected_items" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name           = "list-protected-items"
   parent_id      = var.parent_id
@@ -133,9 +134,9 @@ The following Modules are called:
 
 ### <a name="module_list_protected_items"></a> [list\_protected\_items](#module\_list\_protected\_items)
 
-Source: ../../
+Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version:
+Version: 0.1.2
 
 ## Usage
 

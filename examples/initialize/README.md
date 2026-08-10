@@ -53,7 +53,8 @@ terraform {
 provider "azapi" {}
 
 module "initialize_replication" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name                  = "local-migration-init"
   operation_mode        = "initialize"
@@ -140,9 +141,9 @@ The following Modules are called:
 
 ### <a name="module_initialize_replication"></a> [initialize\_replication](#module\_initialize\_replication)
 
-Source: ../../
+Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version:
+Version: 0.1.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

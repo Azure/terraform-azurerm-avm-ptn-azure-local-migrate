@@ -2,6 +2,7 @@
 # DISCOVER SERVERS OUTPUTS
 # ========================================
 
+
 output "cache_storage_account_id" {
   description = "ID of the cache storage account"
   value       = local.is_initialize_mode ? local.resolved_cache_storage_account_id : null
@@ -39,6 +40,11 @@ output "discovered_servers_raw" {
   value       = local.is_discover_mode && length(data.azapi_resource_list.discovered_servers) > 0 ? data.azapi_resource_list.discovered_servers[0].output : null
 }
 
+output "discovery_server_site_id" {
+  description = "ARM ID of the server discovery site bound to the project's ServerDiscovery solution. Populated only when creating a new project (create-project mode)."
+  value       = local.create_new_project && length(azapi_resource.discovery_server_site) > 0 ? azapi_resource.discovery_server_site[0].id : null
+}
+
 output "location_output" {
   description = "Azure region where resources are deployed"
   value       = local.effective_location
@@ -49,19 +55,14 @@ output "machine_id" {
   value       = var.machine_id
 }
 
-output "migrate_project_id" {
-  description = "The resource ID of the Azure Migrate project (created or existing)"
-  value       = local.migrate_project_id
-}
-
 output "master_site_id" {
   description = "ARM ID of the Azure Migrate master site that appliances register their per-appliance site under. Populated only when creating a new project (create-project mode)."
   value       = local.create_new_project && length(azapi_resource.master_site) > 0 ? azapi_resource.master_site[0].id : null
 }
 
-output "discovery_server_site_id" {
-  description = "ARM ID of the server discovery site bound to the project's ServerDiscovery solution. Populated only when creating a new project (create-project mode)."
-  value       = local.create_new_project && length(azapi_resource.discovery_server_site) > 0 ? azapi_resource.discovery_server_site[0].id : null
+output "migrate_project_id" {
+  description = "The resource ID of the Azure Migrate project (created or existing)"
+  value       = local.migrate_project_id
 }
 
 output "migration_operation_details" {

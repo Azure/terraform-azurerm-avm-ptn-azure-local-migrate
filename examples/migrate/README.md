@@ -24,7 +24,8 @@ provider "azapi" {}
 
 # Perform planned failover (migration) of a protected VM
 module "migrate_vm" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name               = "vm-migration"
   parent_id          = var.parent_id
@@ -63,14 +64,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_target_object_id"></a> [target\_object\_id](#input\_target\_object\_id)
-
-Description: The full resource ID of the target object (replicated VM) to migrate
-
-Type: `string`
-
-Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50236aa8-35fb-7f53-50a1-0da9f0930c4f"`
-
 ### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
 
 Description: Whether to shutdown the source VM before migration (recommended for production migrations)
@@ -95,6 +88,14 @@ Default:
 }
 ```
 
+### <a name="input_target_object_id"></a> [target\_object\_id](#input\_target\_object\_id)
+
+Description: The full resource ID of the target object (replicated VM) to migrate
+
+Type: `string`
+
+Default: `"/subscriptions/265ca7e5-909a-455d-9459-7c7041c1c37d/resourceGroups/saif-project-021826-rg/providers/Microsoft.DataReplication/replicationVaults/saif-project-08648replicationvault/protectedItems/100-69-177-104-f1c605c7-d8ee-48df-a65a-9d3c1c60bc20_50236aa8-35fb-7f53-50a1-0da9f0930c4f"`
+
 ## Outputs
 
 The following outputs are exported:
@@ -117,9 +118,9 @@ The following Modules are called:
 
 ### <a name="module_migrate_vm"></a> [migrate\_vm](#module\_migrate\_vm)
 
-Source: ../../
+Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version:
+Version: 0.1.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

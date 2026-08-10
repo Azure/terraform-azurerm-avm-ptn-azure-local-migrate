@@ -24,7 +24,8 @@ provider "azapi" {}
 
 # Get protected item details
 module "get_protected_item" {
-  source = "../../"
+  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
+  version = "0.1.2"
 
   name              = "get-protected-item"
   parent_id         = var.parent_id
@@ -130,9 +131,9 @@ The following Modules are called:
 
 ### <a name="module_get_protected_item"></a> [get\_protected\_item](#module\_get\_protected\_item)
 
-Source: ../../
+Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version:
+Version: 0.1.2
 
 ## Usage
 

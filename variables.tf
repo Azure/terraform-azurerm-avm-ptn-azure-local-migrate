@@ -2,11 +2,6 @@
 # MIGRATION-SPECIFIC VARIABLES
 # ========================================
 
-variable "location" {
-  type        = string
-  default     = null
-  description = "Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet)."
-}
 
 # tflint-ignore: terraform_unused_declarations
 variable "name" {
@@ -152,6 +147,12 @@ variable "job_name" {
   type        = string
   default     = null
   description = "Specific job name to retrieve. If not provided, all jobs will be listed."
+}
+
+variable "location" {
+  type        = string
+  default     = null
+  description = "Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet)."
 }
 
 variable "lock" {
