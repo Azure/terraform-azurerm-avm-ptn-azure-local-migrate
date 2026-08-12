@@ -34,7 +34,7 @@ provider "azapi" {}
 # Skip this step if infrastructure already exists by setting skip_initialize = true.
 module "initialize" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
   count   = var.skip_initialize ? 0 : 1
 
   name                  = "e2e-initialize"
@@ -67,7 +67,7 @@ locals {
 # This creates a protected item in the replication vault per VM.
 module "replicate_vm" {
   source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  version  = "0.1.3"
   for_each = var.vms
 
   name                     = "e2e-replicate-${each.key}"
@@ -170,7 +170,7 @@ resource "terraform_data" "wait_for_replication" {
 # After replication is created, check the current status per VM.
 module "check_status" {
   source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  version  = "0.1.3"
   for_each = var.vms
 
   name              = "e2e-check-status-${each.key}"
@@ -190,7 +190,7 @@ module "check_status" {
 # is confirmed complete.
 module "migrate_vm" {
   source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  version  = "0.1.3"
   for_each = var.vms
 
   name               = "e2e-migrate-${each.key}"
