@@ -51,5 +51,5 @@ avm.tflint_module.merged.hcl
 # conftest policy
 examples/*/policy
 *.mptfbackup
-.avm
 .agents
+.avm/managed-files.json
