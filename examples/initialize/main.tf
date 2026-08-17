@@ -13,7 +13,7 @@ provider "azapi" {}
 
 module "initialize_replication" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   name                  = "local-migration-init"
   operation_mode        = "initialize"

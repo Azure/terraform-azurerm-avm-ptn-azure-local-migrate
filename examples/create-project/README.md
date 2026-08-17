@@ -47,7 +47,7 @@ provider "azapi" {}
 # Create a new Azure Migrate project
 module "create_migrate_project" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   location               = var.location
   name                   = "create-project"
@@ -154,7 +154,7 @@ The following Modules are called:
 
 Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version: 0.1.2
+Version: 0.1.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
