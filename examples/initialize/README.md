@@ -57,8 +57,8 @@ module "initialize_replication" {
   version = "0.1.2"
 
   name                  = "local-migration-init"
-  operation_mode        = "initialize"
   parent_id             = var.parent_id
+  operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
   target_appliance_name = var.target_appliance_name

@@ -86,25 +86,23 @@ module "replicate_vm" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
   version = "0.1.2"
 
-  name           = "vm-replication"
-  operation_mode = "replicate"
-  parent_id      = var.parent_id
-  project_name   = var.project_name
-
+  name      = "vm-replication"
+  parent_id = var.parent_id
+  # Azure Local placement
+  custom_location_id = var.custom_location_id
   # PowerShell-equivalent required parameters
   # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
   machine_id               = var.machine_id
+  operation_mode           = "replicate"
   os_disk_id               = var.os_disk_id
+  project_name             = var.project_name
   source_appliance_name    = var.source_appliance_name
   target_appliance_name    = var.target_appliance_name
+  target_hci_cluster_id    = var.target_hci_cluster_id
   target_resource_group_id = var.target_resource_group_id
   target_storage_path_id   = var.target_storage_path_id
   target_virtual_switch_id = var.target_virtual_switch_id
   target_vm_name           = var.target_vm_name
-
-  # Azure Local placement
-  custom_location_id    = var.custom_location_id
-  target_hci_cluster_id = var.target_hci_cluster_id
 }
 ```
 

@@ -27,9 +27,3 @@ module "get_protected_item" {
   protected_item_id = var.protected_item_id
   tags              = var.tags
 }
-
-
-
-
-
-

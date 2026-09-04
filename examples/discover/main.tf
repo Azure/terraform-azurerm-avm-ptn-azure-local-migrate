@@ -22,5 +22,3 @@ module "discover_vms" {
   project_name   = var.project_name
   tags           = var.tags
 }
-
-
