@@ -36,7 +36,6 @@ module "replication_jobs" {
   replication_vault_id = var.replication_vault_id
   tags                 = var.tags
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->

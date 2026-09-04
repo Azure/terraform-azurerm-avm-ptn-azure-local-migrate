@@ -34,7 +34,6 @@ module "list_protected_items" {
   project_name = var.project_name
   tags         = var.tags
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
