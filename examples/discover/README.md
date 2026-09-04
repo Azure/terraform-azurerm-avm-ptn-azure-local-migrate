@@ -21,7 +21,7 @@ provider "azapi" {}
 # Test Discovery
 module "discover_vms" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   name           = "migrate-discover"
   parent_id      = var.parent_id
@@ -102,7 +102,7 @@ The following Modules are called:
 
 Source: Azure/avm-ptn-azure-local-migrate/azurerm
 
-Version: 0.1.2
+Version: 0.1.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
