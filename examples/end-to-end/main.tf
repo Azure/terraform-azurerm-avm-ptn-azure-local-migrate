@@ -39,6 +39,7 @@ module "initialize" {
 
   name                  = "e2e-initialize"
   parent_id             = var.parent_id
+  enable_telemetry      = false
   operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
@@ -74,6 +75,7 @@ module "replicate_vm" {
   parent_id                = var.parent_id
   custom_location_id       = var.custom_location_id
   disks_to_include         = each.value.disks_to_include
+  enable_telemetry         = false
   machine_id               = each.value.machine_id
   nics_to_include          = each.value.nics_to_include
   operation_mode           = "replicate"
@@ -176,6 +178,7 @@ module "check_status" {
 
   name              = "e2e-check-status-${each.key}"
   parent_id         = var.parent_id
+  enable_telemetry  = false
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
@@ -196,6 +199,7 @@ module "migrate_vm" {
 
   name               = "e2e-migrate-${each.key}"
   parent_id          = var.parent_id
+  enable_telemetry   = false
   operation_mode     = "migrate"
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm

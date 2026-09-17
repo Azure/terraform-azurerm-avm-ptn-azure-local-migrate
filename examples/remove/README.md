@@ -54,6 +54,7 @@ module "remove_replication" {
 
   name             = "remove-replication"
   parent_id        = var.parent_id
+  enable_telemetry = false
   force_remove     = var.force_remove
   operation_mode   = "remove"
   tags             = var.tags

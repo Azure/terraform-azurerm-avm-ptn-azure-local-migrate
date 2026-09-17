@@ -20,9 +20,10 @@ module "list_protected_items" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
   version = "0.1.2"
 
-  name           = "list-protected-items"
-  parent_id      = var.parent_id
-  operation_mode = "list"
+  name             = "list-protected-items"
+  parent_id        = var.parent_id
+  enable_telemetry = false
+  operation_mode   = "list"
   # List by project name (vault auto-discovered)
   project_name = var.project_name
   tags         = var.tags

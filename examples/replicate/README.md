@@ -90,6 +90,7 @@ module "replicate_vm" {
   parent_id = var.parent_id
   # Azure Local placement
   custom_location_id = var.custom_location_id
+  enable_telemetry   = false
   # PowerShell-equivalent required parameters
   # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
   machine_id               = var.machine_id
