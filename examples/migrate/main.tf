@@ -22,6 +22,7 @@ module "migrate_vm" {
 
   name               = "vm-migration"
   parent_id          = var.parent_id
+  enable_telemetry   = false
   operation_mode     = "migrate"
   protected_item_id  = var.target_object_id
   shutdown_source_vm = var.shutdown_source_vm

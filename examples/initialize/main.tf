@@ -17,6 +17,7 @@ module "initialize_replication" {
 
   name                  = "local-migration-init"
   parent_id             = var.parent_id
+  enable_telemetry      = false
   operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name

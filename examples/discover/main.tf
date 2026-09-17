@@ -16,9 +16,10 @@ module "discover_vms" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
   version = "0.1.2"
 
-  name           = "migrate-discover"
-  parent_id      = var.parent_id
-  operation_mode = "discover"
-  project_name   = var.project_name
-  tags           = var.tags
+  name             = "migrate-discover"
+  parent_id        = var.parent_id
+  enable_telemetry = false
+  operation_mode   = "discover"
+  project_name     = var.project_name
+  tags             = var.tags
 }
