@@ -29,7 +29,7 @@ module "migrate_vm" {
 
   name               = "vm-migration"
   parent_id          = var.parent_id
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   operation_mode     = "migrate"
   protected_item_id  = var.target_object_id
   shutdown_source_vm = var.shutdown_source_vm
@@ -64,6 +64,16 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
 

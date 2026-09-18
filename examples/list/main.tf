@@ -22,7 +22,7 @@ module "list_protected_items" {
 
   name             = "list-protected-items"
   parent_id        = var.parent_id
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   operation_mode   = "list"
   # List by project name (vault auto-discovered)
   project_name = var.project_name
