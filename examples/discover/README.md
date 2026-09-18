@@ -25,7 +25,7 @@ module "discover_vms" {
 
   name             = "migrate-discover"
   parent_id        = var.parent_id
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   operation_mode   = "discover"
   project_name     = var.project_name
   tags             = var.tags
@@ -59,6 +59,16 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 

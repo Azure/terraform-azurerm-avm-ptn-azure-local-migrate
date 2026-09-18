@@ -54,7 +54,7 @@ module "remove_replication" {
 
   name             = "remove-replication"
   parent_id        = var.parent_id
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   force_remove     = var.force_remove
   operation_mode   = "remove"
   tags             = var.tags
@@ -83,6 +83,16 @@ No required inputs.
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_force_remove"></a> [force\_remove](#input\_force\_remove)
 

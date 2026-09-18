@@ -22,7 +22,7 @@ module "replication_jobs" {
 
   name             = "replication-jobs"
   parent_id        = var.parent_id
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   operation_mode   = "jobs"
   project_name     = var.project_name
   # Optional: pass an explicit vault ID. When omitted, the vault is

@@ -24,7 +24,7 @@ module "create_migrate_project" {
   parent_id              = var.parent_id
   connectivity_method    = var.connectivity_method
   create_migrate_project = true # Set to true to create new project
-  enable_telemetry       = false
+  enable_telemetry       = var.enable_telemetry
   location               = var.location
   operation_mode         = "create-project"
   project_name           = var.project_name
