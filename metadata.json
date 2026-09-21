@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
   "moduleDisplayName": "Azure Local Azure Migrate Project",
-  "moduleDescription": "Intended AVM Terraform pattern module for Azure Local Azure Migrate Project.",
+  "moduleDescription": "AVM Terraform pattern module for Azure Local Azure Migrate Project.",
   "canonicalType": "azure-local-migrate",
   "owners": [],
   "telemetryIdPrefix": "46d3xtrf.ptn.c2d28ad"
