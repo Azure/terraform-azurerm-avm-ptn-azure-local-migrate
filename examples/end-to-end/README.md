@@ -333,7 +333,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
