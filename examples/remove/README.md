@@ -92,7 +92,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_force_remove"></a> [force\_remove](#input\_force\_remove)
 
