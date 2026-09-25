@@ -3,6 +3,6 @@
   "moduleDisplayName": "Azure Local Azure Migrate Project",
   "moduleDescription": "AVM Terraform pattern module for Azure Local Azure Migrate Project.",
   "canonicalType": "azure-local-migrate",
-  "owners": [],
+  "owners": ["saifaldin14"],
   "telemetryIdPrefix": "46d3xtrf.ptn.c2d28ad"
 }
