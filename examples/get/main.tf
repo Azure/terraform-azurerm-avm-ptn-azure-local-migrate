@@ -18,7 +18,7 @@ provider "azapi" {}
 # Get protected item details
 module "get_protected_item" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   name              = "get-protected-item"
   parent_id         = var.parent_id
