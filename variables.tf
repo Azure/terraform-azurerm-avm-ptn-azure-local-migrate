@@ -5,7 +5,7 @@
 
 variable "location" {
   type        = string
-  description = "The Azure region for the module's resources and telemetry. Use the existing Azure Migrate project's region or a supported region when creating a project."
+  description = "The Azure region for the module's resources and telemetry. Required for every module call and not inferred from the existing Azure Migrate project."
   nullable    = false
 }
 

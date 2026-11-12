@@ -83,7 +83,7 @@ The following input variables are required:
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: The Azure region for the module's resources and telemetry. Use the existing Azure Migrate project's region or a supported region when creating a project.
+Description: The Azure region for the module's resources and telemetry. Required for every module call and not inferred from the existing Azure Migrate project.
 
 Type: `string`
 
