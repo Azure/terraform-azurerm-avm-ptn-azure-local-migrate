@@ -24,13 +24,6 @@ resource "azapi_resource" "migrate_project" {
   identity {
     type = "SystemAssigned"
   }
-
-  lifecycle {
-    precondition {
-      condition     = var.location != null
-      error_message = "`var.location` is required when `create_migrate_project = true`. There is no existing project to discover the region from — supply the target Azure region explicitly."
-    }
-  }
 }
 
 # Solution 1: Servers-Assessment-ServerAssessment (Active)

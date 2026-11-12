@@ -59,6 +59,7 @@ module "initialize_replication" {
   name                  = "local-migration-init"
   parent_id             = var.parent_id
   enable_telemetry      = var.enable_telemetry
+  location              = var.location
   operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
@@ -121,6 +122,14 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ## Outputs
 

@@ -91,6 +91,7 @@ module "replicate_vm" {
   # Azure Local placement
   custom_location_id = var.custom_location_id
   enable_telemetry   = var.enable_telemetry
+  location           = var.location
   # PowerShell-equivalent required parameters
   # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
   machine_id               = var.machine_id
@@ -210,6 +211,14 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ## Outputs
 

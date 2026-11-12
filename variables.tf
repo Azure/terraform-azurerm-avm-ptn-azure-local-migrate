@@ -3,6 +3,12 @@
 # ========================================
 
 
+variable "location" {
+  type        = string
+  description = "The Azure region for the module's resources and telemetry. Use the existing Azure Migrate project's region or a supported region when creating a project."
+  nullable    = false
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "name" {
   type        = string
@@ -147,12 +153,6 @@ variable "job_name" {
   type        = string
   default     = null
   description = "Specific job name to retrieve. If not provided, all jobs will be listed."
-}
-
-variable "location" {
-  type        = string
-  default     = null
-  description = "Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet)."
 }
 
 variable "lock" {

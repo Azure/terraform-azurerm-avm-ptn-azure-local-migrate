@@ -24,6 +24,7 @@ module "remove_replication" {
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
   force_remove     = var.force_remove
+  location         = var.location
   operation_mode   = "remove"
   tags             = var.tags
   target_object_id = var.target_object_id

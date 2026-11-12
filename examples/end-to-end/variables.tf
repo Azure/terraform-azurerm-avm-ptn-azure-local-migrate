@@ -2,6 +2,37 @@
 # COMMON INPUTS
 # ========================================
 
+
+# ========================================
+# INITIALIZE (STEP 0)
+# ========================================
+
+
+# ========================================
+# REPLICATE (STEP 1)
+# ========================================
+
+
+# ========================================
+# MIGRATE (STEP 3)
+# ========================================
+
+
+# ========================================
+# VMs TO REPLICATE
+# ========================================
+
+
+# ========================================
+# TAGS
+# ========================================
+
+
+variable "custom_location_id" {
+  type        = string
+  description = "Arc custom location ARM ID for the Azure Local cluster."
+}
+
 variable "parent_id" {
   type        = string
   description = "Resource ID of the resource group containing the Azure Migrate project. Format: /subscriptions/{sub}/resourceGroups/{rg}"
@@ -12,6 +43,11 @@ variable "project_name" {
   description = "The name of the Azure Migrate project."
 }
 
+variable "run_as_account_id" {
+  type        = string
+  description = "Run-as account ARM ID (from vCenter for VMware sources)."
+}
+
 variable "source_appliance_name" {
   type        = string
   description = "The name of the source appliance."
@@ -20,36 +56,6 @@ variable "source_appliance_name" {
 variable "target_appliance_name" {
   type        = string
   description = "The name of the target appliance."
-}
-
-# ========================================
-# INITIALIZE (STEP 0)
-# ========================================
-
-variable "skip_initialize" {
-  type        = bool
-  default     = true
-  description = "Skip the initialize step when the replication vault/policy/extension already exist."
-}
-
-variable "replication_vault_id" {
-  type        = string
-  default     = null
-  description = "Replication vault ID. Required when `skip_initialize = true`. When omitted, it is auto-discovered from the migrate project."
-}
-
-# ========================================
-# REPLICATE (STEP 1)
-# ========================================
-
-variable "custom_location_id" {
-  type        = string
-  description = "Arc custom location ARM ID for the Azure Local cluster."
-}
-
-variable "run_as_account_id" {
-  type        = string
-  description = "Run-as account ARM ID (from vCenter for VMware sources)."
 }
 
 variable "target_hci_cluster_id" {
@@ -71,20 +77,6 @@ variable "target_virtual_switch_id" {
   type        = string
   description = "Target logical network / virtual switch ARM ID."
 }
-
-# ========================================
-# MIGRATE (STEP 3)
-# ========================================
-
-variable "shutdown_source_vm" {
-  type        = bool
-  default     = true
-  description = "Whether to shut the source VM down before planned failover."
-}
-
-# ========================================
-# VMs TO REPLICATE
-# ========================================
 
 variable "vms" {
   type = map(object({
@@ -108,16 +100,6 @@ variable "vms" {
   description = "Map of VMs to replicate. Each key is a friendly name used in module addressing."
 }
 
-# ========================================
-# TAGS
-# ========================================
-
-variable "tags" {
-  type        = map(string)
-  default     = null
-  description = "Tags to apply to managed resources."
-}
-
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -126,4 +108,35 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+}
+
+variable "location" {
+  type        = string
+  default     = "eastus"
+  description = "The Azure region for this module's resources or telemetry deployment."
+  nullable    = false
+}
+
+variable "replication_vault_id" {
+  type        = string
+  default     = null
+  description = "Replication vault ID. Required when `skip_initialize = true`. When omitted, it is auto-discovered from the migrate project."
+}
+
+variable "shutdown_source_vm" {
+  type        = bool
+  default     = true
+  description = "Whether to shut the source VM down before planned failover."
+}
+
+variable "skip_initialize" {
+  type        = bool
+  default     = true
+  description = "Skip the initialize step when the replication vault/policy/extension already exist."
+}
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "Tags to apply to managed resources."
 }

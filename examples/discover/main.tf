@@ -19,6 +19,7 @@ module "discover_vms" {
   name             = "migrate-discover"
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   operation_mode   = "discover"
   project_name     = var.project_name
   tags             = var.tags

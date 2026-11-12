@@ -34,10 +34,12 @@ mock_provider "azapi" {
       output    = "{}"
     }
   }
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
 }
-
-mock_provider "modtm" {}
-mock_provider "random" {}
 
 # ========================================
 # DEFAULT VARIABLES FOR ALL TESTS
@@ -728,12 +730,12 @@ run "diagnostic_settings_require_vault" {
 }
 
 # ========================================
-# LOCATION AUTO-DISCOVERY TESTS
+# LOCATION INPUT TESTS
 # ========================================
 
-# Caller-supplied `var.location` always wins, even when the existing project
-# advertises a different region. This preserves the explicit-override contract.
-run "location_explicit_var_wins_over_project" {
+# The required input determines the resource region even if the existing
+# project advertises a different region.
+run "location_input_is_used_for_existing_project" {
   command = plan
 
   override_data {
@@ -746,54 +748,14 @@ run "location_explicit_var_wins_over_project" {
 
   variables {
     operation_mode = "discover"
-    location       = "eastus"
+    location       = "centralus"
     project_name   = "test-project"
   }
 
   assert {
-    condition     = local.effective_location == "eastus"
-    error_message = "Caller-supplied var.location must take precedence over the discovered project location"
+    condition     = local.effective_location == "centralus"
+    error_message = "The required var.location must determine the resource region"
   }
-}
-
-# When `var.location` is omitted, the module reads the region from the existing
-# migrate project (PowerShell-equivalent behaviour).
-run "location_auto_discovered_from_project" {
-  command = plan
-
-  override_data {
-    target = data.azapi_resource.migrate_project_existing[0]
-    values = {
-      id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateprojects/test-project"
-      location = "westeurope"
-    }
-  }
-
-  variables {
-    operation_mode = "discover"
-    location       = null
-    project_name   = "test-project"
-  }
-
-  assert {
-    condition     = local.effective_location == "westeurope"
-    error_message = "effective_location must auto-discover from the migrate project when var.location is null"
-  }
-}
-
-# Creating a new migrate project has no existing project to discover from,
-# so the precondition must fail when var.location is omitted.
-run "location_required_when_creating_project" {
-  command = plan
-
-  variables {
-    operation_mode         = "create-project"
-    location               = null
-    project_name           = "new-project"
-    create_migrate_project = true
-  }
-
-  expect_failures = [azapi_resource.migrate_project]
 }
 
 # ========================================
@@ -1083,4 +1045,3 @@ run "migrate_precondition_accepts_restart_state" {
     error_message = "protected_item_is_migratable must be true when allowedJobs contains 'Restart' (CLI parity)"
   }
 }
-

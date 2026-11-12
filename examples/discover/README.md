@@ -26,6 +26,7 @@ module "discover_vms" {
   name             = "migrate-discover"
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
+  location         = var.location
   operation_mode   = "discover"
   project_name     = var.project_name
   tags             = var.tags
@@ -69,6 +70,14 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 

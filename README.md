@@ -6,6 +6,10 @@
 
 This Terraform module provides infrastructure as code (IaC) capabilities for Azure Migrate, enabling automated discovery, replication, and migration of virtual machines to Azure Stack HCI.
 
+## Required location
+
+The `location` input is required for every operation. Set it to the existing Azure Migrate project's region, or choose a supported region when creating a project. Configurations that previously omitted `location` and relied on project-location discovery must provide it when upgrading.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -14,10 +18,6 @@ The following requirements are needed by this module:
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Resources
 
@@ -43,14 +43,14 @@ The following resources are used by this module:
 - [azapi_resource.source_dra_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.target_dra_storage_blob_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.target_dra_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vault_storage_blob_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vault_storage_contributor](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.planned_failover_hyperv](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.planned_failover_vmware](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.remove_replication](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.update_solution_storage](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
-- [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [terraform_data.telemetry](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_resource.custom_location](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.machine_parent_for_run_as](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
@@ -75,12 +75,17 @@ The following resources are used by this module:
 - [azapi_resource_list.replication_jobs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.source_fabric_agents](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.target_fabric_agents](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
-- [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
 The following input variables are required:
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for the module's resources and telemetry. Use the existing Azure Migrate project's region or a supported region when creating a project.
+
+Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
@@ -217,14 +222,6 @@ Default: `false`
 ### <a name="input_job_name"></a> [job\_name](#input\_job\_name)
 
 Description: Specific job name to retrieve. If not provided, all jobs will be listed.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region for managed resources. Optional in most modes — when omitted, the module reads it from the existing Azure Migrate project. Required only when `create_migrate_project = true` (there is no project to read from yet).
 
 Type: `string`
 
