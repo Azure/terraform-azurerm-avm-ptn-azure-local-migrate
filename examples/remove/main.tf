@@ -18,7 +18,7 @@ provider "azapi" {}
 # Remove replication for a protected item
 module "remove_replication" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   name             = "remove-replication"
   parent_id        = var.parent_id

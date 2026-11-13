@@ -18,7 +18,7 @@ provider "azapi" {}
 # Perform planned failover (migration) of a protected VM
 module "migrate_vm" {
   source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  version = "0.1.3"
 
   name               = "vm-migration"
   parent_id          = var.parent_id
