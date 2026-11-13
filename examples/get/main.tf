@@ -23,6 +23,7 @@ module "get_protected_item" {
   name              = "get-protected-item"
   parent_id         = var.parent_id
   enable_telemetry  = var.enable_telemetry
+  location          = var.location
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = var.protected_item_id

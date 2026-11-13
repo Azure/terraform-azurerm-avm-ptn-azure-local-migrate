@@ -30,6 +30,7 @@ module "migrate_vm" {
   name               = "vm-migration"
   parent_id          = var.parent_id
   enable_telemetry   = var.enable_telemetry
+  location           = var.location
   operation_mode     = "migrate"
   protected_item_id  = var.target_object_id
   shutdown_source_vm = var.shutdown_source_vm
@@ -74,6 +75,14 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_shutdown_source_vm"></a> [shutdown\_source\_vm](#input\_shutdown\_source\_vm)
 

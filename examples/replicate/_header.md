@@ -1,6 +1,6 @@
 # Replicate Example
 
-Mirrors `New-AzMigrateLocalServerReplication` (Option 1, "ByIdDefaultUser"). This is the **happy-path, bare-bones** wiring: only the PowerShell-equivalent required inputs are passed. Replication policy, replication extension, fabric agents, instance type, and source/target fabric IDs are all auto-resolved by the module.
+Mirrors `New-AzMigrateLocalServerReplication` (Option 1, "ByIdDefaultUser"). This is the **happy-path, bare-bones** wiring: it passes the PowerShell-equivalent inputs and the AVM-required `location`. Replication policy, replication extension, fabric agents, instance type, and source/target fabric IDs are all auto-resolved by the module.
 
 ## Prerequisites
 
@@ -15,6 +15,7 @@ module "replicate_vm" {
   name           = "vm-replication"
   operation_mode = "replicate"
   parent_id      = "/subscriptions/<sub>/resourceGroups/<rg>"
+  location       = "eastus"
   project_name   = "<migrate-project>"
 
   machine_id               = "/subscriptions/.../machines/<vm-id>"
@@ -33,12 +34,11 @@ module "replicate_vm" {
 
 ## Optional inputs (not shown in this example)
 
-These root-module variables are not required for the happy path. Set them
-only when you need to deviate from defaults.
+The following module inputs are optional. `location` is required explicitly,
+even when it matches the existing migrate project's region.
 
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
-| `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable |
 | `target_vm_compute` | `-TargetVMCPUCore`, `-TargetVMRam`, `-IsDynamicMemoryEnabled` | `{ cpu_cores = 2, ram_mb = 4096, is_dynamic_memory_enabled = false }` | Right-size the target VM |
 | `run_as_account_id` | `-RunAsAccountID` | `null` | Appliance needs an explicit run-as account |
 | `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |

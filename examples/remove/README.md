@@ -56,6 +56,7 @@ module "remove_replication" {
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
   force_remove     = var.force_remove
+  location         = var.location
   operation_mode   = "remove"
   tags             = var.tags
   target_object_id = var.target_object_id
@@ -101,6 +102,14 @@ Description: Specifies whether the replication needs to be force removed. Use wi
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 

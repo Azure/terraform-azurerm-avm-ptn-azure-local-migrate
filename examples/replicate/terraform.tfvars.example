@@ -1,4 +1,5 @@
 parent_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<rg>"
+location                 = "eastus"
 project_name             = "<migrate-project-name>"
 machine_id               = "/subscriptions/.../providers/Microsoft.OffAzure/.../machines/<vm-id>"
 os_disk_id               = "scsi0:0"
