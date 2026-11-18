@@ -6,7 +6,7 @@ This example demonstrates how to discover machines in an Azure Migrate project u
 
 ```hcl
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -20,13 +20,12 @@ provider "azapi" {}
 
 # Test Discovery
 module "discover_vms" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location         = var.location
   name             = "migrate-discover"
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
-  location         = var.location
   operation_mode   = "discover"
   project_name     = var.project_name
   tags             = var.tags
@@ -38,7 +37,7 @@ module "discover_vms" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -120,9 +119,9 @@ The following Modules are called:
 
 ### <a name="module_discover_vms"></a> [discover\_vms](#module\_discover\_vms)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.2
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

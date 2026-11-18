@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -12,13 +12,12 @@ terraform {
 provider "azapi" {}
 
 module "initialize_replication" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location              = var.location
   name                  = "local-migration-init"
   parent_id             = var.parent_id
   enable_telemetry      = var.enable_telemetry
-  location              = var.location
   operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name

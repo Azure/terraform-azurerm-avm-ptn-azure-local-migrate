@@ -10,7 +10,7 @@ This example demonstrates how to retrieve replication job information using the 
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -24,13 +24,12 @@ provider "azapi" {}
 
 # Get replication jobs
 module "replication_jobs" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location         = var.location
   name             = "replication-jobs"
   parent_id        = var.parent_id
   enable_telemetry = var.enable_telemetry
-  location         = var.location
   operation_mode   = "jobs"
   project_name     = var.project_name
   # Optional: pass an explicit vault ID. When omitted, the vault is
@@ -45,7 +44,7 @@ module "replication_jobs" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -139,9 +138,9 @@ The following Modules are called:
 
 ### <a name="module_replication_jobs"></a> [replication\_jobs](#module\_replication\_jobs)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.2
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

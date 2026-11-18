@@ -10,7 +10,7 @@ This example demonstrates how to perform a planned failover (migration) of a rep
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -24,13 +24,12 @@ provider "azapi" {}
 
 # Perform planned failover (migration) of a protected VM
 module "migrate_vm" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location           = var.location
   name               = "vm-migration"
   parent_id          = var.parent_id
   enable_telemetry   = var.enable_telemetry
-  location           = var.location
   operation_mode     = "migrate"
   protected_item_id  = var.target_object_id
   shutdown_source_vm = var.shutdown_source_vm
@@ -43,7 +42,7 @@ module "migrate_vm" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -138,9 +137,9 @@ The following Modules are called:
 
 ### <a name="module_migrate_vm"></a> [migrate\_vm](#module\_migrate\_vm)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.2
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

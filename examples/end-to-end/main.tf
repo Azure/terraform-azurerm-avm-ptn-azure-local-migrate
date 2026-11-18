@@ -15,7 +15,7 @@
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -33,14 +33,13 @@ provider "azapi" {}
 # Sets up the replication vault, policy, and extension.
 # Skip this step if infrastructure already exists by setting skip_initialize = true.
 module "initialize" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
-  count   = var.skip_initialize ? 0 : 1
+  source = "../../"
+  count  = var.skip_initialize ? 0 : 1
 
+  location              = var.location
   name                  = "e2e-initialize"
   parent_id             = var.parent_id
   enable_telemetry      = var.enable_telemetry
-  location              = var.location
   operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
@@ -68,16 +67,15 @@ locals {
 # Start replication of each source VM to Azure Stack HCI.
 # This creates a protected item in the replication vault per VM.
 module "replicate_vm" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  source   = "../../"
   for_each = var.vms
 
+  location                 = var.location
   name                     = "e2e-replicate-${each.key}"
   parent_id                = var.parent_id
   custom_location_id       = var.custom_location_id
   disks_to_include         = each.value.disks_to_include
   enable_telemetry         = var.enable_telemetry
-  location                 = var.location
   machine_id               = each.value.machine_id
   nics_to_include          = each.value.nics_to_include
   operation_mode           = "replicate"
@@ -174,14 +172,13 @@ resource "terraform_data" "wait_for_replication" {
 # ========================================
 # After replication is created, check the current status per VM.
 module "check_status" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  source   = "../../"
   for_each = var.vms
 
+  location          = var.location
   name              = "e2e-check-status-${each.key}"
   parent_id         = var.parent_id
   enable_telemetry  = var.enable_telemetry
-  location          = var.location
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
@@ -196,14 +193,13 @@ module "check_status" {
 # Automatically performs planned failover for each VM after replication
 # is confirmed complete.
 module "migrate_vm" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.2"
+  source   = "../../"
   for_each = var.vms
 
+  location           = var.location
   name               = "e2e-migrate-${each.key}"
   parent_id          = var.parent_id
   enable_telemetry   = var.enable_telemetry
-  location           = var.location
   operation_mode     = "migrate"
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm

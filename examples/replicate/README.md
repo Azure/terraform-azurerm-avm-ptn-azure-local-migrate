@@ -70,7 +70,7 @@ See the [user guide](../../docs/user-guide.md) for the full variable reference.
 
 ```hcl
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -83,15 +83,14 @@ terraform {
 provider "azapi" {}
 
 module "replicate_vm" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location  = var.location
   name      = "vm-replication"
   parent_id = var.parent_id
   # Azure Local placement
   custom_location_id = var.custom_location_id
   enable_telemetry   = var.enable_telemetry
-  location           = var.location
   # PowerShell-equivalent required parameters
   # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
   machine_id               = var.machine_id
@@ -113,7 +112,7 @@ module "replicate_vm" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -242,9 +241,9 @@ The following Modules are called:
 
 ### <a name="module_replicate_vm"></a> [replicate\_vm](#module\_replicate\_vm)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.2
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

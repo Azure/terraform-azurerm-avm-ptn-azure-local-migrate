@@ -10,7 +10,7 @@ This example demonstrates retrieving details about a protected item (replicated 
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -24,13 +24,12 @@ provider "azapi" {}
 
 # Get protected item details
 module "get_protected_item" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.2"
+  source = "../../"
 
+  location          = var.location
   name              = "get-protected-item"
   parent_id         = var.parent_id
   enable_telemetry  = var.enable_telemetry
-  location          = var.location
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = var.protected_item_id
@@ -43,7 +42,7 @@ module "get_protected_item" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -145,9 +144,9 @@ The following Modules are called:
 
 ### <a name="module_get_protected_item"></a> [get\_protected\_item](#module\_get\_protected\_item)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.2
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
