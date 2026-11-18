@@ -20,7 +20,7 @@
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -38,17 +38,18 @@ provider "azapi" {}
 # Sets up the replication vault, policy, and extension.
 # Skip this step if infrastructure already exists by setting skip_initialize = true.
 module "initialize" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
-  count   = var.skip_initialize ? 0 : 1
+  source = "../../"
+  count  = var.skip_initialize ? 0 : 1
 
+  location              = var.location
   name                  = "e2e-initialize"
-  operation_mode        = "initialize"
   parent_id             = var.parent_id
+  enable_telemetry      = var.enable_telemetry
+  operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
-  target_appliance_name = var.target_appliance_name
   tags                  = var.tags
+  target_appliance_name = var.target_appliance_name
 }
 
 # The protected item ID follows a predictable pattern based on the machine_id
@@ -71,17 +72,18 @@ locals {
 # Start replication of each source VM to Azure Stack HCI.
 # This creates a protected item in the replication vault per VM.
 module "replicate_vm" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.3"
+  source   = "../../"
   for_each = var.vms
 
+  location                 = var.location
   name                     = "e2e-replicate-${each.key}"
-  operation_mode           = "replicate"
   parent_id                = var.parent_id
   custom_location_id       = var.custom_location_id
   disks_to_include         = each.value.disks_to_include
+  enable_telemetry         = var.enable_telemetry
   machine_id               = each.value.machine_id
   nics_to_include          = each.value.nics_to_include
+  operation_mode           = "replicate"
   os_disk_id               = each.value.os_disk_id
   project_name             = var.project_name
   run_as_account_id        = var.run_as_account_id
@@ -104,8 +106,7 @@ module "replicate_vm" {
 # finishes. This can take anywhere from minutes to hours depending on VM
 # disk size and network bandwidth.
 resource "terraform_data" "wait_for_replication" {
-  for_each   = var.vms
-  depends_on = [module.replicate_vm]
+  for_each = var.vms
 
   # Re-run the wait whenever the protected item is (re)created
   triggers_replace = module.replicate_vm[each.key].protected_item_id
@@ -167,6 +168,8 @@ resource "terraform_data" "wait_for_replication" {
       exit 1
     EOT
   }
+
+  depends_on = [module.replicate_vm]
 }
 
 # ========================================
@@ -174,13 +177,14 @@ resource "terraform_data" "wait_for_replication" {
 # ========================================
 # After replication is created, check the current status per VM.
 module "check_status" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.3"
+  source   = "../../"
   for_each = var.vms
 
+  location          = var.location
   name              = "e2e-check-status-${each.key}"
-  operation_mode    = "get"
   parent_id         = var.parent_id
+  enable_telemetry  = var.enable_telemetry
+  operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = local.protected_item_ids[each.key]
   tags              = var.tags
@@ -194,13 +198,14 @@ module "check_status" {
 # Automatically performs planned failover for each VM after replication
 # is confirmed complete.
 module "migrate_vm" {
-  source   = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version  = "0.1.3"
+  source   = "../../"
   for_each = var.vms
 
+  location           = var.location
   name               = "e2e-migrate-${each.key}"
-  operation_mode     = "migrate"
   parent_id          = var.parent_id
+  enable_telemetry   = var.enable_telemetry
+  operation_mode     = "migrate"
   protected_item_id  = local.protected_item_ids[each.key]
   shutdown_source_vm = var.shutdown_source_vm
   tags               = var.tags
@@ -214,7 +219,7 @@ module "migrate_vm" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -320,6 +325,24 @@ map(object({
 
 The following input variables are optional (have default values):
 
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
+
 ### <a name="input_replication_vault_id"></a> [replication\_vault\_id](#input\_replication\_vault\_id)
 
 Description: Replication vault ID. Required when `skip_initialize = true`. When omitted, it is auto-discovered from the migrate project.
@@ -390,27 +413,27 @@ The following Modules are called:
 
 ### <a name="module_check_status"></a> [check\_status](#module\_check\_status)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 ### <a name="module_initialize"></a> [initialize](#module\_initialize)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 ### <a name="module_migrate_vm"></a> [migrate\_vm](#module\_migrate\_vm)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 ### <a name="module_replicate_vm"></a> [replicate\_vm](#module\_replicate\_vm)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

@@ -3,7 +3,7 @@
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -17,11 +17,12 @@ provider "azapi" {}
 
 # Remove replication for a protected item
 module "remove_replication" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
+  location         = var.location
   name             = "remove-replication"
   parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
   force_remove     = var.force_remove
   operation_mode   = "remove"
   tags             = var.tags

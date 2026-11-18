@@ -686,12 +686,7 @@ Set `instance_type` to match your source environment. This affects fabric discov
 |---|---|---|
 | `name` | `string` | Name of the migration resource (2-80 chars, alphanumeric + hyphens) |
 | `parent_id` | `string` | Resource group ARM ID (`/subscriptions/{sub}/resourceGroups/{rg}`) |
-
-### Auto-discovered Variables
-
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `location` | `string` | `null` | Azure region. Auto-discovered from the existing migrate project in non-create modes. Required only when `create_migrate_project = true`. |
+| `location` | `string` | Azure region for module-managed resources and telemetry; required for every module call and not inferred from the existing Azure Migrate project. |
 
 ### Operation Control
 

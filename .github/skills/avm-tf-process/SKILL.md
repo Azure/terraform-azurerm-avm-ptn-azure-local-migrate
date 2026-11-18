@@ -23,10 +23,12 @@ Before creating or restructuring a repository, read the current requirements for
 
 ## 2. Establish the managed repository baseline
 
-Start from the current AVM Terraform template or governance-managed repository state. Import `Avm.Authoring` and synchronize managed files:
+Start from the current AVM Terraform template or governance-managed repository state. Follow the [MAR installation prerequisites](https://github.com/Azure/azure-verified-modules-tools#install) to upgrade PSResourceGet and register MAR once; it is not registered by default. Import `Avm.Authoring` and synchronize managed files:
 
 ```pwsh
-Install-PSResource -Name Avm.Authoring -Repository PSGallery -TrustRepository
+Install-PSResource -Name avm.authoring `
+    -Repository MAR `
+    -Scope CurrentUser
 Import-Module Avm.Authoring
 avm version
 avm sync
@@ -35,6 +37,12 @@ avm sync
 Review synchronized changes before continuing. Do not restore files from the retired Make, Porch, or container workflow.
 
 ## 3. Implement from current specifications
+
+Build every new resource-deploying module repository on AzAPI. Do not declare or configure `hashicorp/azurerm`, and do not create any `azurerm_*` resource or data source for control-plane operations, convenience, or ordinary supporting infrastructure in implementation, submodules, examples, E2E configurations, Terraform tests, fixtures, setup or teardown Terraform, migration examples, documentation examples, or generated snippets.
+
+When supporting configuration needs a direct Azure resource that the module under test does not supply, use an AzAPI resource, data source, or action. Each standalone Terraform root that performs direct Azure operations includes `Azure/azapi` in `required_providers`.
+
+Permit `hashicorp/azurerm ~> 4.0` only when required by an independently justified `azurerm_*` resource or data-source block. Each block scopes to one specific unsupported data-plane/non-ARM operation, documents the exact block and why AzAPI cannot implement it with an upstream AzAPI issue or pull request, and is replaced when support ships. Prefer an AVM TFLint override file, but use a justified line-level annotation when it avoids suppressing unrelated findings in the same scope. One valid block does not authorize another. Examples and tests may configure AzureRM only to exercise such blocks. Follow `avm-tf-tflint`.
 
 Fetch `llms.txt`, then read each applicable raw spec page. At minimum, review:
 
@@ -112,7 +120,7 @@ The pull request must explain:
 - compatibility or breaking-change impact;
 - state migration steps when addresses or providers changed;
 - tests and examples exercised; and
-- any narrow AzureRM exception and upstream tracking issue.
+- confirmation that control-plane and supporting resources use AzAPI, plus the evidence and upstream link for any narrow data-plane/non-ARM AzureRM exception.
 
 Review the final diff rather than only the hand-authored files. Managed and generated outputs are part of the change.
 

@@ -5,6 +5,7 @@
 # Resource Group ID where your Azure Migrate project resides
 # Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
 parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+location  = "eastus"
 
 # Required: The protected item ARM ID to remove
 # This is the full resource ID of the protected item in the replication vault
@@ -13,9 +14,6 @@ target_object_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resource
 # Optional: Force removal (use with caution)
 # Set to true to force remove even if the item is in an inconsistent state
 force_remove = false
-
-# Optional: Azure region (defaults to resource group location)
-# location = "eastus"
 
 # Optional: Tags
 tags = {

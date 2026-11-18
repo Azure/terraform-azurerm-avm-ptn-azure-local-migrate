@@ -5,6 +5,7 @@
 # Resource Group ID where your Azure Migrate project resides
 # Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
 parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
+location  = "eastus"
 
 # Protected Item (replicated VM) to migrate - full resource ID
 # Get this from the 'list' or 'get' operation output

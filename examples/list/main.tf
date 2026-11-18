@@ -3,7 +3,7 @@
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -17,14 +17,14 @@ provider "azapi" {}
 
 # List all protected items in the vault
 module "list_protected_items" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
-  name           = "list-protected-items"
-  parent_id      = var.parent_id
-  operation_mode = "list"
+  location         = var.location
+  name             = "list-protected-items"
+  parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
+  operation_mode   = "list"
   # List by project name (vault auto-discovered)
   project_name = var.project_name
   tags         = var.tags
 }
-

@@ -3,7 +3,7 @@
 # Note: The resource group must already exist. Use parent_id to specify it.
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -17,14 +17,14 @@ provider "azapi" {}
 
 # Create a new Azure Migrate project
 module "create_migrate_project" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
   location               = var.location
   name                   = "create-project"
   parent_id              = var.parent_id
   connectivity_method    = var.connectivity_method
   create_migrate_project = true # Set to true to create new project
+  enable_telemetry       = var.enable_telemetry
   operation_mode         = "create-project"
   project_name           = var.project_name
   tags                   = var.tags

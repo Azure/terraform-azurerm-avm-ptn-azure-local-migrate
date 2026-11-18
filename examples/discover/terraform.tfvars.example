@@ -6,6 +6,9 @@
 # Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
 parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-resource-group"
 
+# Azure region for this operation
+location = "eastus"
+
 # Azure Migrate Project name
 project_name = "my-migrate-project"
 

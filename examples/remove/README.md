@@ -35,7 +35,7 @@ The `force_remove` option should be used with caution. It forces the removal eve
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -49,11 +49,12 @@ provider "azapi" {}
 
 # Remove replication for a protected item
 module "remove_replication" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
+  location         = var.location
   name             = "remove-replication"
   parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
   force_remove     = var.force_remove
   operation_mode   = "remove"
   tags             = var.tags
@@ -66,7 +67,7 @@ module "remove_replication" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -83,6 +84,16 @@ No required inputs.
 
 The following input variables are optional (have default values):
 
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_force_remove"></a> [force\_remove](#input\_force\_remove)
 
 Description: Specifies whether the replication needs to be force removed. Use with caution as force removal may leave resources in an inconsistent state.
@@ -90,6 +101,14 @@ Description: Specifies whether the replication needs to be force removed. Use wi
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
@@ -137,9 +156,9 @@ The following Modules are called:
 
 ### <a name="module_remove_replication"></a> [remove\_replication](#module\_remove\_replication)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

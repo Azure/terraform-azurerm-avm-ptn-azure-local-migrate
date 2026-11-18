@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -12,26 +12,25 @@ terraform {
 provider "azapi" {}
 
 module "replicate_vm" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
-  name           = "vm-replication"
-  operation_mode = "replicate"
-  parent_id      = var.parent_id
-  project_name   = var.project_name
-
+  location  = var.location
+  name      = "vm-replication"
+  parent_id = var.parent_id
+  # Azure Local placement
+  custom_location_id = var.custom_location_id
+  enable_telemetry   = var.enable_telemetry
   # PowerShell-equivalent required parameters
   # (New-AzMigrateLocalServerReplication -ByIdDefaultUser)
   machine_id               = var.machine_id
+  operation_mode           = "replicate"
   os_disk_id               = var.os_disk_id
+  project_name             = var.project_name
   source_appliance_name    = var.source_appliance_name
   target_appliance_name    = var.target_appliance_name
+  target_hci_cluster_id    = var.target_hci_cluster_id
   target_resource_group_id = var.target_resource_group_id
   target_storage_path_id   = var.target_storage_path_id
   target_virtual_switch_id = var.target_virtual_switch_id
   target_vm_name           = var.target_vm_name
-
-  # Azure Local placement
-  custom_location_id    = var.custom_location_id
-  target_hci_cluster_id = var.target_hci_cluster_id
 }

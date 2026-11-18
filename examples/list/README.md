@@ -10,7 +10,7 @@ This example demonstrates listing all protected items (replicated VMs) in a vaul
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -24,17 +24,17 @@ provider "azapi" {}
 
 # List all protected items in the vault
 module "list_protected_items" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
-  name           = "list-protected-items"
-  parent_id      = var.parent_id
-  operation_mode = "list"
+  location         = var.location
+  name             = "list-protected-items"
+  parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
+  operation_mode   = "list"
   # List by project name (vault auto-discovered)
   project_name = var.project_name
   tags         = var.tags
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -42,7 +42,7 @@ module "list_protected_items" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -64,6 +64,24 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -134,9 +152,9 @@ The following Modules are called:
 
 ### <a name="module_list_protected_items"></a> [list\_protected\_items](#module\_list\_protected\_items)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

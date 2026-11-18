@@ -10,7 +10,7 @@ This example demonstrates how to retrieve replication job information using the 
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -24,19 +24,19 @@ provider "azapi" {}
 
 # Get replication jobs
 module "replication_jobs" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
-  name           = "replication-jobs"
-  parent_id      = var.parent_id
-  operation_mode = "jobs"
-  project_name   = var.project_name
+  location         = var.location
+  name             = "replication-jobs"
+  parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
+  operation_mode   = "jobs"
+  project_name     = var.project_name
   # Optional: pass an explicit vault ID. When omitted, the vault is
   # auto-resolved from the migrate project's Server Migration solution.
   replication_vault_id = var.replication_vault_id
   tags                 = var.tags
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -44,7 +44,7 @@ module "replication_jobs" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -66,6 +66,24 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ### <a name="input_project_name"></a> [project\_name](#input\_project\_name)
 
@@ -120,9 +138,9 @@ The following Modules are called:
 
 ### <a name="module_replication_jobs"></a> [replication\_jobs](#module\_replication\_jobs)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

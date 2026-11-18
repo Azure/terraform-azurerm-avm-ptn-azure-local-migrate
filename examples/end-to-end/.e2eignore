@@ -1,0 +1,2 @@
+# This example requires a pre-provisioned Azure Migrate and Azure Local environment.
+# Automated E2E and plan-based APRL/AVMSEC evaluation are skipped without it.

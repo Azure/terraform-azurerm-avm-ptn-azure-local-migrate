@@ -3,7 +3,7 @@
 #
 
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -17,19 +17,14 @@ provider "azapi" {}
 
 # Get protected item details
 module "get_protected_item" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
+  location          = var.location
   name              = "get-protected-item"
   parent_id         = var.parent_id
+  enable_telemetry  = var.enable_telemetry
   operation_mode    = "get"
   project_name      = var.project_name
   protected_item_id = var.protected_item_id
   tags              = var.tags
 }
-
-
-
-
-
-

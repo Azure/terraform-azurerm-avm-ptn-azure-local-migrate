@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -13,14 +13,13 @@ provider "azapi" {}
 
 # Test Discovery
 module "discover_vms" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
-  name           = "migrate-discover"
-  parent_id      = var.parent_id
-  operation_mode = "discover"
-  project_name   = var.project_name
-  tags           = var.tags
+  location         = var.location
+  name             = "migrate-discover"
+  parent_id        = var.parent_id
+  enable_telemetry = var.enable_telemetry
+  operation_mode   = "discover"
+  project_name     = var.project_name
+  tags             = var.tags
 }
-
-

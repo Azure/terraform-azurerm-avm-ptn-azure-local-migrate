@@ -3,9 +3,9 @@
 # Initialize Example
 
 Mirrors `Initialize-AzMigrateLocalReplicationInfrastructure`. This is the
-**happy-path, bare-bones** wiring: only the four PowerShell-equivalent
-required inputs are passed. Vault, cache storage account, replication
-policy, replication extension, fabric IDs, and DRA identities are all
+**happy-path, bare-bones** wiring: it passes the four PowerShell-equivalent
+required inputs and the AVM-required `location`. Vault, cache storage account,
+replication policy, replication extension, fabric IDs, and DRA identities are
 auto-resolved by the module from the migrate project's Server Migration
 solution.
 
@@ -16,6 +16,7 @@ module "initialize_replication" {
   name                  = "local-migration-init"
   operation_mode        = "initialize"
   parent_id             = "/subscriptions/<sub>/resourceGroups/<rg>"
+  location              = "eastus"
   project_name          = "<migrate-project>"
   source_appliance_name = "<src-appliance>"
   target_appliance_name = "<tgt-appliance>"
@@ -24,12 +25,11 @@ module "initialize_replication" {
 
 ## Optional inputs (not shown in this example)
 
-These root-module variables are not required for the happy path. Set them
-only when you need to deviate from defaults.
+The following module inputs are optional. `location` is required explicitly,
+even when it matches the existing migrate project's region.
 
 | Module variable | PowerShell equivalent | Default | When to set it |
 | --- | --- | --- | --- |
-| `location` | n/a (auto-resolved by cmdlet) | Auto-discovered from the existing migrate project | Override when the project's region is unavailable (e.g. when creating a new project) |
 | `cache_storage_account_id` | `-CacheStorageAccountId` | Module reuses the solution-recorded storage account or creates one | Bring your own storage account |
 | `source_machine_type` | n/a (per-cmdlet flag) | `"VMware"` | Set to `"HyperV"` for Hyper-V → Azure Local |
 | `replication_policy` | `-RecoveryPointHistoryInMinutes`, `-CrashConsistentFrequencyInMinutes`, `-AppConsistentFrequencyInMinutes` | `{ recovery_point_history_minutes = 4320, crash_consistent_frequency_minutes = 60, app_consistent_frequency_minutes = 240 }` | Tune RPO / retention |
@@ -40,7 +40,7 @@ See the [user guide](../../docs/user-guide.md) for the full variable reference.
 
 ```hcl
 terraform {
-  required_version = ">= 1.9"
+  required_version = ">= 1.12.0, < 2.0"
 
   required_providers {
     azapi = {
@@ -53,12 +53,13 @@ terraform {
 provider "azapi" {}
 
 module "initialize_replication" {
-  source  = "Azure/avm-ptn-azure-local-migrate/azurerm"
-  version = "0.1.3"
+  source = "../../"
 
+  location              = var.location
   name                  = "local-migration-init"
-  operation_mode        = "initialize"
   parent_id             = var.parent_id
+  enable_telemetry      = var.enable_telemetry
+  operation_mode        = "initialize"
   project_name          = var.project_name
   source_appliance_name = var.source_appliance_name
   target_appliance_name = var.target_appliance_name
@@ -70,7 +71,7 @@ module "initialize_replication" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.12.0, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -109,7 +110,25 @@ Type: `string`
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
 
 ## Outputs
 
@@ -141,9 +160,9 @@ The following Modules are called:
 
 ### <a name="module_initialize_replication"></a> [initialize\_replication](#module\_initialize\_replication)
 
-Source: Azure/avm-ptn-azure-local-migrate/azurerm
+Source: ../../
 
-Version: 0.1.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
